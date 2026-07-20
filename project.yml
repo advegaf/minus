@@ -1,0 +1,176 @@
+name: Minus
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # DEVELOPMENT_TEAM is supplied per-developer via Config/Secrets.xcconfig
+    # (see Config/Secrets.example.xcconfig) so no team ID lives in the repo.
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  Minus:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Minus
+    dependencies:
+      - target: MinusMonitor
+        embed: true
+      - target: MinusReport
+        embed: true
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
+    settings:
+      base:
+        # Supplied per-developer via Config/Secrets.xcconfig (MINUS_BUNDLE_ID), so
+        # local Xcode builds always sign with YOUR registered App ID while the
+        # repo ships only the neutral example value.
+        PRODUCT_BUNDLE_IDENTIFIER: $(MINUS_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Support/Minus.entitlements
+        ENABLE_PREVIEWS: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    info:
+      path: Support/Info.plist
+      properties:
+        CFBundleDisplayName: minus
+        # Route the real numbers through, or App Store Connect warns on every
+        # upload (literal-default trap — verified in vita build 3).
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Dark-only by design (Vivid+Co: obsidian canvas is the theme).
+        UIUserInterfaceStyle: Dark
+        # Portrait-only, declared in the plist itself: the INFOPLIST_KEY_ build
+        # setting is NOT merged when a source Info.plist is used (verified in
+        # vita's built product), so it would silently support every orientation.
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+        UIAppFonts:
+          - GeneralSans-Regular.otf
+          - GeneralSans-Bold.otf
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        # Runtime source for the app-group id (SharedState reads Bundle.main,
+        # never hardcodes), kept in lockstep with the entitlements files.
+        MinusAppGroup: group.$(MINUS_BUNDLE_ID)
+        # Essential-app deep links: canOpenURL requires declaring every scheme
+        # (max 50). Keep in lockstep with EssentialAppCatalog — enforced by
+        # EssentialCatalogTests in Phase 2a.
+        LSApplicationQueriesSchemes:
+          - tel
+          - sms
+          - facetime
+          - mailto
+          - maps
+          - music
+          - photos-redirect
+          - calshow
+          - mobilenotes
+          - shortcuts
+          - spotify
+          - whatsapp
+          - signal
+          - telegram
+
+  MinusMonitor:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: MinusMonitor
+      # Phase 2a adds: Minus/Data/SharedState.swift (the app<->extension contract)
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(MINUS_BUNDLE_ID).monitor
+        CODE_SIGN_ENTITLEMENTS: Support/MinusMonitor.entitlements
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Support/MinusMonitor-Info.plist
+      properties:
+        CFBundleDisplayName: minus
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MonitorExtension
+
+  MinusReport:
+    type: extensionkit-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: MinusReport
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(MINUS_BUNDLE_ID).report
+        CODE_SIGN_ENTITLEMENTS: Support/MinusReport.entitlements
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Support/MinusReport-Info.plist
+      properties:
+        CFBundleDisplayName: minus
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.deviceactivity.report-extension
+
+  MinusTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: MinusTests
+    dependencies:
+      - target: Minus
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.minus.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  MinusUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: MinusUITests
+    dependencies:
+      - target: Minus
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.minus.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Minus:
+    build:
+      targets:
+        Minus: all
+        MinusTests: [test]
+        MinusUITests: [test]
+    test:
+      targets:
+        - MinusTests
+        - MinusUITests
+    run:
+      config: Debug
