@@ -23,6 +23,9 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - path: Minus
+        excludes:
+          # Finder resource-fork stubs ("Icon\r") codesign refuses inside bundles.
+          - "**/Icon?"
     dependencies:
       - target: MinusMonitor
         embed: true
@@ -82,8 +85,8 @@ targets:
           - shortcuts
           - spotify
           - whatsapp
-          - signal
-          - telegram
+          - sgnl
+          - tg
 
   MinusMonitor:
     type: app-extension
@@ -91,7 +94,10 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - path: MinusMonitor
-      # Phase 2a adds: Minus/Data/SharedState.swift (the app<->extension contract)
+        excludes:
+          - "**/Icon?"
+      # The app<->extension contract, compiled into both targets.
+      - path: Minus/Data/SharedState.swift
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
@@ -107,6 +113,8 @@ targets:
         CFBundleDisplayName: minus
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # SharedState reads the app-group id from Bundle.main in BOTH targets.
+        MinusAppGroup: group.$(MINUS_BUNDLE_ID)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).MonitorExtension
@@ -117,6 +125,8 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - path: MinusReport
+        excludes:
+          - "**/Icon?"
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
