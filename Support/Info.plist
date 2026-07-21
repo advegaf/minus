@@ -36,8 +36,8 @@
 		<string>shortcuts</string>
 		<string>spotify</string>
 		<string>whatsapp</string>
-		<string>signal</string>
-		<string>telegram</string>
+		<string>sgnl</string>
+		<string>tg</string>
 	</array>
 	<key>MinusAppGroup</key>
 	<string>group.$(MINUS_BUNDLE_ID)</string>

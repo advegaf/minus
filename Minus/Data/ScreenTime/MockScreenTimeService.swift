@@ -21,9 +21,12 @@ final class MockScreenTimeService: ScreenTimeService {
     private(set) var shieldedActivities: Set<String> = []
     private var endTimers: [String: Task<Void, Never>] = [:]
 
-    /// MINUS_STATE=denied forces the denial path for stories ON-4/SE-6.
+    /// MINUS_STATE=denied (seeded, post-onboarding) or MINUS_AUTH=denied
+    /// (orthogonal — works with fresh state for onboarding's denial path)
+    /// force authorization to fail. Stories ON-4/SE-6.
     private var forceDenied: Bool {
         ProcessInfo.processInfo.environment["MINUS_STATE"] == "denied"
+            || ProcessInfo.processInfo.environment["MINUS_AUTH"] == "denied"
     }
 
     init() {
