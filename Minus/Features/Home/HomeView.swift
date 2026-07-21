@@ -1,0 +1,88 @@
+import SwiftData
+import SwiftUI
+
+/// The monument. Everything the user sees fifty times a day, composed top→down
+/// on the obsidian void and locked to a single 20pt leading margin: the stacked
+/// clock, their intention, the essentials launcher, then — pinned low — the
+/// focus state and the ghost nav row.
+struct HomeView: View {
+    @Environment(AppDependencies.self) private var deps
+    @Environment(AppRouter.self) private var router
+    @Query private var configs: [UserConfig]
+
+    private var intention: String {
+        configs.first { $0.id == UserConfig.wellKnownID }?.intentionText ?? ""
+    }
+
+    private var permissionDenied: Bool {
+        deps.service.authorizationStatus == .denied
+    }
+
+    var body: some View {
+        ZStack {
+            MN.obsidian.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 0) {
+                Color.clear.frame(height: MN.Space.xl)
+
+                ClockDisplay()
+
+                if !intention.isEmpty {
+                    Text(intention)
+                        .mnType(.body)
+                        .foregroundStyle(MN.boneWhite)
+                        .frame(maxWidth: 300, alignment: .leading)
+                        .padding(.top, MN.Space.m)
+                        .accessibilityIdentifier("intention-line")
+                }
+
+                EssentialAppList()
+                    .padding(.top, MN.Space.section)
+
+                Spacer(minLength: MN.Space.l)
+
+                if permissionDenied {
+                    permissionBand
+                }
+
+                FocusStateLine()
+
+                NavTextRow(items: [
+                    ("Focus", { router.push(.focus) }),
+                    ("Awareness", { router.push(.awareness) }),
+                    ("Settings", { router.push(.settings) }),
+                ])
+                .padding(.top, MN.Space.s)
+                .padding(.bottom, MN.Space.m)
+            }
+            .padding(.horizontal, MN.Space.m)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    /// Shown only when Screen Time authorization is denied: a full-width ash
+    /// hairline over a single fog caption that routes to Settings to fix it.
+    private var permissionBand: some View {
+        VStack(alignment: .leading, spacing: MN.Space.s) {
+            Rectangle()
+                .fill(MN.ashBorder)
+                .frame(height: MN.hairline)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, -MN.Space.m)
+
+            Button {
+                router.push(.settings)
+            } label: {
+                Text("screen time off — focus won't shield · settings")
+                    .mnType(.caption)
+                    .foregroundStyle(MN.fogBlue)
+                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.mnPress)
+            .accessibilityIdentifier("banner-permission")
+        }
+        .padding(.bottom, MN.Space.s)
+    }
+}
