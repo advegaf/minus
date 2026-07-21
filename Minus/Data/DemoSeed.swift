@@ -43,7 +43,13 @@ enum DemoSeed {
         }
 
         let blockList = MinusContainer.defaultBlockList(in: context)
-        blockList.selectionData = MockScreenTimeService.encodeSelection(apps: 5, categories: 2)
+        // MINUS_BLOCK=stale plants undecodable selection data — the restored-
+        // from-backup scenario Settings must recover from (SE-4).
+        if ProcessInfo.processInfo.environment["MINUS_BLOCK"] == "stale" {
+            blockList.selectionData = Data([0xFF, 0x00, 0xBA, 0xD0])
+        } else {
+            blockList.selectionData = MockScreenTimeService.encodeSelection(apps: 5, categories: 2)
+        }
         blockList.updatedAt = ClockProvider.now()
     }
 

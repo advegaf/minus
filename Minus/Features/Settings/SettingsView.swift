@@ -1,14 +1,138 @@
+import SwiftData
 import SwiftUI
 
-// Placeholder — replaced in Phase 2f.
+/// Settings root: quiet rows in the selection-row vocabulary, each pushing a
+/// focused subscreen. Reset lives at the bottom as a ghost — destructive
+/// gravity without a drop of red.
 struct SettingsView: View {
+    @Environment(AppDependencies.self) private var deps
+    @Environment(AppRouter.self) private var router
+    @Query private var configs: [UserConfig]
+
+    private var config: UserConfig? {
+        configs.first { $0.id == UserConfig.wellKnownID }
+    }
+
+    private var permissionCaption: String {
+        switch deps.service.authorizationStatus {
+        case .approved: "on"
+        case .denied: "off"
+        case .notDetermined: "not set"
+        }
+    }
+
     var body: some View {
         ZStack {
             MN.obsidian.ignoresSafeArea()
-            Text("SETTINGS")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("SETTINGS")
+                        .mnType(.caption)
+                        .textCase(.uppercase)
+                        .foregroundStyle(MN.fogBlue)
+                        .padding(.top, MN.Space.s)
+                        .padding(.leading, MN.Space.xl)
+
+                    VStack(spacing: 0) {
+                        row("intention", detail: config?.intentionText.isEmpty == false ? config!.intentionText : "not set", id: "row-intention") {
+                            router.push(.settingsIntention)
+                        }
+                        row("essentials", detail: nil, id: "row-essentials") {
+                            router.push(.settingsEssentials)
+                        }
+                        row("blocked apps", detail: blockedDetail, id: "row-blocked") {
+                            router.push(.settingsBlocked)
+                        }
+                        row("strictness", detail: config?.strictness.rawValue, id: "row-strictness") {
+                            router.push(.settingsStrictness)
+                        }
+                        row("screen time", detail: permissionCaption, id: "row-permission") {
+                            router.push(.settingsPermission)
+                        }
+                        row("about", detail: nil, id: "row-about") {
+                            router.push(.settingsAbout)
+                        }
+                    }
+                    .padding(.top, MN.Space.l)
+
+                    GhostCaptionButton(title: "Reset everything", accessibilityID: "cta-reset") {
+                        confirmingReset = true
+                    }
+                    .padding(.top, MN.Space.section)
+                    .padding(.bottom, MN.Space.l)
+                }
+                .padding(.horizontal, MN.Space.m)
+            }
         }
+        .toolbar(.hidden, for: .navigationBar)
+        .overlay(alignment: .topLeading) { BackGlyph() }
+        .confirmationDialog(
+            "Reset everything? Sessions, schedules, essentials, and your intention all go.",
+            isPresented: $confirmingReset,
+            titleVisibility: .visible
+        ) {
+            Button("Reset", role: .destructive) { resetAll() }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings")
+    }
+
+    @State private var confirmingReset = false
+
+    private var blockedDetail: String? {
+        let blockList = try? deps.context.fetch(
+            FetchDescriptor<BlockList>(predicate: #Predicate { $0.isDefault })
+        ).first
+        guard let data = blockList?.selectionData else { return "none" }
+        let summary = deps.service.selectionSummary(from: data)
+        if summary.apps == 0 && summary.categories == 0 { return "needs re-pick" }
+        return "\(summary.apps) apps · \(summary.categories) categories"
+    }
+
+    private func row(_ title: String, detail: String?, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(alignment: .firstTextBaseline, spacing: MN.Space.s) {
+                Text(title)
+                    .mnType(.bodyLg)
+                    .foregroundStyle(MN.boneWhite)
+                Spacer(minLength: MN.Space.s)
+                if let detail {
+                    Text(detail.lowercased())
+                        .mnType(.caption)
+                        .foregroundStyle(MN.fogBlue)
+                        .lineLimit(1)
+                        .frame(maxWidth: 160, alignment: .trailing)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(MN.ashBorder).frame(height: MN.hairline)
+            }
+        }
+        .buttonStyle(.mnPress)
+        .accessibilityIdentifier(id)
+    }
+
+    private func resetAll() {
+        deps.coordinator.resetAll()
+        for schedule in (try? deps.context.fetch(FetchDescriptor<FocusSchedule>())) ?? [] {
+            deps.context.delete(schedule)
+        }
+        for session in (try? deps.context.fetch(FetchDescriptor<FocusSession>())) ?? [] {
+            deps.context.delete(session)
+        }
+        for app in (try? deps.context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
+            deps.context.delete(app)
+        }
+        for list in (try? deps.context.fetch(FetchDescriptor<BlockList>())) ?? [] {
+            deps.context.delete(list)
+        }
+        for config in configs {
+            deps.context.delete(config)
+        }
+        try? deps.context.save()
+        router.popToRoot()
     }
 }

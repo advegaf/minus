@@ -48,6 +48,18 @@ struct AppRootView: View {
             ScheduleListView()
         case .scheduleEditor(let id):
             ScheduleEditorView(scheduleID: id)
+        case .settingsIntention:
+            IntentionEditView()
+        case .settingsEssentials:
+            EssentialsEditView()
+        case .settingsBlocked:
+            BlockListEditView()
+        case .settingsStrictness:
+            StrictnessView()
+        case .settingsPermission:
+            PermissionSettingsView()
+        case .settingsAbout:
+            AboutView()
         }
     }
 }

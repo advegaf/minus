@@ -7,6 +7,12 @@ enum Route: Hashable {
     case settings
     case schedules
     case scheduleEditor(id: UUID?)
+    case settingsIntention
+    case settingsEssentials
+    case settingsBlocked
+    case settingsStrictness
+    case settingsPermission
+    case settingsAbout
 }
 
 @MainActor
