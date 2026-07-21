@@ -14,7 +14,10 @@ struct BlockedStep: View {
     @State private var appeared = false
 
     // Live (device) state.
-    @State private var liveSelection = FamilyActivitySelection()
+    // includeEntireCategory: picking a category materializes its member apps
+    // into applicationTokens, so counts read the way users expect (B1). The
+    // flag is init-only — never reuse a decoded selection as a picker binding.
+    @State private var liveSelection = FamilyActivitySelection(includeEntireCategory: true)
     @State private var pickerPresented = false
 
     /// The simulator stand-in: distracting apps only, never the essentials.
@@ -117,12 +120,11 @@ struct BlockedStep: View {
     private var summaryText: String? {
         if deps.service.isMock {
             guard !selectedMock.isEmpty else { return nil }
-            let n = selectedMock.count
-            return "\(n) app\(n == 1 ? "" : "s") \u{00B7} 2 categories"
+            return SelectionSummaryText.line(apps: selectedMock.count, categories: 2)
         }
         let summary = deps.service.selectionSummary(from: LiveScreenTimeService.encodeSelection(liveSelection))
         guard summary.apps + summary.categories > 0 else { return nil }
-        return "\(summary.apps) apps \u{00B7} \(summary.categories) categories"
+        return SelectionSummaryText.line(apps: summary.apps, categories: summary.categories)
     }
 
     private func toggleMock(_ slug: String) {

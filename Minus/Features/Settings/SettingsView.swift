@@ -84,10 +84,11 @@ struct SettingsView: View {
         let blockList = try? deps.context.fetch(
             FetchDescriptor<BlockList>(predicate: #Predicate { $0.isDefault })
         ).first
-        guard let data = blockList?.selectionData else { return "none" }
+        guard let data = blockList?.selectionData else { return "nothing yet" }
         let summary = deps.service.selectionSummary(from: data)
+        // Data present but nothing decodes = stale tokens (SE-4 contract).
         if summary.apps == 0 && summary.categories == 0 { return "needs re-pick" }
-        return "\(summary.apps) apps · \(summary.categories) categories"
+        return SelectionSummaryText.line(apps: summary.apps, categories: summary.categories)
     }
 
     private func row(_ title: String, detail: String?, id: String, action: @escaping () -> Void) -> some View {

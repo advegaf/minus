@@ -113,6 +113,12 @@ final class LiveScreenTimeService: ScreenTimeService {
 
     func selectionSummary(from data: Data?) -> (apps: Int, categories: Int) {
         guard let selection = Self.decodeSelection(data) else { return (0, 0) }
-        return (selection.applicationTokens.count, selection.categoryTokens.count)
+        // max() covers both sides of the token/derived-set asymmetry: flag-true
+        // payloads carry category members in applicationTokens; either way the
+        // derived `applications` set never under-counts what tokens hold.
+        return (
+            max(selection.applicationTokens.count, selection.applications.count),
+            selection.categoryTokens.count
+        )
     }
 }

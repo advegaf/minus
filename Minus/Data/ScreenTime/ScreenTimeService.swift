@@ -6,6 +6,23 @@ enum ScreenTimeAuthStatus: String, Sendable {
     case denied
 }
 
+/// The one voice for selection summaries: zero components drop out, singulars
+/// read correctly, and an empty selection says so plainly (D12).
+enum SelectionSummaryText {
+    /// "14 apps · 2 categories" / "2 categories" / "1 app" / "nothing yet"
+    static func line(apps: Int, categories: Int) -> String {
+        var parts: [String] = []
+        if apps > 0 {
+            parts.append("\(apps) app\(apps == 1 ? "" : "s")")
+        }
+        if categories > 0 {
+            parts.append("\(categories) categor\(categories == 1 ? "y" : "ies")")
+        }
+        guard !parts.isEmpty else { return "nothing yet" }
+        return parts.joined(separator: " \u{00B7} ")
+    }
+}
+
 enum ScreenTimeError: Error, Equatable, Sendable {
     case monitoringFailed(String)
 }
