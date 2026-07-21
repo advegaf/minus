@@ -70,9 +70,8 @@ final class HomeUITests: XCTestCase {
 
         line.tap()
 
-        // The Focus stub's placeholder proves we pushed, and the Home-only
-        // focus line being gone proves it is the Focus screen's caption.
-        XCTAssertTrue(app.staticTexts["FOCUS"].waitForExistence(timeout: 5), "Focus placeholder missing")
+        // With a session running, Focus renders the active void directly.
+        XCTAssertTrue(app.otherElements["active-session"].waitForExistence(timeout: 5), "active session screen missing")
         XCTAssertFalse(app.buttons["focus-state-line"].exists, "still on Home after tap")
     }
 
@@ -86,15 +85,14 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(settings.waitForExistence(timeout: 5))
         settings.tap()
 
-        XCTAssertTrue(app.staticTexts["SETTINGS"].waitForExistence(timeout: 5), "Settings placeholder missing")
+        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5), "Settings screen missing")
         XCTAssertFalse(element(app, "clock-display").exists, "Home clock still present after push")
 
         attach(app, named: "HO-3")
 
-        // The nav bar is hidden, so pop with the interactive edge-swipe.
-        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
-        let finish = app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5))
-        start.press(forDuration: 0.1, thenDragTo: finish)
+        // Hidden nav chrome disables the system edge-swipe (verified) — the
+        // BackGlyph is the designed return path.
+        app.buttons["nav-back"].firstMatch.tap()
 
         XCTAssertTrue(element(app, "clock-display").waitForExistence(timeout: 5), "did not return Home")
     }

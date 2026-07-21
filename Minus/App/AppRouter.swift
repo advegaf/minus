@@ -30,13 +30,17 @@ final class AppRouter {
 
     #if DEBUG
     /// MINUS_SCREEN deep-jump for screenshot tours (focus | awareness |
-    /// settings | schedules).
+    /// settings | schedules | settings-{sub}).
     func jumpFromEnvironment() {
         switch ProcessInfo.processInfo.environment["MINUS_SCREEN"] {
         case "focus": path = [.focus]
         case "awareness": path = [.awareness]
         case "settings": path = [.settings]
         case "schedules": path = [.focus, .schedules]
+        case "settings-blocked": path = [.settings, .settingsBlocked]
+        case "settings-permission": path = [.settings, .settingsPermission]
+        case "settings-strictness": path = [.settings, .settingsStrictness]
+        case "settings-about": path = [.settings, .settingsAbout]
         default: break
         }
     }

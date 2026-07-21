@@ -21,6 +21,11 @@ enum DemoSeed {
         case "noblock":
             // Onboarded but never picked blocked apps — Focus's empty state.
             MinusContainer.defaultBlockList(in: context).selectionData = nil
+        case "noessentials":
+            // Onboarded but the launcher is empty — Home's nudge state (HO-5).
+            for app in (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
+                context.delete(app)
+            }
         default:
             break
         }

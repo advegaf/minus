@@ -1,49 +1,49 @@
 ID,Area,User story,Expected behavior (from code),Status,Evidence,Notes
-ON-1,Onboarding,As a new user I see the prism hero and can begin,UserConfig.onboardedAt nil gates AppRootView to OnboardingFlow; WelcomeStep renders PrismArtifact(260) + displaySm "minus" wordmark + cta-begin,,,
-ON-2,Onboarding,I must write an intention before continuing,IntentionStep CONTINUE at 0.35/inert until trimmed non-empty; 80-char hard cap; "N / 80" counter past 60; writes UserConfig.intentionText,,,
-ON-3,Onboarding,I pick 1–7 essential apps,EssentialsStep OnboardingSelectRow toggles (bone+em-dash vs fog); at homeCap 7 others dim 0.35 + inert; ≥1 required; EssentialApp rows inserted in tap order,,,
-ON-4,Onboarding,I grant Screen Time and move on,PermissionStep cta-allow → requestAuthorization; REQUESTING… opacity pulse in-flight; approved auto-advances after 0.6s; PillTag SIMULATOR MOCK when isMock,,,Sim mock auto-approves after 500ms
-ON-5,Onboarding,Denied Screen Time still lets me in,MINUS_AUTH=denied forces denial → copy + TRY AGAIN + cta-skip-permission advances unauthorized,,,Real denial sheet Needs device
-ON-6,Onboarding,I choose what gets blocked,BlockedStep: sim = mock rows (instagram/tiktok/x/youtube/reddit…) → MockScreenTimeService.encodeSelection(n apps + 2 categories); device = familyActivityPicker + selectionSummary line; writes BlockList.selectionData,,,Real picker Needs device
-ON-7,Onboarding,I can skip blocking for now,cta-skip-blocked leaves selectionData nil; Focus later shows focus-empty-blocklist,,,
-ON-8,Onboarding,Finishing drops me into my new home,cta-finish stamps onboardedAt = ClockProvider.now() + save; AppRootView @Query flips to Home on MMotion.signature fade,,,
-ON-9,Onboarding,minus remembers I onboarded,Relaunch with onboardedAt set → Home directly (AppRootView gate),,,In-memory store in UITestMode — verified via states not relaunch
-HO-1,Home,I see a monumental clock,ClockDisplay: stacked 24h hour/minute at display 96 leading 1.0 (DigitMetrics.displayLineSpacing); leading-aligned fixed CoreText slots — zero shift on tick,,,MINUS_FREEZE_TIME=09:41
-HO-2,Home,My intention sits under the clock,intention-line .body boneWhite max-w 300 from UserConfig; omitted entirely when empty,,,
-HO-3,Home,I open an essential app in one tap,EssentialAppList row-app-{slug} → openURL(urlScheme); canOpenURL false → fog 0.4 + inline "not installed" + inert,,,phone/music not installed on sim by design
-HO-4,Home,The launcher feels alive but calm,Rows stagger 50ms once per appear (MMotion.staggerStep); mnPress 0.97; reduce-motion crossfade,,,
-HO-5,Home,An empty launcher points me to settings,essentials-empty fog line → push .settings,,,Post-reset or 0-enabled rows
-HO-6,Home,I always see my running session,focus-state-line "focused · MM:SS left" ticking from activeSnapshot.plannedEndAt − ClockProvider.now(); tap → push .focus,,,
-HO-7,Home,I see my next scheduled block,Idle + enabled schedules → earliest ScheduleMath.nextOccurrence → "next · name · day time",,,
-HO-8,Home,Idle home invites focus quietly,No session/schedules → fog "begin a focus session" → push .focus,,,
-HO-9,Home,Revoked permission is visible not silent,authorizationStatus denied + onboarded → banner-permission hairline band above nav → push .settings,,,
-HO-10,Home,I reach every area from the nav row,NavTextRow FOCUS/AWARENESS/SETTINGS (nav-focus/awareness/settings) push routes; BackGlyph/swipe returns; ≥44pt,,,
-FO-1,Focus,I pick a duration in one glance,Presets 15/30/60/120 as select rows + custom… row → FieldShell digits-only; <15 shows custom-too-short + start inert,,,
-FO-2,Focus,Starting a session shields instantly,cta-start → coordinator.start: applyShields + startEndTimer + FocusSession row + SharedState snapshot; ActiveSessionView appears,,,Shield efficacy = FO-8 device story
-FO-3,Focus,The countdown is sculptural and stable,ActiveSessionView FixedDigits displaySm slots MM:SS from plannedEndAt − ClockProvider.now() per-second,,,
-FO-4,Focus,Normal strictness ends in one tap,strictness normal → cta-end → endEarly: clearShields + stopActivities + row endedEarly + idle picker returns,,,
-FO-5,Focus,Friction strictness makes me hold,strictness friction → cta-hold-end: 2s linear fill while pressed; release snaps back at MMotion.exit; completion → endEarly,,,
-FO-6,Focus,Strict mode hides the exit,strictness strict → no end control; strict-note "ends at HH:mm" only,,,Uninstall honesty lives in About copy
-FO-7,Focus,Sessions end themselves on time,Mock end timer → ledger intervalEnded + .minusMockIntervalEnded → reconcile closes row completed → UI idle,,,Device analog FO-8
-FO-8,Focus,Shields lift even if I killed the app,MonitorExtension.intervalDidEnd clears named store + appends ledger; next-foreground reconcile marks completed,Needs device,,Core trust story — walk DEVICE-TESTING #5
-FO-9,Focus,No blocklist means a gentle setup nudge,selectionData nil → focus-empty-blocklist state + CHOOSE APPS → push .settings (blocked editor),,,
-FO-10,Focus,Denied permission explains itself,authorizationStatus denied → focus-denied copy + OPEN SETTINGS → push .settings; no start CTA,,,
-FO-11,Focus,Focus always shows a running session,activeSnapshot != nil → ActiveSessionView replaces picker entirely,,,
-FO-12,Focus,Schedules start empty and honest,ScheduleListView schedules-empty copy + cta-new-schedule,,,
-FO-13,Focus,I create a weekday schedule safely,Editor validates ≥1 day / end>start / ≥15m / overlap-vs-enabled / budget via ScheduleMath; SAVE registers expansions + writes scheduleRegistry; save disabled while invalid,,,
-FO-14,Focus,Toggling a schedule takes effect,List toggle-schedule-{id}: on→unregister+isEnabled false; off→register (needs blocklist) or fog error,,,Interval firing Needs device
-FO-15,Focus,Deleting a schedule cleans up,Editor DELETE → confirmationDialog → unregister + registry entries removed + row deleted + pop,,,
-AW-1,Awareness,I see minutes reclaimed today,stat-today from StatsService.focusSeconds over FocusSession slices; awareness-zero copy when no rows ever,,,
-AW-2,Awareness,I see the week and completed count,stat-week weekSeconds; streak text; derived live at render,,,
+ON-1,Onboarding,As a new user I see the prism hero and can begin,"UserConfig.onboardedAt nil gates AppRootView to OnboardingFlow; WelcomeStep renders PrismArtifact(260) + displaySm ""minus"" wordmark + cta-begin",Pass,ON-1.png OnboardingUITests,
+ON-2,Onboarding,I must write an intention before continuing,"IntentionStep CONTINUE at 0.35/inert until trimmed non-empty; 80-char hard cap; ""N / 80"" counter past 60; writes UserConfig.intentionText",Pass,ON-2.png OnboardingUITests,
+ON-3,Onboarding,I pick 1–7 essential apps,EssentialsStep OnboardingSelectRow toggles (bone+em-dash vs fog); at homeCap 7 others dim 0.35 + inert; ≥1 required; EssentialApp rows inserted in tap order,Fail,ON-3.png,Row names Capitalized here but lowercase on Home/Settings — voice inconsistency; fix F1
+ON-4,Onboarding,I grant Screen Time and move on,PermissionStep cta-allow → requestAuthorization; REQUESTING… opacity pulse in-flight; approved auto-advances after 0.6s; PillTag SIMULATOR MOCK when isMock,Pass,ON-4.png OnboardingUITests,Sim mock auto-approves after 500ms; real grant sheet = DEVICE-TESTING #1
+ON-5,Onboarding,Denied Screen Time still lets me in,MINUS_AUTH=denied forces denial → copy + TRY AGAIN + cta-skip-permission advances unauthorized,Pass (tests),OnboardingUITests denial attachment,MINUS_AUTH=denied; real denial sheet Needs device
+ON-6,Onboarding,I choose what gets blocked,BlockedStep: sim = mock rows (instagram/tiktok/x/youtube/reddit…) → MockScreenTimeService.encodeSelection(n apps + 2 categories); device = familyActivityPicker + selectionSummary line; writes BlockList.selectionData,Pass,ON-6.png OnboardingUITests,Mock list on sim; real picker = DEVICE-TESTING #2
+ON-7,Onboarding,I can skip blocking for now,cta-skip-blocked leaves selectionData nil; Focus later shows focus-empty-blocklist,Pass (tests),OnboardingUITests,
+ON-8,Onboarding,Finishing drops me into my new home,cta-finish stamps onboardedAt = ClockProvider.now() + save; AppRootView @Query flips to Home on MMotion.signature fade,Pass (tests),OnboardingUITests happy path,
+ON-9,Onboarding,minus remembers I onboarded,Relaunch with onboardedAt set → Home directly (AppRootView gate),Pass (code),AppRootView gate + HomeUITests fresh/onboarded states,Relaunch persistence uses on-disk store outside UITestMode
+HO-1,Home,I see a monumental clock,ClockDisplay: stacked 24h hour/minute at display 96 leading 1.0 (DigitMetrics.displayLineSpacing); leading-aligned fixed CoreText slots — zero shift on tick,Pass,HO-1.png HomeUITests,Slot stability proven by 09/41 asserts; '41' optical left edge acceptable
+HO-2,Home,My intention sits under the clock,intention-line .body boneWhite max-w 300 from UserConfig; omitted entirely when empty,Pass,HO-1.png,
+HO-3,Home,I open an essential app in one tap,"EssentialAppList row-app-{slug} → openURL(urlScheme); canOpenURL false → fog 0.4 + inline ""not installed"" + inert",Pass (code),HO-1.png,phone/music greyed on sim proves canOpenURL path; launch itself is system API
+HO-4,Home,The launcher feels alive but calm,Rows stagger 50ms once per appear (MMotion.staggerStep); mnPress 0.97; reduce-motion crossfade,Pass,HO-1.png,Stagger observed in live tours; reduce-motion crossfade in code
+HO-5,Home,An empty launcher points me to settings,essentials-empty fog line → push .settings,Pass,HO-5.png,Post-reset or 0-enabled rows
+HO-6,Home,I always see my running session,"focus-state-line ""focused · MM:SS left"" ticking from activeSnapshot.plannedEndAt − ClockProvider.now(); tap → push .focus",Pass,HO-6.png HomeUITests countdown assert,
+HO-7,Home,I see my next scheduled block,"Idle + enabled schedules → earliest ScheduleMath.nextOccurrence → ""next · name · day time""",Pass,HO-7.png,Mid-window schedule shows NEXT occurrence by design; active-window display is v2
+HO-8,Home,Idle home invites focus quietly,"No session/schedules → fog ""begin a focus session"" → push .focus",Pass,HO-5.png,
+HO-9,Home,Revoked permission is visible not silent,authorizationStatus denied + onboarded → banner-permission hairline band above nav → push .settings,Fail,HO-9.png,Clock monument shifts ~35pt up when banner present — vertical anchor must be state-invariant; fix F2
+HO-10,Home,I reach every area from the nav row,NavTextRow FOCUS/AWARENESS/SETTINGS (nav-focus/awareness/settings) push routes; BackGlyph/swipe returns; ≥44pt,Pass (tests),HomeUITests,Hidden chrome disables system edge-swipe; BackGlyph is the designed return path
+FO-1,Focus,I pick a duration in one glance,Presets 15/30/60/120 as select rows + custom… row → FieldShell digits-only; <15 shows custom-too-short + start inert,Pass,FO-1.png FocusUITests custom validation,
+FO-2,Focus,Starting a session shields instantly,cta-start → coordinator.start: applyShields + startEndTimer + FocusSession row + SharedState snapshot; ActiveSessionView appears,Pass,FO-2.png FocusUITests,Shield efficacy = FO-8 device story
+FO-3,Focus,The countdown is sculptural and stable,ActiveSessionView FixedDigits displaySm slots MM:SS from plannedEndAt − ClockProvider.now() per-second,Pass,FO-2.png,
+FO-4,Focus,Normal strictness ends in one tap,strictness normal → cta-end → endEarly: clearShields + stopActivities + row endedEarly + idle picker returns,Pass (tests),FocusUITests end-normal,
+FO-5,Focus,Friction strictness makes me hold,strictness friction → cta-hold-end: 2s linear fill while pressed; release snaps back at MMotion.exit; completion → endEarly,Pass,FO-5.png FocusUITests 2.4s hold,
+FO-6,Focus,Strict mode hides the exit,"strictness strict → no end control; strict-note ""ends at HH:mm"" only",Pass,FO-6.png FocusUITests,ends-at math verified (9:41+25:00=10:06)
+FO-7,Focus,Sessions end themselves on time,Mock end timer → ledger intervalEnded + .minusMockIntervalEnded → reconcile closes row completed → UI idle,Pass (tests),SessionCoordinatorTests reconcile ledger/sweep,Mock timer e2e would need 15-min wait; unit paths cover
+FO-8,Focus,Shields lift even if I killed the app,MonitorExtension.intervalDidEnd clears named store + appends ledger; next-foreground reconcile marks completed,Needs device,,Core trust story — DEVICE-TESTING #5
+FO-9,Focus,No blocklist means a gentle setup nudge,selectionData nil → focus-empty-blocklist state + CHOOSE APPS → push .settings (blocked editor),Pass,FO-9.png FocusUITests,
+FO-10,Focus,Denied permission explains itself,authorizationStatus denied → focus-denied copy + OPEN SETTINGS → push .settings; no start CTA,Pass,FO-10.png FocusUITests,
+FO-11,Focus,Focus always shows a running session,activeSnapshot != nil → ActiveSessionView replaces picker entirely,Pass,FO-2.png FocusUITests active-state,
+FO-12,Focus,Schedules start empty and honest,ScheduleListView schedules-empty copy + cta-new-schedule,Pass,FO-12.png FocusUITests,
+FO-13,Focus,I create a weekday schedule safely,Editor validates ≥1 day / end>start / ≥15m / overlap-vs-enabled / budget via ScheduleMath; SAVE registers expansions + writes scheduleRegistry; save disabled while invalid,Pass (tests),FocusUITests create attachment,
+FO-14,Focus,Toggling a schedule takes effect,List toggle-schedule-{id}: on→unregister+isEnabled false; off→register (needs blocklist) or fog error,Pass (tests),FO-14.png FocusUITests toggle,Registration verified; interval firing = device
+FO-15,Focus,Deleting a schedule cleans up,Editor DELETE → confirmationDialog → unregister + registry entries removed + row deleted + pop,Pass (code),SessionCoordinatorTests unregister,Editor delete UI flow untested — add UITest in fix pass (F3)
+AW-1,Awareness,I see minutes reclaimed today,stat-today from StatsService.focusSeconds over FocusSession slices; awareness-zero copy when no rows ever,Pass,AW-1.png AW-zero.png AwarenessUITests,
+AW-2,Awareness,I see the week and completed count,stat-week weekSeconds; streak text; derived live at render,Pass,AW-1.png,Engine math spot-checked: 3x45m + 5m = 2h20m
 AW-3,Awareness,My streak is honest about today,StreakService.currentStreak — today pending doesn't break chain,Pass (tests),StatsEngineTests,Engine verified; UI shows stat-streak
-AW-4,Awareness,Real screen time renders on device,ReportSection → DeviceActivityReport(.dailyOverview daily filter); MinusReport sums totalActivityDuration + numberOfPickups,Needs device,,Host can never read values; skeleton renders async
-AW-5,Awareness,The simulator says so instead of lying,isMock → report-placeholder: Simulator pill + "the simulator has none",,,
-AW-6,Awareness,Denied permission degrades gracefully,App-owned stats intact; report area explains (placeholder on mock / report-denied live),,,
-SE-1,Settings,I can rewrite my intention,row-intention → IntentionEditView FieldShell (80 cap) → save → UserConfig persists → Home + root row reflect,,,
-SE-2,Settings,I curate my essentials later,EssentialsEditView toggles membership rows (cap 7 dimming); order = add order (no drag reorder in v1); Home follows sortOrder,,,
-SE-3,Settings,I can change what gets blocked,BlockListEditView: mock rows re-encode selection on every toggle + updatedAt; device re-pick via real picker,,,Device picker path Needs device
-SE-4,Settings,Stale tokens offer recovery not crash,selectionData non-nil but summary (0;0) → stale-recovery row; re-picking any row clears it,,,MINUS_BLOCK=stale simulates; real restore Needs device
-SE-5,Settings,Strictness changes apply to running sessions,strictness-{level} rows write UserConfig; ActiveSessionView end control re-renders (tap/hold/hidden),,,
-SE-6,Settings,Permission state is visible and fixable,row-permission detail on/off/not-set; subscreen status + cta-grant + cta-system-settings (openSettingsURLString),,,
-SE-7,Settings,About tells the truth,about-version from bundle; General Sans credit; uninstall-releases-shields honesty; DEBUG monitor log (ring buffer),,,
-SE-8,Settings,Reset gives me a clean slate,cta-reset → dialog → coordinator.resetAll (stores cleared + monitoring stopped) + all models deleted + popToRoot → onboarding gate,,,
+AW-4,Awareness,Real screen time renders on device,ReportSection → DeviceActivityReport(.dailyOverview daily filter); MinusReport sums totalActivityDuration + numberOfPickups,Needs device,,DEVICE-TESTING #8; skeleton + async load on hardware
+AW-5,Awareness,The simulator says so instead of lying,"isMock → report-placeholder: Simulator pill + ""the simulator has none""",Pass,AW-1.png AwarenessUITests,
+AW-6,Awareness,Denied permission degrades gracefully,App-owned stats intact; report area explains (placeholder on mock / report-denied live),Pass (tests),AW-6.png AwarenessUITests,
+SE-1,Settings,I can rewrite my intention,row-intention → IntentionEditView FieldShell (80 cap) → save → UserConfig persists → Home + root row reflect,Pass (tests),SettingsUITests intention persists to Home,
+SE-2,Settings,I curate my essentials later,EssentialsEditView toggles membership rows (cap 7 dimming); order = add order (no drag reorder in v1); Home follows sortOrder,Pass (tests),SettingsUITests essentials toggle reflects Home,
+SE-3,Settings,I can change what gets blocked,BlockListEditView: mock rows re-encode selection on every toggle + updatedAt; device re-pick via real picker,Pass (tests),SettingsUITests stale re-pick,Device picker path = DEVICE-TESTING #9
+SE-4,Settings,Stale tokens offer recovery not crash,selectionData non-nil but summary (0;0) → stale-recovery row; re-picking any row clears it,Pass,SE-4.png SettingsUITests,MINUS_BLOCK=stale sim; real restore = device
+SE-5,Settings,Strictness changes apply to running sessions,strictness-{level} rows write UserConfig; ActiveSessionView end control re-renders (tap/hold/hidden),Pass,SE-5.png SettingsUITests strict gating e2e,
+SE-6,Settings,Permission state is visible and fixable,row-permission detail on/off/not-set; subscreen status + cta-grant + cta-system-settings (openSettingsURLString),Pass,SE-6.png SettingsUITests,
+SE-7,Settings,About tells the truth,about-version from bundle; General Sans credit; uninstall-releases-shields honesty; DEBUG monitor log (ring buffer),Pass,SE-7.png SettingsUITests,
+SE-8,Settings,Reset gives me a clean slate,cta-reset → dialog → coordinator.resetAll (stores cleared + monitoring stopped) + all models deleted + popToRoot → onboarding gate,Pass (tests),SettingsUITests reset to onboarding,
