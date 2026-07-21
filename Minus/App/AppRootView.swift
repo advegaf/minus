@@ -30,9 +30,27 @@ struct AppRootView: View {
             }
         }
         .animation(MMotion.signature, value: isOnboarded)
-        #if DEBUG
-        .onAppear { router.jumpFromEnvironment() }
-        #endif
+        .onChange(of: deps.pendingDeepLink) { _, _ in
+            consumeFocusLink()
+        }
+        .onAppear {
+            consumeFocusLink()
+            #if DEBUG
+            router.jumpFromEnvironment()
+            #endif
+        }
+    }
+
+    /// minus://focus lands here (this view owns the router). Mid-onboarding
+    /// the link is cleared and dropped — the gate wins.
+    private func consumeFocusLink() {
+        guard case .focus = deps.pendingDeepLink else { return }
+        guard isOnboarded else {
+            deps.pendingDeepLink = nil
+            return
+        }
+        deps.pendingDeepLink = nil
+        router.path = [.focus]
     }
 
     @ViewBuilder

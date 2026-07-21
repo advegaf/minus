@@ -12,6 +12,10 @@ final class AppDependencies {
     let service: any ScreenTimeService
     let coordinator: SessionCoordinator
 
+    /// A widget deep link waiting for the scene to become active — recorded by
+    /// onOpenURL, consumed by MinusApp (essentials) / AppRootView (focus).
+    var pendingDeepLink: DeepLink?
+
     var context: ModelContext { container.mainContext }
 
     init() {
@@ -28,6 +32,13 @@ final class AppDependencies {
         #endif
         service = ScreenTimeServiceFactory.make()
         coordinator = SessionCoordinator(service: service, context: container.mainContext)
+        // Widgets track every coordinator mutation through the bridge.
+        // (Capture the context, not self — no retain cycle through the closure.)
+        let mainContext = container.mainContext
+        coordinator.onStateChange = { [weak coordinator] in
+            guard let coordinator else { return }
+            LauncherBridge.publish(context: mainContext, coordinator: coordinator)
+        }
         coordinator.reconcile()
     }
 }

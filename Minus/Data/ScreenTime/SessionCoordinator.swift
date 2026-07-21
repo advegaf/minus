@@ -24,6 +24,11 @@ final class SessionCoordinator {
     private let context: ModelContext
     private(set) var activeSnapshot: ActivitySnapshot?
 
+    /// Fired after every state mutation (start/end/reconcile/register/
+    /// unregister/refresh/reset) — AppDependencies points this at
+    /// LauncherBridge.publish so widgets never go stale.
+    var onStateChange: (() -> Void)?
+
     init(service: any ScreenTimeService, context: ModelContext) {
         self.service = service
         self.context = context
@@ -75,6 +80,7 @@ final class SessionCoordinator {
         )
         SharedState.activeSessions = [snapshot]
         activeSnapshot = snapshot
+        onStateChange?()
         return session
     }
 
@@ -85,6 +91,7 @@ final class SessionCoordinator {
         closeSession(activityName: snapshot.activityName, at: ClockProvider.now(), reason: .endedEarly)
         SharedState.removeActiveSession(activityName: snapshot.activityName)
         activeSnapshot = nil
+        onStateChange?()
     }
 
     // MARK: Reconcile (foreground + mock end signal)
@@ -106,6 +113,7 @@ final class SessionCoordinator {
             SharedState.removeActiveSession(activityName: snapshot.activityName)
         }
         activeSnapshot = SharedState.activeSessions.first
+        onStateChange?()
     }
 
     private func closeSession(activityName: String, at date: Date, reason: SessionEndReason) {
@@ -150,6 +158,7 @@ final class SessionCoordinator {
             registry[expansion.activityName] = interval
         }
         SharedState.scheduleRegistry = registry
+        onStateChange?()
     }
 
     /// Blocklist edits propagate here (SE-9). A registry-data swap, NOT a
@@ -184,6 +193,7 @@ final class SessionCoordinator {
         if let snapshot = activeSnapshot {
             service.applyShields(selectionData: selectionData, activityName: snapshot.activityName)
         }
+        onStateChange?()
     }
 
     func unregister(schedule: FocusSchedule) {
@@ -195,6 +205,7 @@ final class SessionCoordinator {
             registry[name] = nil
         }
         SharedState.scheduleRegistry = registry
+        onStateChange?()
     }
 
     /// Settings → reset: stop everything, clear every store, wipe shared state.
@@ -206,5 +217,6 @@ final class SessionCoordinator {
         }
         SharedState.reset()
         activeSnapshot = nil
+        onStateChange?()
     }
 }

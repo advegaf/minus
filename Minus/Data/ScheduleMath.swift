@@ -84,3 +84,38 @@ enum ScheduleMath {
         return minute >= startMinuteOfDay && minute < endMinuteOfDay
     }
 }
+
+/// "next · deep work · mon 9:00" — the one voice for upcoming-schedule lines,
+/// shared by FocusStateLine and the widget snapshot builder. Model-free input
+/// keeps it pure and unit-testable.
+enum NextScheduleText {
+    struct Candidate {
+        var name: String
+        var weekdays: [Int]
+        var startMinuteOfDay: Int
+    }
+
+    static func line(schedules: [Candidate], after reference: Date, calendar: Calendar = .current) -> String? {
+        var best: (date: Date, name: String)?
+        for schedule in schedules {
+            guard let date = ScheduleMath.nextOccurrence(
+                weekdays: schedule.weekdays,
+                startMinuteOfDay: schedule.startMinuteOfDay,
+                after: reference,
+                calendar: calendar
+            ) else { continue }
+            if best == nil || date < best!.date {
+                best = (date, schedule.name)
+            }
+        }
+        guard let best else { return nil }
+        let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: best.date) - 1].lowercased()
+        let time = String(
+            format: "%d:%02d",
+            calendar.component(.hour, from: best.date),
+            calendar.component(.minute, from: best.date)
+        )
+        let name = best.name.isEmpty ? "focus" : best.name.lowercased()
+        return "next \u{00B7} \(name) \u{00B7} \(weekday) \(time)"
+    }
+}
