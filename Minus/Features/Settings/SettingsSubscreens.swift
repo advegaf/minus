@@ -1,3 +1,4 @@
+import FamilyControls
 import SwiftData
 import SwiftUI
 
@@ -99,6 +100,12 @@ struct BlockListEditView: View {
     @State private var mockSelected: Set<String> = []
     @State private var loaded = false
 
+    // Device re-pick (B2): the binding is ALWAYS a fresh flag-true selection
+    // with token sets copied in — includeEntireCategory is init-only, and a
+    // decoded flag-false selection would silently revert the B1 count fix.
+    @State private var liveSelection = FamilyActivitySelection(includeEntireCategory: true)
+    @State private var pickerPresented = false
+
     private static let mockApps = ["instagram", "tiktok", "x", "youtube", "reddit", "twitch", "mail"]
 
     private var blockList: BlockList {
@@ -127,15 +134,73 @@ struct BlockListEditView: View {
                 mockList
                     .padding(.top, MN.Space.m)
             } else {
-                Text("re-pick with Apple's picker on device.")
-                    .mnType(.body)
-                    .foregroundStyle(MN.fogBlue)
+                deviceEditor
                     .padding(.top, MN.Space.m)
-                // Device path presents FamilyActivityPicker from Focus/Onboarding
-                // flows; Settings re-pick lands with the real picker in the
-                // device pass (SE-3/SE-4 Needs device).
             }
         }
+        // Attached to the stable shell root, never inside a conditional branch:
+        // the picker is a remote view service and re-evaluated anchors make it
+        // render blank.
+        .familyActivityPicker(isPresented: $pickerPresented, selection: $liveSelection)
+        .onChange(of: pickerPresented) { _, presented in
+            guard !presented, !deps.service.isMock else { return }
+            persistLiveSelection()
+        }
+        .onAppear(perform: seedLiveSelection)
+    }
+
+    // MARK: Device branch
+
+    private var deviceEditor: some View {
+        VStack(alignment: .leading, spacing: MN.Space.s) {
+            Text(SelectionSummaryText.line(
+                apps: liveSummary.apps, categories: liveSummary.categories
+            ))
+            .mnType(.body)
+            .foregroundStyle(MN.fogBlue)
+            .accessibilityIdentifier("blocked-summary")
+
+            OutlinedCTA(title: "Re-pick apps", prominent: true) {
+                pickerPresented = true
+            }
+            .accessibilityIdentifier("cta-repick")
+        }
+    }
+
+    private var liveSummary: (apps: Int, categories: Int) {
+        deps.service.selectionSummary(from: LiveScreenTimeService.encodeSelection(liveSelection))
+    }
+
+    private func seedLiveSelection() {
+        guard !deps.service.isMock,
+              let saved = LiveScreenTimeService.decodeSelection(blockList.selectionData) else { return }
+        var fresh = FamilyActivitySelection(includeEntireCategory: true)
+        fresh.applicationTokens = saved.applicationTokens
+        fresh.categoryTokens = saved.categoryTokens
+        fresh.webDomainTokens = saved.webDomainTokens
+        liveSelection = fresh
+    }
+
+    private func persistLiveSelection() {
+        let isEmpty = liveSelection.applicationTokens.isEmpty
+            && liveSelection.categoryTokens.isEmpty
+            && liveSelection.webDomainTokens.isEmpty
+        if isEmpty {
+            // Honest ON-7 semantics: nothing picked = no blocklist. The registry
+            // can't carry nil, so enabled schedules turn off truthfully.
+            blockList.selectionData = nil
+            for schedule in (try? deps.context.fetch(
+                FetchDescriptor<FocusSchedule>(predicate: #Predicate { $0.isEnabled })
+            )) ?? [] {
+                deps.coordinator.unregister(schedule: schedule)
+                schedule.isEnabled = false
+            }
+        } else {
+            blockList.selectionData = LiveScreenTimeService.encodeSelection(liveSelection)
+            deps.coordinator.refreshSchedules(blockList: blockList)
+        }
+        blockList.updatedAt = ClockProvider.now()
+        try? deps.context.save()
     }
 
     private var staleRecovery: some View {
@@ -169,6 +234,8 @@ struct BlockListEditView: View {
                     )
                     blockList.updatedAt = ClockProvider.now()
                     try? deps.context.save()
+                    // Same propagation contract as the device path (SE-9).
+                    deps.coordinator.refreshSchedules(blockList: blockList)
                 }
             }
         }

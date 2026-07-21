@@ -152,6 +152,59 @@ final class SessionCoordinatorTests: XCTestCase {
         XCTAssertNotNil(SharedState.scheduleRegistry[ScheduleMath.activityName(scheduleID: b.id, weekday: 3)])
     }
 
+    // MARK: Refresh (SE-9)
+
+    func testRefreshSwapsRegistryData() throws {
+        let schedule = makeSchedule(weekdays: [2, 3])
+        try coordinator.register(schedule: schedule, blockList: blockList)
+        let newData = MockScreenTimeService.encodeSelection(apps: 9, categories: 3)
+        blockList.selectionData = newData
+        coordinator.refreshSchedules(blockList: blockList)
+        for interval in SharedState.scheduleRegistry.values {
+            XCTAssertEqual(interval.selectionData, newData)
+        }
+    }
+
+    func testRefreshReshieldsMidWindowInterval() throws {
+        // frozenNow is a Thursday? Derive its weekday and build a window around it.
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: frozenNow)
+        let minute = calendar.component(.hour, from: frozenNow) * 60 + calendar.component(.minute, from: frozenNow)
+        let schedule = FocusSchedule(
+            name: "Now",
+            weekdays: [weekday],
+            startMinuteOfDay: max(0, minute - 10),
+            endMinuteOfDay: min(1439, minute + 30)
+        )
+        context.insert(schedule)
+        try coordinator.register(schedule: schedule, blockList: blockList)
+
+        let name = ScheduleMath.activityName(scheduleID: schedule.id, weekday: weekday)
+        XCTAssertFalse(mock.shieldedActivities.contains(name), "registration alone must not shield")
+        coordinator.refreshSchedules(blockList: blockList)
+        XCTAssertTrue(mock.shieldedActivities.contains(name), "mid-window interval re-shielded in-app")
+    }
+
+    func testRefreshReshieldsRunningManualSession() throws {
+        let session = try coordinator.start(minutes: 30, blockList: blockList)
+        mock.clearShields(activityName: session.activityName)
+        coordinator.refreshSchedules(blockList: blockList)
+        XCTAssertTrue(mock.shieldedActivities.contains(session.activityName))
+    }
+
+    func testRefreshWithNilSelectionIsNoOp() throws {
+        let schedule = makeSchedule()
+        try coordinator.register(schedule: schedule, blockList: blockList)
+        let before = SharedState.scheduleRegistry
+        blockList.selectionData = nil
+        coordinator.refreshSchedules(blockList: blockList)
+        XCTAssertEqual(SharedState.scheduleRegistry.keys.sorted(), before.keys.sorted())
+        XCTAssertEqual(
+            SharedState.scheduleRegistry.values.first?.selectionData,
+            before.values.first?.selectionData
+        )
+    }
+
     // MARK: Reset
 
     func testResetAllWipesSessionsAndRegistry() throws {

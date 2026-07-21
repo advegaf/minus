@@ -152,6 +152,40 @@ final class SessionCoordinator {
         SharedState.scheduleRegistry = registry
     }
 
+    /// Blocklist edits propagate here (SE-9). A registry-data swap, NOT a
+    /// DeviceActivity re-registration: stopMonitoring a mid-window interval
+    /// cancels its pending intervalDidEnd — the janitor that clears shields —
+    /// violating trust invariant #1. The extension reads the registry at
+    /// intervalDidStart, so swapping bytes is enough for every future fire;
+    /// intervals already inside their window (and a running manual session)
+    /// get re-shielded in-app right now.
+    func refreshSchedules(blockList: BlockList) {
+        // Empty pick: callers disable schedules through unregister; the registry
+        // can't carry nil, and a running session's own end timer clears it.
+        guard let selectionData = blockList.selectionData else { return }
+
+        var registry = SharedState.scheduleRegistry
+        for (name, var interval) in registry {
+            interval.selectionData = selectionData
+            registry[name] = interval
+        }
+        SharedState.scheduleRegistry = registry
+
+        let now = ClockProvider.now()
+        for interval in registry.values where ScheduleMath.isActive(
+            weekdays: [interval.weekday],
+            startMinuteOfDay: interval.startMinuteOfDay,
+            endMinuteOfDay: interval.endMinuteOfDay,
+            at: now
+        ) {
+            service.applyShields(selectionData: selectionData, activityName: interval.activityName)
+        }
+
+        if let snapshot = activeSnapshot {
+            service.applyShields(selectionData: selectionData, activityName: snapshot.activityName)
+        }
+    }
+
     func unregister(schedule: FocusSchedule) {
         var registry = SharedState.scheduleRegistry
         let names = registry.values.filter { $0.scheduleID == schedule.id }.map(\.activityName)
