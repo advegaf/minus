@@ -1,0 +1,71 @@
+# minus — architecture
+
+Five targets, one trust invariant: **shields always come down.**
+
+## Targets
+
+| Target | Kind | Purpose |
+|---|---|---|
+| `Minus` | app | SwiftUI app, all UI, session orchestration |
+| `MinusMonitor` | DeviceActivityMonitor extension (NSExtension) | applies schedule shields at `intervalDidStart`, clears shields at `intervalDidEnd` — even when the app is dead |
+| `MinusReport` | DeviceActivityReport extension (ExtensionKit) | renders real screen-time/pickups inside Apple's sandbox; the host can never read the numbers |
+| `MinusTests` / `MinusUITests` | tests | pure engines in milliseconds; story flows via accessibility ids |
+
+## Session lifecycle (the core)
+
+1. **Start (in-app):** `SessionCoordinator.start` → insert `FocusSession` row → apply
+   shields immediately via named `ManagedSettingsStore(named: activityName)` → register a
+   one-shot DeviceActivity interval as the end-timer → snapshot to the app group.
+   Shields are instant; the extension is only the janitor.
+2. **End (app alive or dead):** `MonitorExtension.intervalDidEnd` clears the named store
+   and appends to the app-group pending-events ledger. On next foreground,
+   `reconcile()` drains the ledger into SwiftData and **sweeps** any snapshot past its
+   planned end (missed-callback belt-and-braces).
+3. **Schedules:** weekday expansion → one `DeviceActivityName` per (schedule, weekday)
+   (`ScheduleMath`, pure). The extension applies shields from the app-group
+   `scheduleRegistry` at `intervalDidStart`. Constraints enforced in UI: ≥15-minute
+   windows (API minimum), ~19-activity budget, same-day windows only in v1.
+4. **Honesty:** deleting the app releases all shields. Strict mode is friction, not a
+   jail, and the copy says so.
+
+## Isolation & persistence
+
+- `SharedState.swift` is compiled into **both** the app and the monitor extension —
+  the entire contract (active snapshots, schedule registry, pending-event ledger,
+  monitor ring-buffer log) is small JSON in the app group. The extension never opens
+  SwiftData (single-digit-MB jetsam ceiling).
+- SwiftData (`MinusSchemaV1`): CloudKit-legal rules (defaulted/optional properties, no
+  `#Unique`, fetch-before-insert singletons). Stats derive live from `FocusSession`
+  rows — no materialized stat tables.
+- `ScreenTimeService` protocol: `LiveScreenTimeService` (FamilyControls) on device,
+  `MockScreenTimeService` on simulator/`-UITestMode` — 100 % of screens drive in the
+  simulator; the mock simulates the full lifecycle including the end-of-interval ledger
+  write.
+
+## Swift 6 strict-concurrency findings (iOS 26.4 SDK)
+
+- `AppExtensionScene` (ExtensionKit parent of `DeviceActivityReportScene`) is
+  `@MainActor`, but `DeviceActivityReportScene`'s own requirements and
+  `DeviceActivityReportExtension.body` are **nonisolated**. Working shape: scene struct
+  holds no stored state, every witness explicitly `nonisolated`, `@ViewBuilder`
+  transform suppressed with an explicit `return` (SE-0289), and the report view gets a
+  `nonisolated init`.
+- All Screen Time API touches confined to `@MainActor` (`SessionCoordinator`,
+  `LiveScreenTimeService`); the monitor extension creates stores locally per callback.
+
+## Design system
+
+`Minus/DesignSystem/` — Vivid+Co, dark-only. One typeface (General Sans 400; 700 only
+at 28pt), fixed sizes (no Dynamic Type), hierarchy from scale. Zero shadows. Prism RGB
+lives `fileprivate` in `PrismArtifact.swift`. `DesignGuardTests` scans the source and
+fails the build-loop on: any `.shadow(`, prism hexes outside `Prism/`, `.font(.system`,
+raw `Color(` constructors outside the design system. Time displays render per-digit in
+fixed-width slots (General Sans has no `tnum`).
+
+## Determinism harness (DEBUG)
+
+`-UITestMode` (in-memory store, mock service, shared-state reset) ·
+`MINUS_STATE=fresh|onboarded|active|schedules|denied` (DemoSeed) ·
+`MINUS_AUTH=denied` (auth failure with any state) · `MINUS_FREEZE_TIME=HH:mm`
+(pins `ClockProvider`) · `MINUS_SCREEN=gallery|focus|awareness|settings|schedules`
+(deep-jump) · `MINUS_GALLERY_SCROLL=<section>` (gallery anchor).

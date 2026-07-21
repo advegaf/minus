@@ -1,0 +1,49 @@
+ID,Area,User story,Expected behavior (from code),Status,Evidence,Notes
+ON-1,Onboarding,As a new user I see the prism hero and can begin,Fresh install (UserConfig.onboardedAt nil) gates AppRootView to OnboardingFlow; WelcomeStep renders PrismArtifact + displaySm wordmark + cta-begin,Building,,
+ON-2,Onboarding,I must write an intention before continuing,IntentionStep CONTINUE disabled until trimmed non-empty; hard cap 80 chars; counter appears past 60; writes UserConfig.intentionText,Building,,
+ON-3,Onboarding,I pick 1–7 essential apps,EssentialsStep rows toggle bone/fog; cap at homeCap 7 (others 0.35 + inert); ≥1 required; EssentialApp rows inserted in tap order,Building,,
+ON-4,Onboarding,I grant Screen Time and move on,PermissionStep cta-allow → requestAuthorization; REQUESTING… pulse in-flight; approved auto-advances after beat; PillTag SIMULATOR MOCK when isMock,Building,,Sim mock auto-approves
+ON-5,Onboarding,Denied Screen Time still lets me in,MINUS_AUTH=denied → denied copy + TRY AGAIN + cta-skip-permission advances without auth,Building,,Real denial is a device story
+ON-6,Onboarding,I choose what gets blocked,BlockedStep: device = familyActivityPicker + summary via selectionSummary; sim = mock list → MockScreenTimeService.encodeSelection; writes BlockList.selectionData,Building,,Real picker Needs device
+ON-7,Onboarding,I can skip blocking for now,cta-skip-blocked leaves selectionData nil; Focus later shows no-blocklist state,Building,,
+ON-8,Onboarding,Finishing drops me into my new home,cta-finish sets onboardedAt = ClockProvider.now() + save; AppRootView flips to Home with signature fade,Building,,
+ON-9,Onboarding,minus remembers I onboarded,Relaunch with onboardedAt set → Home directly; onboarding never reappears,Building,,
+HO-1,Home,I see a monumental clock,ClockDisplay 96pt stacked hour/minute (DisplayStack leading 1.0); 24h zero-padded; fixed-width CoreText digit slots — zero horizontal shift on tick,Building,,MINUS_FREEZE_TIME=09:41 for shots
+HO-2,Home,My intention sits under the clock,UserConfig.intentionText at .body boneWhite max-w 300; omitted entirely when empty,Building,,
+HO-3,Home,I open an essential app in one tap,EssentialAppList row → openURL(urlScheme); canOpenURL false → fog 0.4 + "not installed" + inert,Building,,tel: unavailable on sim by design
+HO-4,Home,The launcher feels alive but calm,Rows stagger in 50ms (once per appear); mnPress 0.97; reduce-motion → crossfade only,Building,,
+HO-5,Home,An empty launcher points me to settings,essentials-empty fog line → push .settings,Building,,
+HO-6,Home,I always see my running session,focus-state-line "focused · MM:SS left" ticking from ClockProvider; tap → push .focus,Building,,
+HO-7,Home,I see my next scheduled block,Idle + enabled schedules → earliest ScheduleMath.nextOccurrence rendered "next · name · day time",Building,,
+HO-8,Home,Idle home invites focus quietly,No session/schedules → fog "begin a focus session" → push .focus,Building,,
+HO-9,Home,Revoked permission is visible not silent,authorizationStatus denied + onboarded → banner-permission fog band above nav → push .settings,Building,,
+HO-10,Home,I reach every area from the nav row,NavTextRow FOCUS/AWARENESS/SETTINGS push routes; back returns; ≥44pt targets,Building,,
+FO-1,Focus,I pick a duration in one glance,Presets 15/30/60/120 + custom; custom validates ≥15 (ScheduleMath.minimumWindowMinutes); invalid inert,Building,,
+FO-2,Focus,Starting a session shields instantly,cta-start → coordinator.start: applyShields + startEndTimer + FocusSession row + snapshot; ActiveSessionView appears,Building,,Shield efficacy Needs device
+FO-3,Focus,The countdown is sculptural and stable,ActiveSessionView displaySm/display countdown MM:SS in fixed slots; prism void behind; ticks from ClockProvider,Building,,
+FO-4,Focus,Normal strictness ends in one tap,strictness normal → END SESSION visible; tap → endEarly: shields cleared + row endedEarly + home idle,Building,,
+FO-5,Focus,Friction strictness makes me hold,strictness friction → hold-to-end (≈2s linear fill; release snaps back fast); completes → endEarly,Building,,
+FO-6,Focus,Strict mode hides the exit,strictness strict → no end control rendered during active session,Building,,Uninstall honesty in copy
+FO-7,Focus,Sessions end themselves on time,Mock end timer fires → ledger event → reconcile closes row completed → UI returns idle,Building,,Device analog is FO-8
+FO-8,Focus,Shields lift even if I killed the app,MonitorExtension.intervalDidEnd clears named store + ledger; foreground reconcile marks completed,Needs device,,Core trust story
+FO-9,Focus,No blocklist means a gentle setup nudge,selectionData nil → empty state + CTA to choose apps (re-uses BlockedStep flow),Building,,
+FO-10,Focus,Denied permission explains itself,authorizationStatus denied → state copy + settings link; start CTA absent,Building,,
+FO-11,Focus,Focus always shows a running session,activeSnapshot != nil → ActiveSessionView not presets (also via HO-6 push),Building,,
+FO-12,Focus,Schedules start empty and honest,ScheduleListView empty state fog copy + create CTA,Building,,
+FO-13,Focus,I create a weekday schedule safely,Editor validates ≥15m window / same-day / ≥1 weekday / overlap warning / ~19-activity budget with visible limit state; register writes scheduleRegistry,Building,,
+FO-14,Focus,Toggling a schedule takes effect,isEnabled toggle → register/unregister expansions; registry reflects,Building,,Interval firing Needs device
+FO-15,Focus,Deleting a schedule cleans up,Delete confirm → unregister + registry entries removed + row deleted,Building,,
+AW-1,Awareness,I see minutes reclaimed today,StatsService.focusSeconds over FocusSession rows; zero state when none,Building,,
+AW-2,Awareness,I see the week and completed count,weekSeconds + sessionsCompleted tiles derive live,Building,,
+AW-3,Awareness,My streak is honest about today,StreakService.currentStreak (today pending doesn't break),Building,,Pass (tests) already for engine
+AW-4,Awareness,Real screen time renders on device,ReportSection embeds DeviceActivityReport(.dailyOverview) with skeleton during async load,Needs device,,Host can never read values
+AW-5,Awareness,The simulator says so instead of lying,isMock → placeholder tiles labeled simulator data,Building,,
+AW-6,Awareness,Denied permission degrades gracefully,denied → app-owned stats still render; report area explains missing access,Building,,
+SE-1,Settings,I can rewrite my intention,Edit via FieldShell → UserConfig.intentionText persists → Home reflects,Building,,
+SE-2,Settings,I curate my essentials later,Editor toggles/reorders EssentialApp rows; Home order follows sortOrder,Building,,
+SE-3,Settings,I can change what gets blocked,Re-present picker (mock/live per service); selectionData + updatedAt rewritten; summary counts update,Building,,
+SE-4,Settings,Stale tokens offer recovery not crash,selectionData decode failure → recovery row "re-pick your blocked apps" → picker,Needs device,,Simulated via corrupt data in sim
+SE-5,Settings,Strictness changes apply to running sessions,Strictness picker writes UserConfig; ActiveSessionView end-early control re-renders per level,Building,,
+SE-6,Settings,Permission state is visible and fixable,Row shows approved/denied; denied → link opens system Settings app,Building,,
+SE-7,Settings,About tells the truth,Version from bundle; font/license credits; DEBUG monitor log viewer (SharedState.monitorLog),Building,,
+SE-8,Settings,Reset gives me a clean slate,Confirm → resetAll (stores cleared + monitoring stopped) + container wipe + SharedState.reset → onboarding,Building,,
