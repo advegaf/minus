@@ -31,6 +31,8 @@ targets:
         embed: true
       - target: MinusReport
         embed: true
+      - target: MinusWidget
+        embed: true
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
@@ -66,6 +68,11 @@ targets:
           - GeneralSans-Bold.otf
         UILaunchScreen:
           UIColorName: LaunchBackground
+        # Widget trampoline: minus://open/{slug} and minus://focus.
+        CFBundleURLTypes:
+          - CFBundleURLName: $(MINUS_BUNDLE_ID)
+            CFBundleURLSchemes:
+              - minus
         # Runtime source for the app-group id (SharedState reads Bundle.main,
         # never hardcodes), kept in lockstep with the entitlements files.
         MinusAppGroup: group.$(MINUS_BUNDLE_ID)
@@ -144,6 +151,47 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.deviceactivity.report-extension
+
+  MinusWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: MinusWidget
+        excludes:
+          - "**/Icon?"
+      # Shared with the app target: the contract + the content views (gallery
+      # renders them; DesignGuardTests scans them) + tokens/type. ClockProvider
+      # is deliberately NOT here (@MainActor — widgets render from entry.date).
+      - path: Minus/Data/LauncherSnapshot.swift
+      - path: Minus/Widgets/MinusWidgetViews.swift
+      - path: Minus/DesignSystem/Tokens.swift
+      - path: Minus/DesignSystem/Typography.swift
+      - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/GeneralSans-Bold.otf
+        buildPhase: resources
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(MINUS_BUNDLE_ID).widget
+        CODE_SIGN_ENTITLEMENTS: Support/MinusWidget.entitlements
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Support/MinusWidget-Info.plist
+      properties:
+        CFBundleDisplayName: minus
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        MinusAppGroup: group.$(MINUS_BUNDLE_ID)
+        UIAppFonts:
+          - GeneralSans-Regular.otf
+          - GeneralSans-Bold.otf
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
   MinusTests:
     type: bundle.unit-test
