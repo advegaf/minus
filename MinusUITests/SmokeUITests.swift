@@ -8,4 +8,28 @@ final class SmokeUITests: XCTestCase {
         app.launch()
         XCTAssertEqual(app.state, .runningForeground)
     }
+
+    @MainActor
+    func testWidgetPreviewsRenderInGallery() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode"]
+        app.launchEnvironment = ["MINUS_SCREEN": "gallery", "MINUS_GALLERY_SCROLL": "widgets"]
+        app.launch()
+
+        for id in [
+            "widget-preview-launcher-medium",
+            "widget-preview-launcher-large",
+            "widget-preview-focus-active",
+            "widget-preview-focus-next",
+        ] {
+            XCTAssertTrue(
+                app.otherElements[id].waitForExistence(timeout: 5),
+                "missing \(id)"
+            )
+        }
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "W-1"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
 }

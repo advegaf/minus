@@ -45,6 +45,7 @@ struct DesignGallery: View {
                     typeSection.id("type")
                     spacingSection.id("spacing")
                     componentsSection.id("components")
+                    widgetsSection.id("widgets")
                     prismSection.id("prism")
                 }
                 .padding(.horizontal, MN.Space.m)
@@ -188,6 +189,63 @@ struct DesignGallery: View {
                 FieldShell(placeholder: "Ritual name", text: $fieldFilled, accessibilityID: "field-filled")
             }
         }
+    }
+
+    // MARK: Widgets (the screenshot surface — WidgetKit can't be UI-automated)
+
+    private var widgetsSection: some View {
+        VStack(alignment: .leading, spacing: MN.Space.s) {
+            eyebrow("Widgets")
+
+            widgetFrame(width: 364, height: 170, id: "widget-preview-launcher-medium") {
+                LauncherWidgetView(snapshot: .fixture, layout: .grid)
+            }
+            widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large") {
+                LauncherWidgetView(snapshot: .fixture, layout: .column)
+            }
+
+            HStack(alignment: .top, spacing: MN.Space.s) {
+                widgetFrame(width: 170, height: 170, id: "widget-preview-focus-active") {
+                    FocusWidgetView(snapshot: focusFixture(activeMinutes: 25), now: fixtureNow)
+                }
+                widgetFrame(width: 170, height: 170, id: "widget-preview-focus-next") {
+                    FocusWidgetView(snapshot: focusFixture(next: "next \u{00B7} deep work \u{00B7} mon 9:00"), now: fixtureNow)
+                }
+            }
+            HStack(alignment: .top, spacing: MN.Space.s) {
+                widgetFrame(width: 170, height: 170, id: "widget-preview-focus-idle") {
+                    FocusWidgetView(snapshot: .fixture, now: fixtureNow)
+                }
+                widgetFrame(width: 170, height: 170, id: "widget-preview-focus-empty") {
+                    FocusWidgetView(snapshot: nil, now: fixtureNow)
+                }
+            }
+        }
+    }
+
+    private var fixtureNow: Date { Date(timeIntervalSince1970: 1_772_000_000) }
+
+    private func focusFixture(activeMinutes: Int? = nil, next: String? = nil) -> LauncherSnapshot {
+        var snapshot = LauncherSnapshot.fixture
+        snapshot.focus = LauncherSnapshot.FocusState(
+            activeUntil: activeMinutes.map { fixtureNow.addingTimeInterval(TimeInterval($0 * 60)) },
+            nextSchedule: next
+        )
+        return snapshot
+    }
+
+    private func widgetFrame(width: CGFloat, height: CGFloat, id: String, @ViewBuilder content: () -> some View) -> some View {
+        content()
+            .padding(MN.Space.s)
+            .frame(width: width, height: height, alignment: .topLeading)
+            .background(MN.obsidian)
+            .clipShape(RoundedRectangle(cornerRadius: MN.Radius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: MN.Radius.card)
+                    .strokeBorder(MN.ashBorder, lineWidth: MN.hairline)
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(id)
     }
 
     // MARK: Prism

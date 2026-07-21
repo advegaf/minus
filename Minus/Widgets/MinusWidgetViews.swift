@@ -111,7 +111,8 @@ struct FocusWidgetView: View {
                 .mnType(.caption)
                 .textCase(.uppercase)
                 .foregroundStyle(MN.fogBlue)
-            Text(next)
+            // The eyebrow already says NEXT — drop the line's own prefix.
+            Text(next.replacingOccurrences(of: "next \u{00B7} ", with: ""))
                 .mnType(.body)
                 .foregroundStyle(MN.boneWhite)
                 .lineLimit(3)
