@@ -18,6 +18,9 @@ enum DemoSeed {
             seedActiveSession(context: context)
         case "schedules":
             seedSchedules(context: context)
+        case "noblock":
+            // Onboarded but never picked blocked apps — Focus's empty state.
+            MinusContainer.defaultBlockList(in: context).selectionData = nil
         default:
             break
         }
@@ -28,6 +31,11 @@ enum DemoSeed {
         let config = MinusContainer.userConfig(in: context)
         config.intentionText = "less phone. more life."
         config.onboardedAt = ClockProvider.now().addingTimeInterval(-86_400 * 3)
+        // MINUS_STRICTNESS=normal|friction|strict overrides for FO-4/5/6 shots.
+        if let raw = ProcessInfo.processInfo.environment["MINUS_STRICTNESS"],
+           let strictness = Strictness(rawValue: raw) {
+            config.strictness = strictness
+        }
 
         for (index, slug) in ["phone", "messages", "maps", "music", "photos"].enumerated() {
             guard let app = EssentialAppCatalog.app(slug: slug) else { continue }

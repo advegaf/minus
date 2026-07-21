@@ -21,7 +21,9 @@ enum DigitMetrics {
 
     /// The 96pt clock slot — cached; computed exactly once.
     static let displaySlot = slotWidth(fontName: MFont.regular, size: MNType.display.size)
-    /// The 13pt caption slot — cached; reused by the focus countdown.
+    /// The 64pt slot — the focus countdown monument.
+    static let displaySmSlot = slotWidth(fontName: MFont.regular, size: MNType.displaySm.size)
+    /// The 13pt caption slot — cached; reused by the home focus state line.
     static let captionSlot = slotWidth(fontName: MFont.regular, size: MNType.caption.size)
 
     /// The negative inter-line gap that pulls display lines into a 1.0-leading
