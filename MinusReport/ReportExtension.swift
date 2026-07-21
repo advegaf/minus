@@ -40,28 +40,60 @@ struct DailyOverviewScene: DeviceActivityReportScene {
         var summary = DailySummary()
         for await segment in data.flatMap({ $0.activitySegments }) {
             summary.totalDuration += segment.totalActivityDuration
+            for await category in segment.categories {
+                for await application in category.applications {
+                    summary.pickups += application.numberOfPickups
+                }
+            }
         }
         return summary
     }
 }
 
 // Report extensions render in a sandboxed process and cannot import the app
-// module — this view keeps its own copies of the canvas/text colors.
+// module — this view keeps its own copies of the canvas/text tokens and the
+// General Sans names (fonts registered via the extension's own UIAppFonts is
+// unnecessary: the system fallback here stays visually quiet at caption size).
 struct DailyOverviewView: View {
     let summary: DailySummary
 
-    // DeviceActivityReportScene.content is a nonisolated requirement, but View
-    // types are MainActor-isolated — a nonisolated init lets the scene's
-    // content closure construct this view from any isolation domain.
     nonisolated init(summary: DailySummary) {
         self.summary = summary
     }
 
+    private var boneWhite: Color { Color(red: 255 / 255, green: 253 / 255, blue: 249 / 255) }
+    private var fogBlue: Color { Color(red: 111 / 255, green: 135 / 255, blue: 156 / 255) }
+
+    private var durationText: String {
+        let minutes = Int(summary.totalDuration) / 60
+        return minutes >= 60 ? "\(minutes / 60)h \(minutes % 60)m" : "\(minutes)m"
+    }
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             Color(red: 16 / 255, green: 16 / 255, blue: 16 / 255)
-            Text(summary.totalDuration.formatted())
-                .foregroundStyle(Color(red: 255 / 255, green: 253 / 255, blue: 249 / 255))
+
+            HStack(alignment: .top, spacing: 40) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SCREEN TIME")
+                        .font(.system(size: 13))
+                        .kerning(0.26)
+                        .foregroundStyle(fogBlue)
+                    Text(durationText)
+                        .font(.system(size: 40, weight: .regular))
+                        .foregroundStyle(boneWhite)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("PICKUPS")
+                        .font(.system(size: 13))
+                        .kerning(0.26)
+                        .foregroundStyle(fogBlue)
+                    Text("\(summary.pickups)")
+                        .font(.system(size: 40, weight: .regular))
+                        .foregroundStyle(boneWhite)
+                }
+            }
+            .padding(.vertical, 8)
         }
     }
 }
