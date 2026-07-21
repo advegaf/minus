@@ -1,9 +1,11 @@
 import SwiftData
 import SwiftUI
 
-/// One quiet line above the nav that reports where focus stands. Priority:
-/// a live session's countdown, else the next scheduled window, else an
-/// invitation to begin. Tapping always opens Focus.
+/// One quiet line above the nav — the single status slot for everything focus.
+/// Priority: a live session's countdown, else a revoked-permission notice
+/// (routes to Settings), else the next scheduled window, else an invitation to
+/// begin. One slot, one height, so the monument above never moves between
+/// states (HO-9).
 struct FocusStateLine: View {
     @Environment(AppDependencies.self) private var deps
     @Environment(AppRouter.self) private var router
@@ -11,22 +13,30 @@ struct FocusStateLine: View {
     @Query(filter: #Predicate<FocusSchedule> { $0.isEnabled })
     private var schedules: [FocusSchedule]
 
+    private var showsDeniedNotice: Bool {
+        deps.coordinator.activeSnapshot == nil && deps.service.authorizationStatus == .denied
+    }
+
     var body: some View {
         Button {
-            router.push(.focus)
+            router.push(showsDeniedNotice ? .settings : .focus)
         } label: {
             content
                 .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.mnPress)
-        .accessibilityIdentifier("focus-state-line")
+        .accessibilityIdentifier(showsDeniedNotice ? "banner-permission" : "focus-state-line")
     }
 
     @ViewBuilder
     private var content: some View {
         if let snapshot = deps.coordinator.activeSnapshot {
             activeCountdown(snapshot)
+        } else if showsDeniedNotice {
+            Text("screen time off — focus won't shield · settings")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
         } else if let next = nextSchedule() {
             Text("next · \(next.name) · \(next.when)")
                 .mnType(.caption)

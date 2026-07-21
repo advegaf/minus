@@ -63,26 +63,30 @@ struct ActiveSessionView: View {
 
     // MARK: Exit per strictness
 
+    /// One fixed-height slot for all three strictness modes, so the countdown
+    /// above never shifts when strictness changes.
     @ViewBuilder
     private var endControl: some View {
-        switch strictness {
-        case .normal:
-            OutlinedCTA(title: "End session", prominent: true) {
-                deps.coordinator.endEarly()
+        Group {
+            switch strictness {
+            case .normal:
+                OutlinedCTA(title: "End session", prominent: true) {
+                    deps.coordinator.endEarly()
+                }
+                .accessibilityIdentifier("cta-end")
+            case .friction:
+                HoldToEndControl {
+                    deps.coordinator.endEarly()
+                }
+            case .strict:
+                Text("ends at \(endTimeText)")
+                    .mnType(.caption)
+                    .textCase(.uppercase)
+                    .foregroundStyle(MN.fogBlue)
+                    .accessibilityIdentifier("strict-note")
             }
-            .accessibilityIdentifier("cta-end")
-        case .friction:
-            HoldToEndControl {
-                deps.coordinator.endEarly()
-            }
-        case .strict:
-            Text("ends at \(endTimeText)")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .frame(minHeight: MN.minHit)
-                .accessibilityIdentifier("strict-note")
         }
+        .frame(height: 52)
     }
 
     private var endTimeText: String {

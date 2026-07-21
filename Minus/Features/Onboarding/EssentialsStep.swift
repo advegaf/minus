@@ -33,7 +33,7 @@ struct EssentialsStep: View {
                     ForEach(Array(EssentialAppCatalog.all.enumerated()), id: \.element.id) { index, app in
                         let isSelected = selected.contains(app.slug)
                         OnboardingSelectRow(
-                            title: app.displayName,
+                            title: app.displayName.lowercased(),
                             isSelected: isSelected,
                             isDimmed: atCap && !isSelected,
                             accessibilityID: "row-\(app.slug)",

@@ -131,6 +131,33 @@ final class FocusUITests: XCTestCase {
     }
 
     @MainActor
+    func testScheduleDeleteCleansUp() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode"]
+        app.launchEnvironment = ["MINUS_STATE": "schedules", "MINUS_SCREEN": "schedules"]
+        app.launch()
+
+        XCTAssertTrue(app.otherElements["schedule-list"].waitForExistence(timeout: 5))
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'row-schedule-'"))
+        let before = rows.count
+        XCTAssertGreaterThanOrEqual(before, 2)
+
+        rows.element(boundBy: 0).tap()
+        XCTAssertTrue(app.otherElements["schedule-editor"].waitForExistence(timeout: 5))
+        app.buttons["cta-delete-schedule"].tap()
+        let confirm = app.buttons["Delete"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+
+        XCTAssertTrue(app.otherElements["schedule-list"].waitForExistence(timeout: 5))
+        XCTAssertEqual(
+            app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'row-schedule-'")).count,
+            before - 1
+        )
+        attach(app, "FO-15")
+    }
+
+    @MainActor
     func testScheduleToggleAndBudgetSurface() {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode"]

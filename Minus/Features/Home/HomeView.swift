@@ -14,16 +14,14 @@ struct HomeView: View {
         configs.first { $0.id == UserConfig.wellKnownID }?.intentionText ?? ""
     }
 
-    private var permissionDenied: Bool {
-        deps.service.authorizationStatus == .denied
-    }
-
     var body: some View {
         ZStack {
             MN.obsidian.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Color.clear.frame(height: MN.Space.xl)
+                // Fixed top block: the monument's origin is identical in every
+                // state — the status slot below absorbs all variance (HO-9).
+                Color.clear.frame(height: MN.Space.l)
 
                 ClockDisplay()
 
@@ -37,13 +35,9 @@ struct HomeView: View {
                 }
 
                 EssentialAppList()
-                    .padding(.top, MN.Space.section)
+                    .padding(.top, MN.Space.xl)
 
-                Spacer(minLength: MN.Space.l)
-
-                if permissionDenied {
-                    permissionBand
-                }
+                Spacer(minLength: MN.Space.xs)
 
                 FocusStateLine()
 
@@ -61,28 +55,4 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    /// Shown only when Screen Time authorization is denied: a full-width ash
-    /// hairline over a single fog caption that routes to Settings to fix it.
-    private var permissionBand: some View {
-        VStack(alignment: .leading, spacing: MN.Space.s) {
-            Rectangle()
-                .fill(MN.ashBorder)
-                .frame(height: MN.hairline)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, -MN.Space.m)
-
-            Button {
-                router.push(.settings)
-            } label: {
-                Text("screen time off — focus won't shield · settings")
-                    .mnType(.caption)
-                    .foregroundStyle(MN.fogBlue)
-                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.mnPress)
-            .accessibilityIdentifier("banner-permission")
-        }
-        .padding(.bottom, MN.Space.s)
-    }
 }
