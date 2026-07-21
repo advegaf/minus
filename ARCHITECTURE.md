@@ -65,7 +65,11 @@ fixed-width slots (General Sans has no `tnum`).
 ## Determinism harness (DEBUG)
 
 `-UITestMode` (in-memory store, mock service, shared-state reset) ·
-`MINUS_STATE=fresh|onboarded|active|schedules|denied` (DemoSeed) ·
-`MINUS_AUTH=denied` (auth failure with any state) · `MINUS_FREEZE_TIME=HH:mm`
-(pins `ClockProvider`) · `MINUS_SCREEN=gallery|focus|awareness|settings|schedules`
-(deep-jump) · `MINUS_GALLERY_SCROLL=<section>` (gallery anchor).
+`MINUS_STATE=fresh|onboarded|active|schedules|noblock|noessentials|denied`
+(DemoSeed) · `MINUS_AUTH=denied` (auth failure with any state) ·
+`MINUS_STRICTNESS=normal|friction|strict` · `MINUS_BLOCK=stale` (undecodable
+selection — the restore scenario) · `MINUS_FREEZE_TIME=HH:mm` (pins
+`ClockProvider`) · `MINUS_SCREEN=gallery|focus|awareness|settings|schedules|
+settings-{blocked|permission|strictness|about}` (deep-jump) ·
+`MINUS_ONBOARDING_STEP=<step>` (onboarding jump) ·
+`MINUS_GALLERY_SCROLL=<section>` (gallery anchor).
