@@ -130,6 +130,19 @@ final class SettingsUITests: XCTestCase {
     }
 
     @MainActor
+    func testGuideShowsAllSteps() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-guide"].waitForExistence(timeout: 5))
+        app.buttons["row-guide"].tap()
+        XCTAssertTrue(app.otherElements["settings-guide"].waitForExistence(timeout: 5))
+        for step in 1...5 {
+            XCTAssertTrue(element(app, "guide-step-\(step)"), "missing guide step \(step)")
+        }
+        XCTAssertTrue(element(app, "guide-honesty"))
+        attach(app, "SE-10")
+    }
+
+    @MainActor
     func testResetReturnsToOnboarding() {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["cta-reset"].waitForExistence(timeout: 5))

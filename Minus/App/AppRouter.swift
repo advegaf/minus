@@ -13,6 +13,7 @@ enum Route: Hashable {
     case settingsStrictness
     case settingsPermission
     case settingsAbout
+    case settingsGuide
 }
 
 @MainActor
@@ -41,6 +42,7 @@ final class AppRouter {
         case "settings-permission": path = [.settings, .settingsPermission]
         case "settings-strictness": path = [.settings, .settingsStrictness]
         case "settings-about": path = [.settings, .settingsAbout]
+        case "settings-guide": path = [.settings, .settingsGuide]
         default: break
         }
     }

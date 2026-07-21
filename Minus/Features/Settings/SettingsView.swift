@@ -50,6 +50,9 @@ struct SettingsView: View {
                         row("screen time", detail: permissionCaption, id: "row-permission") {
                             router.push(.settingsPermission)
                         }
+                        row("make it a dumb phone", detail: nil, id: "row-guide") {
+                            router.push(.settingsGuide)
+                        }
                         row("about", detail: nil, id: "row-about") {
                             router.push(.settingsAbout)
                         }

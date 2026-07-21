@@ -78,6 +78,8 @@ struct AppRootView: View {
             PermissionSettingsView()
         case .settingsAbout:
             AboutView()
+        case .settingsGuide:
+            DumbPhoneGuideView()
         }
     }
 }
