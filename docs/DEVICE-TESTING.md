@@ -34,6 +34,15 @@ The simulator can never shield apps. Every `Needs device` row in
 | 10 | SE-6 | Settings → Screen Time → revoke in system Settings → return | Home shows the revoked band; Focus shows denied state |
 | 11 | SE-7 | Reset everything mid-session | Shields lift, schedules gone, back to onboarding |
 
+## v1.1 additions (widgets + counts + re-pick)
+
+| # | Story | Do | Expect |
+|---|---|---|---|
+| 12 | W-1/W-3 | Long-press home screen → add minus's large launcher + small focus widgets | Obsidian ground, General Sans, essentials as text cells |
+| 13 | W-2 | Tap a launcher cell with minus force-quit (cold), then again warm | Both times: minus flashes, target app lands foreground |
+| 14 | W-4 | Start a 15-min session, force-quit minus, watch the small widget at the end time | Widget flips from "FOCUSED until…" to idle on its own |
+| 15 | ON-6/SE-3/SE-9 | Settings → blocked apps → re-pick: select one full category | Summary counts member apps ("N apps · 1 category"); with a schedule mid-window, About → monitor log confirms the re-shield |
+
 Debugging: Settings → about → monitor log (DEBUG builds) is the app-group ring buffer
 the extension writes. `intervalDidEnd` can lag by up to ~2 minutes — that's Apple's
 scheduler, not a bug; the foreground sweep covers worse.
