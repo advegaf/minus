@@ -33,6 +33,17 @@ enum DemoSeed {
     }
 
     private static func seedOnboarded(context: ModelContext) {
+        // Idempotent on persistent stores: a seeded launch against the on-disk
+        // container must not duplicate rows (found via real-store widget seed).
+        for row in (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
+            context.delete(row)
+        }
+        for session in (try? context.fetch(FetchDescriptor<FocusSession>())) ?? [] {
+            context.delete(session)
+        }
+        for schedule in (try? context.fetch(FetchDescriptor<FocusSchedule>())) ?? [] {
+            context.delete(schedule)
+        }
         let config = MinusContainer.userConfig(in: context)
         config.intentionText = "less phone. more life."
         config.onboardedAt = ClockProvider.now().addingTimeInterval(-86_400 * 3)
