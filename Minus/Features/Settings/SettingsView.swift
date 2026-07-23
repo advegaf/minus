@@ -27,12 +27,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("SETTINGS")
-                        .mnType(.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(MN.fogBlue)
-                        .padding(.top, MN.Space.s)
-                        .padding(.leading, MN.Space.xl)
+                    PushedHeader(eyebrow: "SETTINGS")
 
                     VStack(spacing: 0) {
                         row("intention", detail: config?.intentionText.isEmpty == false ? config!.intentionText : "not set", id: "row-intention") {
@@ -69,7 +64,6 @@ struct SettingsView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) { BackGlyph() }
         .confirmationDialog(
             "Reset everything? Sessions, schedules, essentials, and your intention all go.",
             isPresented: $confirmingReset,

@@ -71,7 +71,7 @@ final class HomeUITests: XCTestCase {
         line.tap()
 
         // With a session running, Focus renders the active void directly.
-        XCTAssertTrue(app.otherElements["active-session"].waitForExistence(timeout: 5), "active session screen missing")
+        XCTAssertTrue(app.descendants(matching: .any)["active-session"].waitForExistence(timeout: 5), "active session screen missing")
         XCTAssertFalse(app.buttons["focus-state-line"].exists, "still on Home after tap")
     }
 
@@ -85,7 +85,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(settings.waitForExistence(timeout: 5))
         settings.tap()
 
-        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5), "Settings screen missing")
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5), "Settings screen missing")
         XCTAssertFalse(element(app, "clock-display").exists, "Home clock still present after push")
 
         attach(app, named: "HO-3")

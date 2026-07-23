@@ -22,9 +22,12 @@ enum EssentialAppCatalog {
 
     static let all: [CatalogApp] = [
         CatalogApp(slug: "phone", displayName: "Phone", urlString: "tel:", scheme: "tel"),
-        CatalogApp(slug: "messages", displayName: "Messages", urlString: "sms:", scheme: "sms"),
+        // messages:// lands on the conversation list; sms: opens a COMPOSE
+        // sheet (T1 — the launcher must open apps, never start drafts).
+        CatalogApp(slug: "messages", displayName: "Messages", urlString: "messages:", scheme: "messages"),
         CatalogApp(slug: "facetime", displayName: "FaceTime", urlString: "facetime:", scheme: "facetime"),
-        CatalogApp(slug: "mail", displayName: "Mail", urlString: "mailto:", scheme: "mailto"),
+        // message:// opens the Mail inbox; mailto: composes.
+        CatalogApp(slug: "mail", displayName: "Mail", urlString: "message:", scheme: "message"),
         CatalogApp(slug: "maps", displayName: "Maps", urlString: "maps:", scheme: "maps"),
         CatalogApp(slug: "music", displayName: "Music", urlString: "music:", scheme: "music"),
         CatalogApp(slug: "photos", displayName: "Photos", urlString: "photos-redirect:", scheme: "photos-redirect"),

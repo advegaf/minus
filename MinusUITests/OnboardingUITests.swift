@@ -18,7 +18,7 @@ final class OnboardingUITests: XCTestCase {
         let app = launch()
 
         // Welcome — ON-1
-        XCTAssertTrue(app.otherElements["step-welcome"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-welcome"].waitForExistence(timeout: 5))
         attach(app, "ON-1")
         app.buttons["cta-begin"].tap()
 
@@ -28,7 +28,7 @@ final class OnboardingUITests: XCTestCase {
         tapContinue(app)
 
         // Essentials — ON-3
-        XCTAssertTrue(app.otherElements["step-essentials"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-phone"].tap()
         app.buttons["row-messages"].tap()
         app.buttons["row-maps"].tap()
@@ -48,7 +48,7 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["cta-finish"].tap()
 
         // Entered the app — every onboarding step container is gone. ON-6
-        XCTAssertTrue(app.otherElements["step-blocked"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-blocked"].waitForNonExistence(timeout: 5))
         XCTAssertFalse(app.buttons["cta-finish"].exists)
         assertNoStepContainers(app)
         attach(app, "ON-6")
@@ -84,7 +84,7 @@ final class OnboardingUITests: XCTestCase {
         typeIntention(app, "quieter evenings")
         tapContinue(app)
 
-        XCTAssertTrue(app.otherElements["step-essentials"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-phone"].tap()
         tapContinue(app)
 
@@ -98,7 +98,7 @@ final class OnboardingUITests: XCTestCase {
 
         // Skip carries on to the final step without shields.
         app.buttons["cta-skip-permission"].tap()
-        XCTAssertTrue(app.otherElements["step-blocked"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-blocked"].waitForExistence(timeout: 5))
     }
 
     // MARK: - (d) Essentials cap
@@ -110,7 +110,7 @@ final class OnboardingUITests: XCTestCase {
         typeIntention(app, "room to think")
         tapContinue(app)
 
-        XCTAssertTrue(app.otherElements["step-essentials"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5))
 
         // Fill the cap with the first seven catalog rows.
         for slug in ["phone", "messages", "facetime", "mail", "maps", "music", "photos"] {
@@ -160,7 +160,7 @@ final class OnboardingUITests: XCTestCase {
     @MainActor
     private func assertNoStepContainers(_ app: XCUIApplication) {
         for id in ["step-welcome", "step-intention", "step-essentials", "step-permission", "step-blocked"] {
-            XCTAssertFalse(app.otherElements[id].exists, "\(id) should be absent after onboarding")
+            XCTAssertFalse(app.descendants(matching: .any)[id].exists, "\(id) should be absent after onboarding")
         }
     }
 

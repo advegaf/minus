@@ -56,7 +56,7 @@ final class WidgetLinkUITests: XCTestCase {
 
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         XCTAssertTrue(
-            app.otherElements["focus-idle"].waitForExistence(timeout: 5),
+            app.descendants(matching: .any)["focus-idle"].waitForExistence(timeout: 5),
             "minus://focus should land on the Focus screen"
         )
         let attachment = XCTAttachment(screenshot: app.screenshot())

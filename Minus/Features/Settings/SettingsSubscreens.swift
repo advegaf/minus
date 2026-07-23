@@ -16,8 +16,11 @@ struct IntentionEditView: View {
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            FieldShell(placeholder: "your intention", text: $text, accessibilityID: "field-intention-edit")
-                .padding(.top, MN.Space.l)
+            IntentionPresetRows(text: $text)
+                .padding(.top, MN.Space.m)
+
+            FieldShell(placeholder: "or write your own", text: $text, accessibilityID: "field-intention-edit")
+                .padding(.top, MN.Space.m)
                 .onChange(of: text) { _, value in
                     if value.count > 80 { text = String(value.prefix(80)) }
                 }
@@ -418,19 +421,13 @@ struct SettingsShell<Content: View>: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) { BackGlyph() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(id)
     }
 
     private var body_: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(eyebrow)
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.s)
-                .padding(.leading, MN.Space.xl)
+            PushedHeader(eyebrow: eyebrow)
                 .padding(.bottom, MN.Space.l)
 
             content

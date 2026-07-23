@@ -32,9 +32,12 @@ struct IntentionStep: View {
                 .frame(maxWidth: 320, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
 
+            IntentionPresetRows(text: $intention)
+                .padding(.top, MN.Space.xs)
+
             VStack(alignment: .trailing, spacing: MN.Space.xs) {
                 FieldShell(
-                    placeholder: "an hour back each evening",
+                    placeholder: "or write your own",
                     text: $intention,
                     accessibilityID: "field-intention"
                 )

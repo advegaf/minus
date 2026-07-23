@@ -20,20 +20,20 @@ final class SettingsUITests: XCTestCase {
     }
 
     private func element(_ app: XCUIApplication, _ id: String) -> Bool {
-        app.otherElements[id].exists || app.staticTexts[id].exists || app.buttons[id].exists
+        app.descendants(matching: .any)[id].exists || app.staticTexts[id].exists || app.buttons[id].exists
     }
 
     @MainActor
     func testRootRowsAndAbout() {
         let app = launch(state: "onboarded")
-        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         for id in ["row-intention", "row-essentials", "row-blocked", "row-strictness", "row-permission", "row-about"] {
             XCTAssertTrue(app.buttons[id].exists, "missing \(id)")
         }
         attach(app, "SE-root")
 
         app.buttons["row-about"].tap()
-        XCTAssertTrue(app.otherElements["settings-about"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-about"].waitForExistence(timeout: 5))
         XCTAssertTrue(element(app, "about-version"))
         attach(app, "SE-7")
     }
@@ -54,7 +54,7 @@ final class SettingsUITests: XCTestCase {
         field.typeText("walk more")
         app.buttons["cta-save-intention"].tap()
 
-        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["walk more"].waitForExistence(timeout: 5))
         attach(app, "SE-1")
@@ -65,18 +65,18 @@ final class SettingsUITests: XCTestCase {
         let app = launch(state: "active")
         XCTAssertTrue(app.buttons["row-strictness"].waitForExistence(timeout: 5))
         app.buttons["row-strictness"].tap()
-        XCTAssertTrue(app.otherElements["settings-strictness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-strictness"].waitForExistence(timeout: 5))
         app.buttons["strictness-strict"].tap()
         attach(app, "SE-5-pick")
 
         // Back to settings, back to home, into the active session.
         app.buttons["nav-back"].firstMatch.tap()
-        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
         XCTAssertTrue(app.buttons["nav-focus"].waitForExistence(timeout: 5))
         app.buttons["nav-focus"].tap()
 
-        XCTAssertTrue(app.otherElements["active-session"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["active-session"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["cta-end"].exists)
         XCTAssertTrue(app.staticTexts["strict-note"].exists)
         attach(app, "SE-5")
@@ -87,7 +87,7 @@ final class SettingsUITests: XCTestCase {
         let app = launch(state: "denied")
         XCTAssertTrue(app.buttons["row-permission"].waitForExistence(timeout: 5))
         app.buttons["row-permission"].tap()
-        XCTAssertTrue(app.otherElements["settings-permission"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-permission"].waitForExistence(timeout: 5))
         XCTAssertTrue(element(app, "permission-status"))
         XCTAssertTrue(app.buttons["cta-grant"].exists)
         XCTAssertTrue(app.buttons["cta-system-settings"].exists)
@@ -99,7 +99,7 @@ final class SettingsUITests: XCTestCase {
         let app = launch(state: "onboarded", extra: ["MINUS_BLOCK": "stale"])
         XCTAssertTrue(app.buttons["row-blocked"].waitForExistence(timeout: 5))
         app.buttons["row-blocked"].tap()
-        XCTAssertTrue(app.otherElements["settings-blocked"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-blocked"].waitForExistence(timeout: 5))
         XCTAssertTrue(element(app, "stale-recovery"))
         attach(app, "SE-4")
 
@@ -113,7 +113,7 @@ final class SettingsUITests: XCTestCase {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-essentials"].tap()
-        XCTAssertTrue(app.otherElements["settings-essentials"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-essentials"].waitForExistence(timeout: 5))
 
         // Seeded: phone, messages, maps, music, photos (5). Add calendar → 6.
         app.buttons["edit-row-calendar"].tap()
@@ -123,7 +123,7 @@ final class SettingsUITests: XCTestCase {
 
         // Home reflects: calendar present, messages gone.
         app.buttons["nav-back"].firstMatch.tap()
-        XCTAssertTrue(app.otherElements["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
         XCTAssertTrue(app.buttons["row-app-calendar"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["row-app-messages"].exists)
@@ -134,7 +134,7 @@ final class SettingsUITests: XCTestCase {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-guide"].waitForExistence(timeout: 5))
         app.buttons["row-guide"].tap()
-        XCTAssertTrue(app.otherElements["settings-guide"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-guide"].waitForExistence(timeout: 5))
         for step in 1...5 {
             XCTAssertTrue(element(app, "guide-step-\(step)"), "missing guide step \(step)")
         }
@@ -151,7 +151,7 @@ final class SettingsUITests: XCTestCase {
         let confirm = app.buttons["Reset"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
-        XCTAssertTrue(app.otherElements["step-welcome"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["step-welcome"].waitForExistence(timeout: 5))
         attach(app, "SE-8")
     }
 }

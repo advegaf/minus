@@ -49,9 +49,13 @@ struct FocusView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topLeading) {
-            // Leaving is not ending: the glyph stays during an active session
-            // (Home keeps showing the countdown line).
-            BackGlyph()
+            // The active void has no header row, so the glyph overlays there;
+            // every other state carries it inside its PushedHeader. Leaving is
+            // not ending — Home keeps showing the countdown line.
+            if deps.coordinator.isSessionActive {
+                BackGlyph()
+                    .padding(.leading, MN.Space.xs)
+            }
         }
     }
 
@@ -73,7 +77,7 @@ struct FocusView: View {
 
     private var idlePicker: some View {
         VStack(alignment: .leading, spacing: 0) {
-            eyebrow("FOCUS")
+            PushedHeader(eyebrow: "FOCUS")
 
             Text("How long?")
                 .mnType(.headingLg)
@@ -161,7 +165,7 @@ struct FocusView: View {
 
     private var deniedState: some View {
         VStack(alignment: .leading, spacing: 0) {
-            eyebrow("FOCUS")
+            PushedHeader(eyebrow: "FOCUS")
             Text("Screen time is off.")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
@@ -187,7 +191,7 @@ struct FocusView: View {
 
     private var noBlockListState: some View {
         VStack(alignment: .leading, spacing: 0) {
-            eyebrow("FOCUS")
+            PushedHeader(eyebrow: "FOCUS")
             Text("Nothing to block yet.")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
@@ -209,33 +213,5 @@ struct FocusView: View {
         .accessibilityIdentifier("focus-empty-blocklist")
     }
 
-    private func eyebrow(_ text: String) -> some View {
-        Text(text)
-            .mnType(.caption)
-            .textCase(.uppercase)
-            .foregroundStyle(MN.fogBlue)
-            .padding(.top, MN.Space.s)
-            .padding(.leading, MN.Space.xl)
-    }
 }
 
-/// Minimal back affordance for pushed screens with hidden system chrome: a
-/// bone-white chevron-less "←" glyph, 44pt target, top-left.
-struct BackGlyph: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        Button {
-            dismiss()
-        } label: {
-            Text("←")
-                .mnType(.bodyLg)
-                .foregroundStyle(MN.boneWhite)
-                .frame(width: MN.minHit, height: MN.minHit)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.mnPress)
-        .padding(.leading, MN.Space.xs)
-        .accessibilityIdentifier("nav-back")
-    }
-}

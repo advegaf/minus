@@ -49,12 +49,7 @@ struct ScheduleEditorView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(existing == nil ? "NEW SCHEDULE" : "EDIT SCHEDULE")
-                        .mnType(.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(MN.fogBlue)
-                        .padding(.top, MN.Space.s)
-                        .padding(.leading, MN.Space.xl)
+                    PushedHeader(eyebrow: existing == nil ? "NEW SCHEDULE" : "EDIT SCHEDULE")
 
                     FieldShell(placeholder: "name (optional)", text: $name, accessibilityID: "field-schedule-name")
                         .padding(.top, MN.Space.l)
@@ -105,7 +100,6 @@ struct ScheduleEditorView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) { BackGlyph() }
         .confirmationDialog("Delete this schedule?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { deleteExisting() }
         }

@@ -198,10 +198,14 @@ struct DesignGallery: View {
             eyebrow("Widgets")
 
             widgetFrame(width: 364, height: 170, id: "widget-preview-launcher-medium") {
-                LauncherWidgetView(snapshot: .fixture, layout: .grid)
+                LauncherWidgetView(snapshot: .fixture, layout: .compact)
             }
             widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large") {
                 LauncherWidgetView(snapshot: .fixture, layout: .column)
+            }
+            // iOS 27 full home-screen page (systemExtraLarge, 4×6 portrait).
+            widgetFrame(width: 364, height: 680, id: "widget-preview-launcher-page") {
+                LauncherWidgetView(snapshot: .fixture, layout: .page)
             }
 
             HStack(alignment: .top, spacing: MN.Space.s) {

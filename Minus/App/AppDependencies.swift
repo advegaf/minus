@@ -30,6 +30,15 @@ final class AppDependencies {
         #if DEBUG
         DemoSeed.seedFromEnvironment(context: container.mainContext)
         #endif
+        // T1 migration: stored launcher rows carry their scheme from insert
+        // time; keep them in lockstep with the catalog (sms:→messages: etc.)
+        // so pre-1.2 installs stop landing in compose sheets.
+        for row in (try? container.mainContext.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
+            if let catalog = EssentialAppCatalog.app(slug: row.slug), row.urlScheme != catalog.urlString {
+                row.urlScheme = catalog.urlString
+            }
+        }
+
         service = ScreenTimeServiceFactory.make()
         coordinator = SessionCoordinator(service: service, context: container.mainContext)
         // Widgets track every coordinator mutation through the bridge.

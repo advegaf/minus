@@ -81,9 +81,12 @@ targets:
         # EssentialCatalogTests in Phase 2a.
         LSApplicationQueriesSchemes:
           - tel
-          - sms
+          # App-opening schemes (T1): messages = conversation list, message =
+          # Mail inbox. Their compose cousins (sms/mailto) are deliberately
+          # not used by the launcher.
+          - messages
+          - message
           - facetime
-          - mailto
           - maps
           - music
           - photos-redirect

@@ -24,13 +24,13 @@ final class AwarenessUITests: XCTestCase {
     /// Combined accessibility elements (`children: .combine`) can surface as
     /// staticTexts or otherElements depending on composition — query both.
     private func element(_ app: XCUIApplication, _ id: String) -> Bool {
-        app.otherElements[id].exists || app.staticTexts[id].exists || app.buttons[id].exists
+        app.descendants(matching: .any)[id].exists || app.staticTexts[id].exists || app.buttons[id].exists
     }
 
     @MainActor
     func testStatsRenderWithHistory() {
         let app = launch(state: "active")
-        XCTAssertTrue(app.otherElements["awareness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["awareness"].waitForExistence(timeout: 5))
         XCTAssertTrue(element(app, "stat-today"))
         XCTAssertTrue(element(app, "stat-week"))
         XCTAssertTrue(element(app, "stat-streak"))
@@ -42,9 +42,9 @@ final class AwarenessUITests: XCTestCase {
     @MainActor
     func testZeroStateWithoutHistory() {
         let app = launch(state: "onboarded")
-        XCTAssertTrue(app.otherElements["awareness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["awareness"].waitForExistence(timeout: 5))
         XCTAssertTrue(
-            app.otherElements["awareness-zero"].exists || app.staticTexts["awareness-zero"].exists
+            app.descendants(matching: .any)["awareness-zero"].exists || app.staticTexts["awareness-zero"].exists
         )
         attach(app, "AW-1-zero")
     }
@@ -52,9 +52,9 @@ final class AwarenessUITests: XCTestCase {
     @MainActor
     func testSimulatorPlaceholderNeverFakesDeviceData() {
         let app = launch(state: "active")
-        XCTAssertTrue(app.otherElements["awareness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["awareness"].waitForExistence(timeout: 5))
         XCTAssertTrue(
-            app.otherElements["report-placeholder"].waitForExistence(timeout: 3)
+            app.descendants(matching: .any)["report-placeholder"].waitForExistence(timeout: 3)
                 || app.staticTexts["report-placeholder"].exists
         )
         attach(app, "AW-5")
@@ -63,7 +63,7 @@ final class AwarenessUITests: XCTestCase {
     @MainActor
     func testDeniedStillShowsOwnStatsAndExplains() {
         let app = launch(state: "denied")
-        XCTAssertTrue(app.otherElements["awareness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["awareness"].waitForExistence(timeout: 5))
         // App-owned surface intact (zero history in denied seed → zero state),
         // and on the mock the placeholder explains the simulator; on device
         // this would be report-denied. Either honest path is a pass here.

@@ -30,12 +30,7 @@ struct AwarenessView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("AWARENESS")
-                        .mnType(.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(MN.fogBlue)
-                        .padding(.top, MN.Space.s)
-                        .padding(.leading, MN.Space.xl)
+                    PushedHeader(eyebrow: "AWARENESS")
 
                     if hasAnyHistory {
                         stats
@@ -51,7 +46,6 @@ struct AwarenessView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) { BackGlyph() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("awareness")
     }

@@ -20,12 +20,7 @@ struct ScheduleListView: View {
             MN.obsidian.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("SCHEDULES")
-                    .mnType(.caption)
-                    .textCase(.uppercase)
-                    .foregroundStyle(MN.fogBlue)
-                    .padding(.top, MN.Space.s)
-                    .padding(.leading, MN.Space.xl)
+                PushedHeader(eyebrow: "SCHEDULES")
 
                 if schedules.isEmpty {
                     emptyState
@@ -53,7 +48,6 @@ struct ScheduleListView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) { BackGlyph() }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("schedule-list")
     }

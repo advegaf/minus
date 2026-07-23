@@ -43,7 +43,9 @@ struct LauncherWidget: Widget {
         }
         .configurationDisplayName("launcher")
         .description("your essentials, one tap.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        // systemExtraLarge = iOS 27's full home-screen page on iPhone; the
+        // family has existed since iOS 15, so this SDK declares it fine.
+        .supportedFamilies([.systemMedium, .systemLarge, .systemExtraLarge])
     }
 }
 
@@ -54,7 +56,15 @@ private struct LauncherFamilyView: View {
     var snapshot: LauncherSnapshot?
 
     var body: some View {
-        LauncherWidgetView(snapshot: snapshot, layout: family == .systemLarge ? .column : .grid)
+        LauncherWidgetView(snapshot: snapshot, layout: layout)
+    }
+
+    private var layout: LauncherLayout {
+        switch family {
+        case .systemExtraLarge: .page
+        case .systemLarge: .column
+        default: .compact
+        }
     }
 }
 

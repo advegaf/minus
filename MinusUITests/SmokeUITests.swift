@@ -19,11 +19,12 @@ final class SmokeUITests: XCTestCase {
         for id in [
             "widget-preview-launcher-medium",
             "widget-preview-launcher-large",
+            "widget-preview-launcher-page",
             "widget-preview-focus-active",
             "widget-preview-focus-next",
         ] {
             XCTAssertTrue(
-                app.otherElements[id].waitForExistence(timeout: 5),
+                app.descendants(matching: .any)[id].waitForExistence(timeout: 5),
                 "missing \(id)"
             )
         }
