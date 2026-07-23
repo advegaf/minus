@@ -43,9 +43,21 @@ struct LauncherWidget: Widget {
         }
         .configurationDisplayName("launcher")
         .description("your essentials, one tap.")
-        // systemExtraLarge = iOS 27's full home-screen page on iPhone; the
-        // family has existed since iOS 15, so this SDK declares it fine.
-        .supportedFamilies([.systemMedium, .systemLarge, .systemExtraLarge])
+        .supportedFamilies(Self.launcherFamilies)
+    }
+
+    /// The iPhone full-home-page family is `systemExtraLargePortrait`,
+    /// iOS-available only in SDK 27 — the compiler gate keeps this file
+    /// building under the stable 26.4 suite toolchain while the SDK-27 device
+    /// binary declares the full page.
+    static var launcherFamilies: [WidgetFamily] {
+        var families: [WidgetFamily] = [.systemMedium, .systemLarge, .systemExtraLarge]
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            families.append(.systemExtraLargePortrait)
+        }
+        #endif
+        return families
     }
 }
 
@@ -60,10 +72,15 @@ private struct LauncherFamilyView: View {
     }
 
     private var layout: LauncherLayout {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *), family == .systemExtraLargePortrait {
+            return .page
+        }
+        #endif
         switch family {
-        case .systemExtraLarge: .page
-        case .systemLarge: .column
-        default: .compact
+        case .systemExtraLarge: return .page
+        case .systemLarge: return .column
+        default: return .compact
         }
     }
 }
