@@ -22,10 +22,10 @@ struct MinusApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
                     case .active:
-                        // Every foreground drains the monitor's ledger and
-                        // sweeps stale sessions — trust invariant #3.
-                        deps.coordinator.reconcile()
+                        // Bounce FIRST (T2 — the trampoline must be a blink),
+                        // then the ledger drain and sweep (trust invariant #3).
                         consumeEssentialLink()
+                        deps.coordinator.reconcile()
                         LauncherBridge.publish(context: deps.context, coordinator: deps.coordinator)
                     case .background:
                         // A widget is only ever seen after we leave foreground —
@@ -54,16 +54,28 @@ struct MinusApp: App {
     }
 
     /// In DEBUG, `MINUS_SCREEN=gallery` swaps in the design-system proof sheet.
+    /// During an essential-app trampoline the root is a bare obsidian veil —
+    /// no clock, no launcher — so the bounce reads as a black blink, not a
+    /// visit to minus (T2).
     @ViewBuilder
     private var rootView: some View {
         #if DEBUG
         if ProcessInfo.processInfo.environment["MINUS_SCREEN"] == "gallery" {
             DesignGallery()
         } else {
-            AppRootView()
+            veiledRoot
         }
         #else
-        AppRootView()
+        veiledRoot
         #endif
+    }
+
+    @ViewBuilder
+    private var veiledRoot: some View {
+        if case .openEssential = deps.pendingDeepLink {
+            MN.obsidian.ignoresSafeArea()
+        } else {
+            AppRootView()
+        }
     }
 }

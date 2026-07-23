@@ -11,7 +11,7 @@ struct IntentionEditView: View {
     @State private var loaded = false
 
     var body: some View {
-        SettingsShell(eyebrow: "INTENTION", id: "settings-intention") {
+        SettingsShell(eyebrow: "INTENTION", id: "settings-intention", scrolls: true) {
             Text("What do you want back?")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
@@ -368,13 +368,14 @@ struct AboutView: View {
                 .padding(.top, MN.Space.s)
                 .accessibilityIdentifier("about-version")
 
-            Text("a phone that asks less of you. type set in General Sans (Fontshare). blocking by Apple Screen Time — deleting the app always lifts every shield.")
+            Text("a phone that asks less of you. blocking by apple screen time — deleting the app always lifts every shield.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
                 .padding(.top, MN.Space.l)
 
             #if DEBUG
+            schemeLab
             Text("MONITOR LOG")
                 .mnType(.caption)
                 .textCase(.uppercase)
@@ -399,6 +400,52 @@ struct AboutView: View {
             #endif
         }
     }
+
+    #if DEBUG
+    /// T3 — landing truth on device. Each row opens a candidate URL raw; the
+    /// user reports where it lands (app main vs compose vs nothing), and the
+    /// winners get hard-coded into EssentialAppCatalog.
+    private static let schemeCandidates: [(label: String, url: String)] = [
+        ("messages:", "messages:"),
+        ("messages://", "messages://"),
+        ("sms:", "sms:"),
+        ("mobilesms:", "mobilesms:"),
+        ("tel:", "tel:"),
+        ("telprompt:", "telprompt:"),
+        ("facetime:", "facetime:"),
+        ("message:", "message:"),
+        ("mailto:", "mailto:"),
+    ]
+
+    private var schemeLab: some View {
+        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+            Text("SCHEME LAB")
+                .mnType(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(MN.fogBlue)
+                .padding(.top, MN.Space.section)
+            Text("tap each — note where it lands.")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+            ForEach(Array(Self.schemeCandidates.enumerated()), id: \.offset) { index, candidate in
+                Button {
+                    if let url = URL(string: candidate.url) {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Text(candidate.label)
+                        .mnType(.body)
+                        .foregroundStyle(MN.boneWhite)
+                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.mnPress)
+                .accessibilityIdentifier("scheme-\(index)")
+            }
+        }
+        .padding(.bottom, MN.Space.l)
+    }
+    #endif
 }
 
 // MARK: - Shared shell

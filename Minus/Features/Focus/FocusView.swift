@@ -49,13 +49,19 @@ struct FocusView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topLeading) {
-            // The active void has no header row, so the glyph overlays there;
-            // every other state carries it inside its PushedHeader. Leaving is
-            // not ending — Home keeps showing the countdown line.
-            if deps.coordinator.isSessionActive {
-                BackGlyph()
-                    .padding(.leading, MN.Space.xs)
+            // The active void has no header row, so the glyph overlays there —
+            // at the SAME insets as PushedHeader's glyph (F-C: one position,
+            // one transition; no jump, no double glyph). Leaving is not
+            // ending — Home keeps showing the countdown line.
+            Group {
+                if deps.coordinator.isSessionActive {
+                    BackGlyph()
+                        .padding(.leading, MN.Space.m)
+                        .padding(.top, MN.Space.xxs)
+                        .transition(.opacity)
+                }
             }
+            .animation(MMotion.signature, value: deps.coordinator.isSessionActive)
         }
     }
 

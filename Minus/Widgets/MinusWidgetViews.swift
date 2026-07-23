@@ -1,12 +1,35 @@
 import SwiftUI
+import WidgetKit
 
 // Widget content views — compiled into BOTH targets: the widget renders them
 // on the home screen, DesignGallery renders them for the screenshot loop, and
-// DesignGuardTests scans them. SwiftUI-only (Link is SwiftUI); no WidgetKit
-// import, no ClockProvider — time comes in as a plain `now` parameter.
+// DesignGuardTests scans them. No ClockProvider — time comes in as a plain
+// `now` parameter. WidgetKit import is for widgetRenderingMode/widgetAccentable
+// only (harmless in the app target; the gallery renders fullColor).
 //
 // v1.2 restyle (reference-driven): the launcher is a big airy left-aligned
 // text stack on the void — NO hairlines anywhere; air is the separator.
+//
+// v1.3 liquid glass (W-glass): in accented rendering (the system's Clear/
+// Tinted home-screen styles) the container drops to transparent and every
+// glyph is widgetAccentable — the wallpaper penetrates and the launcher reads
+// as floating words, not a widget. Full-color keeps the branded obsidian.
+
+/// Mode-aware container: obsidian when full-color, transparent under the
+/// system's glass treatments.
+struct GlassAwareBackground: ViewModifier {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
+    func body(content: Content) -> some View {
+        content.containerBackground(for: .widget) {
+            if renderingMode == .fullColor {
+                MN.obsidian
+            } else {
+                Color.clear
+            }
+        }
+    }
+}
 
 /// Layout family abstraction so this file needn't import WidgetKit.
 enum LauncherLayout {
@@ -63,6 +86,7 @@ struct LauncherWidgetView: View {
                 Text(snapshot.intention)
                     .mnType(.caption)
                     .foregroundStyle(MN.fogBlue)
+                    .widgetAccentable()
                     .lineLimit(1)
                     .padding(.bottom, layout == .page ? MN.Space.m : 0)
             }
@@ -75,6 +99,7 @@ struct LauncherWidgetView: View {
             Text(essential.name.lowercased())
                 .mnType(token)
                 .foregroundStyle(MN.boneWhite)
+                .widgetAccentable()
                 .opacity(essential.installed == false ? 0.4 : 1)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: minRow, alignment: .leading)
@@ -96,6 +121,7 @@ struct FocusWidgetView: View {
                 EmptyInviteView()
             }
         }
+        .widgetAccentable()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
@@ -142,6 +168,7 @@ struct EmptyInviteView: View {
         Text("open minus")
             .mnType(.caption)
             .foregroundStyle(MN.fogBlue)
+            .widgetAccentable()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }

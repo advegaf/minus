@@ -124,6 +124,32 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertFalse(eighth.isSelected, "8th row must never enter the selected state at cap")
     }
 
+    // MARK: - (F-A) preset intentions
+
+    @MainActor
+    func testPresetTapEnablesContinueAndAdvances() {
+        let app = launch(extraEnv: ["MINUS_ONBOARDING_STEP": "intention"])
+        let preset = app.buttons["preset-less-scrolling"]
+        XCTAssertTrue(preset.waitForExistence(timeout: 5))
+
+        let cta = app.buttons["cta-continue"]
+        XCTAssertFalse(cta.isEnabled, "CONTINUE must start inert")
+
+        preset.tap()
+        XCTAssertTrue(cta.isEnabled, "a preset tap alone must enable CONTINUE")
+
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "ON-2-preset"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+
+        cta.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5),
+            "preset-filled intention must advance the flow"
+        )
+    }
+
     // MARK: - Helpers
 
     @MainActor

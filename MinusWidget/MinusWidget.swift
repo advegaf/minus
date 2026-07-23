@@ -39,7 +39,7 @@ struct LauncherWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "MinusLauncher", provider: LauncherProvider()) { entry in
             LauncherFamilyView(snapshot: entry.snapshot)
-                .containerBackground(MN.obsidian, for: .widget)
+                .modifier(GlassAwareBackground())
         }
         .configurationDisplayName("launcher")
         .description("your essentials, one tap.")
@@ -96,7 +96,7 @@ struct FocusWidget: Widget {
         StaticConfiguration(kind: "MinusFocus", provider: FocusProvider()) { entry in
             FocusWidgetView(snapshot: entry.snapshot, now: entry.date)
                 .widgetURL(URL(string: "minus://focus"))
-                .containerBackground(MN.obsidian, for: .widget)
+                .modifier(GlassAwareBackground())
         }
         .configurationDisplayName("focus")
         .description("where focus stands.")

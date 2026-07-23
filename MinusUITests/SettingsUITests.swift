@@ -61,6 +61,23 @@ final class SettingsUITests: XCTestCase {
     }
 
     @MainActor
+    func testIntentionPresetSavesFromEditView() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-intention"].waitForExistence(timeout: 5))
+        app.buttons["row-intention"].tap()
+
+        let preset = app.buttons["preset-one-thing"]
+        XCTAssertTrue(preset.waitForExistence(timeout: 5))
+        preset.tap()
+        app.buttons["cta-save-intention"].tap()
+
+        // Root row detail reflects the exact preset text.
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["one thing at a time."].waitForExistence(timeout: 5))
+        attach(app, "SE-1-preset")
+    }
+
+    @MainActor
     func testStrictnessChangeAffectsActiveSession() {
         let app = launch(state: "active")
         XCTAssertTrue(app.buttons["row-strictness"].waitForExistence(timeout: 5))
@@ -135,7 +152,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["row-guide"].waitForExistence(timeout: 5))
         app.buttons["row-guide"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings-guide"].waitForExistence(timeout: 5))
-        for step in 1...5 {
+        for step in 1...6 {
             XCTAssertTrue(element(app, "guide-step-\(step)"), "missing guide step \(step)")
         }
         XCTAssertTrue(element(app, "guide-honesty"))

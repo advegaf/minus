@@ -22,13 +22,18 @@ struct ScheduleListView: View {
             VStack(alignment: .leading, spacing: 0) {
                 PushedHeader(eyebrow: "SCHEDULES")
 
-                if schedules.isEmpty {
-                    emptyState
-                } else {
-                    list
+                // Scrolls (F-D): saved schedules are unbounded — only enabling
+                // is budget-capped — so the list must never push the CTA away.
+                ScrollView {
+                    if schedules.isEmpty {
+                        emptyState
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        list
+                    }
                 }
 
-                Spacer(minLength: MN.Space.l)
+                Spacer(minLength: MN.Space.s)
 
                 if let toggleError {
                     Text(toggleError)

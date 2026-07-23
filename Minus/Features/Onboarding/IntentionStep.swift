@@ -32,31 +32,37 @@ struct IntentionStep: View {
                 .frame(maxWidth: 320, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
 
-            IntentionPresetRows(text: $intention)
-                .padding(.top, MN.Space.xs)
+            // Scrolls (F-B): presets + field + keyboard exceed SE-class
+            // heights; the CTA stays pinned below, always reachable.
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    IntentionPresetRows(text: $intention)
+                        .padding(.top, MN.Space.xs)
 
-            VStack(alignment: .trailing, spacing: MN.Space.xs) {
-                FieldShell(
-                    placeholder: "or write your own",
-                    text: $intention,
-                    accessibilityID: "field-intention"
-                )
-                .onChange(of: intention) { _, newValue in
-                    if newValue.count > hardCap {
-                        intention = String(newValue.prefix(hardCap))
+                    VStack(alignment: .trailing, spacing: MN.Space.xs) {
+                        FieldShell(
+                            placeholder: "or write your own",
+                            text: $intention,
+                            accessibilityID: "field-intention"
+                        )
+                        .onChange(of: intention) { _, newValue in
+                            if newValue.count > hardCap {
+                                intention = String(newValue.prefix(hardCap))
+                            }
+                        }
+
+                        if intention.count > softCap {
+                            Text("\(intention.count) / \(hardCap)")
+                                .mnType(.caption)
+                                .foregroundStyle(MN.fogBlue)
+                                .transition(.opacity)
+                        }
                     }
-                }
-
-                if intention.count > softCap {
-                    Text("\(intention.count) / \(hardCap)")
-                        .mnType(.caption)
-                        .foregroundStyle(MN.fogBlue)
-                        .transition(.opacity)
+                    .animation(MMotion.micro, value: intention.count > softCap)
                 }
             }
-            .animation(MMotion.micro, value: intention.count > softCap)
 
-            Spacer(minLength: MN.Space.l)
+            Spacer(minLength: MN.Space.s)
 
             OutlinedCTA(title: "CONTINUE", prominent: true, action: commit)
                 .disabled(!canContinue)

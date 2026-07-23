@@ -15,6 +15,8 @@ struct DumbPhoneGuideView: View {
          "allow notifications for phone, messages, and facetime. silence the rest — apps don't get to interrupt you."),
         ("the small widget",
          "add the focus widget too, so a running session is visible from the home screen."),
+        ("let it disappear",
+         "long-press the home screen → edit → customize → set the widget style to clear. on a dark wallpaper the launcher becomes floating words — no widget, just glass."),
     ]
 
     var body: some View {
