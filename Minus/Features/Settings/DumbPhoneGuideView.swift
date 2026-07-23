@@ -17,6 +17,8 @@ struct DumbPhoneGuideView: View {
          "add the focus widget too, so a running session is visible from the home screen."),
         ("let it disappear",
          "long-press the home screen → edit → customize → set the widget style to clear. on a dark wallpaper the launcher becomes floating words — no widget, just glass."),
+        ("the four that ring",
+         "in shortcuts, make four one-action shortcuts — open app → phone, named minus-phone. repeat for messages, facetime, mail. apple only lets shortcuts open these to their real screens; minus routes their taps through yours."),
     ]
 
     var body: some View {

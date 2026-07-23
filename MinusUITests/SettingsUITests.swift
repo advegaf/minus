@@ -152,7 +152,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(app.buttons["row-guide"].waitForExistence(timeout: 5))
         app.buttons["row-guide"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings-guide"].waitForExistence(timeout: 5))
-        for step in 1...6 {
+        for step in 1...7 {
             XCTAssertTrue(element(app, "guide-step-\(step)"), "missing guide step \(step)")
         }
         XCTAssertTrue(element(app, "guide-honesty"))

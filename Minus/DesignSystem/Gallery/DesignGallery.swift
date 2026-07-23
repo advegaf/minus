@@ -240,6 +240,9 @@ struct DesignGallery: View {
 
     private func widgetFrame(width: CGFloat, height: CGFloat, id: String, @ViewBuilder content: () -> some View) -> some View {
         content()
+            // Previews are inert: cells are live intent Buttons that would
+            // otherwise open apps when tapped inside the gallery.
+            .allowsHitTesting(false)
             .padding(MN.Space.s)
             .frame(width: width, height: height, alignment: .topLeading)
             .background(MN.obsidian)

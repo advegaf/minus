@@ -23,7 +23,9 @@ struct GlassAwareBackground: ViewModifier {
     func body(content: Content) -> some View {
         content.containerBackground(for: .widget) {
             if renderingMode == .fullColor {
-                MN.obsidian
+                // True black, not obsidian: on a pure-black wallpaper the
+                // container edge vanishes entirely (v1.5 premium ask).
+                Color.black
             } else {
                 Color.clear
             }
@@ -76,12 +78,16 @@ struct LauncherWidgetView: View {
         let spec = spec(for: layout)
         VStack(alignment: .leading, spacing: spec.rowSpacing) {
             if layout == .page {
-                Spacer(minLength: MN.Space.m)
+                Spacer(minLength: MN.Space.l)
             }
             ForEach(snapshot.essentials.prefix(spec.cap)) { essential in
                 cell(essential, token: spec.token, minRow: spec.minRow)
             }
-            Spacer(minLength: 0)
+            if layout == .page {
+                Spacer(minLength: MN.Space.l)
+            } else {
+                Spacer(minLength: 0)
+            }
             if layout != .compact, !snapshot.intention.isEmpty {
                 Text(snapshot.intention)
                     .mnType(.caption)
@@ -95,7 +101,9 @@ struct LauncherWidgetView: View {
     }
 
     private func cell(_ essential: LauncherSnapshot.Essential, token: MNType, minRow: CGFloat) -> some View {
-        Link(destination: URL(string: "minus://open/\(essential.slug)") ?? URL(string: "minus://focus")!) {
+        // Button(intent:) runs LaunchEssentialIntent inside the widget process
+        // and the SYSTEM opens the resolved URL — minus never launches (v1.5).
+        Button(intent: LaunchEssentialIntent(slug: essential.slug, urlString: essential.url)) {
             Text(essential.name.lowercased())
                 .mnType(token)
                 .foregroundStyle(MN.boneWhite)
@@ -104,6 +112,7 @@ struct LauncherWidgetView: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: minRow, alignment: .leading)
         }
+        .buttonStyle(.plain)
     }
 }
 

@@ -168,6 +168,7 @@ targets:
       # is deliberately NOT here (@MainActor — widgets render from entry.date).
       - path: Minus/Data/LauncherSnapshot.swift
       - path: Minus/Widgets/MinusWidgetViews.swift
+      - path: Minus/Widgets/LaunchEssentialIntent.swift
       - path: Minus/DesignSystem/Tokens.swift
       - path: Minus/DesignSystem/Typography.swift
       - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
