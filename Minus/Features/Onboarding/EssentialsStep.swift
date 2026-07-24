@@ -30,21 +30,33 @@ struct EssentialsStep: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(EssentialAppCatalog.all.enumerated()), id: \.element.id) { index, app in
-                        let isSelected = selected.contains(app.slug)
-                        OnboardingSelectRow(
-                            title: app.displayName.lowercased(),
-                            isSelected: isSelected,
-                            isDimmed: atCap && !isSelected,
-                            accessibilityID: "row-\(app.slug)",
-                            action: { toggle(app.slug) }
-                        )
-                        .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : 8)
-                        .animation(
-                            MMotion.micro.delay(Double(index) * MMotion.staggerStep),
-                            value: appeared
-                        )
+                    // v1.6: sixty apps — category eyebrows keep the wall
+                    // walkable. Stagger only the first screenful; rows below
+                    // the fold appear settled.
+                    ForEach(CatalogCategory.allCases, id: \.rawValue) { category in
+                        Text(category.rawValue)
+                            .mnType(.caption)
+                            .textCase(.uppercase)
+                            .foregroundStyle(MN.fogBlue)
+                            .padding(.top, MN.Space.m)
+                            .padding(.bottom, MN.Space.xxs)
+                        ForEach(EssentialAppCatalog.apps(in: category)) { app in
+                            let isSelected = selected.contains(app.slug)
+                            let index = rowIndex(of: app.slug)
+                            OnboardingSelectRow(
+                                title: app.displayName.lowercased(),
+                                isSelected: isSelected,
+                                isDimmed: atCap && !isSelected,
+                                accessibilityID: "row-\(app.slug)",
+                                action: { toggle(app.slug) }
+                            )
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 8)
+                            .animation(
+                                MMotion.micro.delay(min(Double(index), 12) * MMotion.staggerStep),
+                                value: appeared
+                            )
+                        }
                     }
                 }
             }
@@ -78,25 +90,21 @@ struct EssentialsStep: View {
         }
     }
 
+    /// Flat position across the categorized list, for the entrance stagger.
+    private func rowIndex(of slug: String) -> Int {
+        EssentialAppCatalog.all.firstIndex { $0.slug == slug } ?? 0
+    }
+
     private func commit() {
         guard !selected.isEmpty else { return }
         let context = deps.context
 
-        // Idempotent: clear any prior picks so a re-run never duplicates rows.
-        if let existing = try? context.fetch(FetchDescriptor<EssentialApp>()) {
-            for row in existing { context.delete(row) }
+        // v1.6: the pick becomes card "one". Idempotent: clear any prior
+        // cards so a re-run never duplicates.
+        if let existing = try? context.fetch(FetchDescriptor<LauncherCard>()) {
+            for card in existing { context.delete(card) }
         }
-        for (order, slug) in selected.enumerated() {
-            guard let app = EssentialAppCatalog.app(slug: slug) else { continue }
-            context.insert(
-                EssentialApp(
-                    slug: app.slug,
-                    displayName: app.displayName,
-                    urlScheme: app.urlString,
-                    sortOrder: order
-                )
-            )
-        }
+        context.insert(LauncherCard(name: "one", orderedSlugs: selected, sortOrder: 0))
         advance()
     }
 }

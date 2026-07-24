@@ -23,9 +23,21 @@ struct PrismArtifact: View {
     /// confidence, so the drift is barely perceptible.
     private let cycle: Double = 6.65
 
+    /// UITestMode renders the phase-0 still: deterministic screenshots, and
+    /// no continuous TimelineView redraw — the iOS 27 simulator renders in
+    /// software, where the per-frame blur + plusLighter stack kept the main
+    /// thread busy enough to time out XCUITest snapshots (Phase 0 finding).
+    private var isStatic: Bool {
+        #if DEBUG
+        reduceMotion || ProcessInfo.processInfo.arguments.contains("-UITestMode")
+        #else
+        reduceMotion
+        #endif
+    }
+
     var body: some View {
         Group {
-            if reduceMotion {
+            if isStatic {
                 cluster(phase: 0)
             } else {
                 TimelineView(.animation) { context in

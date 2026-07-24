@@ -39,16 +39,49 @@
 		<string>messages</string>
 		<string>message</string>
 		<string>facetime</string>
+		<string>whatsapp</string>
+		<string>sgnl</string>
+		<string>tg</string>
+		<string>slack</string>
+		<string>discord</string>
+		<string>msteams</string>
+		<string>ms-outlook</string>
+		<string>googlegmail</string>
+		<string>zoomus</string>
 		<string>maps</string>
 		<string>music</string>
 		<string>photos-redirect</string>
 		<string>calshow</string>
 		<string>mobilenotes</string>
 		<string>shortcuts</string>
+		<string>x-apple-reminderkit</string>
+		<string>shareddocuments</string>
+		<string>ibooks</string>
+		<string>podcasts</string>
+		<string>shoebox</string>
+		<string>x-apple-health</string>
 		<string>spotify</string>
-		<string>whatsapp</string>
-		<string>sgnl</string>
-		<string>tg</string>
+		<string>youtube</string>
+		<string>nflx</string>
+		<string>twitch</string>
+		<string>overcast</string>
+		<string>instagram</string>
+		<string>twitter</string>
+		<string>fb</string>
+		<string>snapchat</string>
+		<string>reddit</string>
+		<string>pinterest</string>
+		<string>linkedin</string>
+		<string>uber</string>
+		<string>lyft</string>
+		<string>waze</string>
+		<string>comgooglemaps</string>
+		<string>venmo</string>
+		<string>strava</string>
+		<string>duolingo</string>
+		<string>googlechrome</string>
+		<string>notion</string>
+		<string>things</string>
 	</array>
 	<key>MinusAppGroup</key>
 	<string>group.$(MINUS_BUNDLE_ID)</string>

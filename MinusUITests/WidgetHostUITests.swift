@@ -69,9 +69,7 @@ final class WidgetHostUITests: XCTestCase {
         XCTAssertTrue(hit, "minus not found in widget gallery")
         shot("05-family-pager")
 
-        // Swipe once to the LARGE family, then add.
-        sb.swipeLeft()
-        Thread.sleep(forTimeInterval: 0.6)
+        // v1.6: LARGE is the first (and on iOS 26 the only) family — no swipe.
         shot("06-large-family")
         XCTAssertTrue(
             tapFirst([sb.buttons["Add Widget"], sb.buttons[" Add Widget"]], timeout: 6),

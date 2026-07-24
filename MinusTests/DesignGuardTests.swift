@@ -88,6 +88,20 @@ final class DesignGuardTests: XCTestCase {
         ))
     }
 
+    // MARK: - Rule 5 — springs only
+
+    func testTimingCurvesAreBannedEverywhereUnderMinus() {
+        let found = Self.findViolations(
+            in: Self.swiftFiles(),
+            patterns: [".timingCurve("]
+        )
+        guard !found.isEmpty else { return }
+        XCTFail(Self.report(
+            rule: "Rule 5 (springs only): `.timingCurve(` must not appear anywhere under Minus/ — the v1.7 motion vocabulary is zero-bounce springs via MMotion tokens.",
+            violations: found
+        ))
+    }
+
     // MARK: - Shared helpers
 
     /// Recursively collects every `*.swift` file under `Minus/`, skipping

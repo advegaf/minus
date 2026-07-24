@@ -1,28 +1,32 @@
 import SwiftUI
 
-/// Motion vocabulary. The signature curve is the brand's "optical focus pull";
-/// everything else is fast ease-out. Transform + opacity only — never animate
-/// layout-driving properties.
+/// Motion vocabulary — v1.7: every token is a critically-damped spring
+/// (`.smooth`, bounce 0). Springs are interruptible and retargetable (velocity
+/// carries when a value changes mid-flight; timing curves restart), and they
+/// arrive asymptotically — no terminal whip, which is what read as "snappy"
+/// in the old cubic-bezier set. Stillness kept: zero bounce everywhere.
+/// Transform + opacity only — never animate layout-driving properties.
 enum MMotion {
-    /// cubic-bezier(0.52, 0.01, 0, 1) at 0.5s — meaningful state changes only
-    /// (focus start/stop, screen-level reveals). Not for micro-interactions.
-    static let signature = Animation.timingCurve(0.52, 0.01, 0, 1, duration: 0.5)
+    /// Meaningful state changes only (focus start/stop, screen-level reveals).
+    /// Not for micro-interactions.
+    static let signature = Animation.smooth(duration: 0.5)
 
     static func signature(_ duration: Double) -> Animation {
-        .timingCurve(0.52, 0.01, 0, 1, duration: duration)
+        .smooth(duration: duration)
     }
 
-    /// Strong ease-out for entrances, dropdowns, small reveals (~200ms).
-    static let micro = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.2)
+    /// Entrances, dropdowns, small reveals — calm but under a third of a second.
+    static let micro = Animation.smooth(duration: 0.3)
 
-    /// Press feedback — instant response (160ms).
-    static let press = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.16)
+    /// Press feedback — springs respond with immediate velocity, so this still
+    /// feels instant while settling gently.
+    static let press = Animation.smooth(duration: 0.2)
 
     /// Exits are always faster and subtler than enters.
-    static let exit = Animation.timingCurve(0.23, 1, 0.32, 1, duration: 0.14)
+    static let exit = Animation.smooth(duration: 0.18)
 
     /// Per-item stagger delay for list entrances.
-    static let staggerStep: Double = 0.05
+    static let staggerStep: Double = 0.04
 }
 
 /// Universal press feedback: scale 0.97, no opacity games. Applied by every

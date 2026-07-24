@@ -44,12 +44,15 @@ struct MinusApp: App {
         }
     }
 
-    /// The trampoline: minus://open/{slug} → the essential's own scheme.
+    /// The trampoline: minus://open/{slug} → wherever the resolver points
+    /// (catalog scheme, or the shortcuts route for comm + custom slugs).
     /// (.focus is consumed by AppRootView, which owns the router.)
     private func consumeEssentialLink() {
         guard case .openEssential(let slug) = deps.pendingDeepLink else { return }
         deps.pendingDeepLink = nil
-        guard let url = EssentialAppCatalog.app(slug: slug)?.url else { return }
+        let urlString = EssentialAppCatalog.app(slug: slug)?.urlString ?? ""
+        guard !urlString.isEmpty || CustomSlug.isCustom(slug),
+              let url = EssentialLaunchURL.resolve(slug: slug, urlString: urlString) else { return }
         UIApplication.shared.open(url)
     }
 

@@ -43,6 +43,26 @@ The simulator can never shield apps. Every `Needs device` row in
 | 14 | W-4 | Start a 15-min session, force-quit minus, watch the small widget at the end time | Widget flips from "FOCUSED until…" to idle on its own |
 | 15 | ON-6/SE-3/SE-9 | Settings → blocked apps → re-pick: select one full category | Summary counts member apps ("N apps · 1 category"); with a schedule mid-window, About → monitor log confirms the re-shield |
 
+## v1.6 additions (cards, config widget, any-app essentials)
+
+| # | Story | Do | Expect |
+|---|---|---|---|
+| 16 | CA-2 | Update over a v1.5 install (widget already placed) | Placed LARGE launcher survives the update and renders identically (defaults); a placed MEDIUM widget goes blank/ghost - remove and re-add as large (two sizes now) |
+| 17 | CA-5 | Long-press the launcher widget → Edit Widget | Three controls: Card / Text size (small-medium-large) / Placement (left-centered); changes render immediately |
+| 18 | CA-1/CA-5 | Make a second card in Settings → cards; point a second widget at it | Two widgets, two different app sets, independent type sizes |
+| 19 | CA-4 | Settings → cards → a card → "+ an app we don't list": type any installed app's name; create the matching one-action shortcut (minus-{slug}) | Widget/Home tap opens that app via Shortcuts with no minus flash |
+| 20 | CA-7 | About → scheme lab (DEBUG): tap the low/medium-confidence rows | Note which land on the app's main screen; wrong ones just no-op (report back for catalog promotion) |
+| 21 | W-1 | Add the full-page launcher (very large, iOS 27) | Full home page of sculptural names; Edit Widget size/placement apply; 6-7-app cards tighten + step down type, never clip |
+
+## v1.7 additions (goal visibility, card swipe, calmer motion)
+
+| # | Story | Do | Expect |
+|---|---|---|---|
+| 22 | V-1 | Settings -> intention -> VISIBILITY -> hidden | Goal disappears from Home AND from every widget footer (background the app once so the snapshot republishes); settings row reads "hidden"; text still there when you switch back to shown |
+| 23 | CA-8 | On Home, swipe left/right across the launcher area (needs 2+ cards) | Pages between cards; card names above act as tabs (bone = current); nothing shifts vertically as you swipe; cold launch returns to card one |
+| 24 | V-3 | Tap around: rows, CTAs, focus start/stop, screen pushes | Motion settles instead of snapping; press feedback still immediate; nothing bounces |
+| 25 | CA-2 | Update over the v1.6 build | Store opens without a crash (no migration stage - additive property, implicit lightweight); cards and goal text survive |
+
 Debugging: Settings → about → monitor log (DEBUG builds) is the app-group ring buffer
 the extension writes. `intervalDidEnd` can lag by up to ~2 minutes — that's Apple's
 scheduler, not a bug; the foreground sweep covers worse.

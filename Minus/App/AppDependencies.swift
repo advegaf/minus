@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// Composition root: one instance owns the model container, the Screen Time
 /// service, and the session coordinator for the whole app. Injected via
@@ -25,6 +26,11 @@ final class AppDependencies {
             // Full isolation per test launch: fresh in-memory store, clean
             // shared state regardless of what a previous run left behind.
             SharedState.reset()
+            // The iOS 27 beta simulator renders in software; UIKit animation
+            // (keyboard bring-up especially — it runs on THIS process's main
+            // thread) starves the run loop past XCUITest's 30s limit. Motion
+            // is out of scope for automation anyway (Phase 0 finding).
+            UIView.setAnimationsEnabled(false)
         }
         container = MinusContainer.make(inMemory: uiTestMode)
         #if DEBUG
@@ -38,6 +44,7 @@ final class AppDependencies {
                 row.urlScheme = catalog.urlString
             }
         }
+        Self.migrateToCards(context: container.mainContext)
 
         service = ScreenTimeServiceFactory.make()
         coordinator = SessionCoordinator(service: service, context: container.mainContext)
@@ -49,5 +56,29 @@ final class AppDependencies {
             LauncherBridge.publish(context: mainContext, coordinator: coordinator)
         }
         coordinator.reconcile()
+    }
+
+    /// v1.6 fold: pre-cards installs carry catalog EssentialApp rows; exactly
+    /// once, they become card "one" and those rows are deleted (EssentialApp
+    /// keeps only "custom-" registry entries from here on). Idempotent — any
+    /// existing card means the fold already ran.
+    static func migrateToCards(context: ModelContext) {
+        let cardCount = (try? context.fetchCount(FetchDescriptor<LauncherCard>())) ?? 0
+        guard cardCount == 0 else { return }
+        let rows = (try? context.fetch(
+            FetchDescriptor<EssentialApp>(sortBy: [SortDescriptor(\.sortOrder)])
+        )) ?? []
+        let catalogRows = rows.filter { !CustomSlug.isCustom($0.slug) && EssentialAppCatalog.app(slug: $0.slug) != nil }
+        guard !catalogRows.isEmpty else { return }
+        let slugs = catalogRows.map(\.slug)
+        context.insert(
+            LauncherCard(
+                name: "one",
+                orderedSlugs: Array(slugs.prefix(EssentialAppCatalog.homeCap)),
+                sortOrder: 0
+            )
+        )
+        for row in catalogRows { context.delete(row) }
+        try? context.save()
     }
 }

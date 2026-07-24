@@ -3,18 +3,30 @@ import Foundation
 
 /// Where a launcher tap actually goes. Pure and shared: the four communication
 /// apps can only reach their REAL main screens through the user's one-action
-/// Shortcuts (iOS 27 turns their schemes into quick-action sheets); everything
-/// else opens directly by scheme.
+/// Shortcuts (iOS 27 turns their schemes into quick-action sheets), and v1.6
+/// custom entries ("custom-" slugs) have no known scheme at all — both route
+/// through shortcuts://run-shortcut. Everything else opens directly by scheme.
+/// NOTE: no CustomSlug dependency — this file compiles into MinusWidget,
+/// which never links the SwiftData layer.
 enum EssentialLaunchURL {
     static let shortcutSlugs: Set<String> = ["phone", "messages", "facetime", "mail"]
+    static let customPrefix = "custom-"
 
     static func resolve(slug: String, urlString: String) -> URL? {
         if shortcutSlugs.contains(slug) {
-            var components = URLComponents(string: "shortcuts://run-shortcut")
-            components?.queryItems = [URLQueryItem(name: "name", value: "minus-\(slug)")]
-            return components?.url
+            return shortcutURL(name: "minus-\(slug)")
+        }
+        if slug.hasPrefix(customPrefix) {
+            let bare = String(slug.dropFirst(customPrefix.count))
+            return shortcutURL(name: "minus-\(bare)")
         }
         return URL(string: urlString)
+    }
+
+    private static func shortcutURL(name: String) -> URL? {
+        var components = URLComponents(string: "shortcuts://run-shortcut")
+        components?.queryItems = [URLQueryItem(name: "name", value: name)]
+        return components?.url
     }
 }
 

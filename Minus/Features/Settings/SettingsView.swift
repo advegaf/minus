@@ -30,10 +30,10 @@ struct SettingsView: View {
                     PushedHeader(eyebrow: "SETTINGS")
 
                     VStack(spacing: 0) {
-                        row("intention", detail: config?.intentionText.isEmpty == false ? config!.intentionText : "not set", id: "row-intention") {
+                        row("intention", detail: intentionDetail, id: "row-intention") {
                             router.push(.settingsIntention)
                         }
-                        row("essentials", detail: nil, id: "row-essentials") {
+                        row("cards", detail: cardsDetail, id: "row-essentials") {
                             router.push(.settingsEssentials)
                         }
                         row("blocked apps", detail: blockedDetail, id: "row-blocked") {
@@ -76,6 +76,18 @@ struct SettingsView: View {
     }
 
     @State private var confirmingReset = false
+
+    private var intentionDetail: String? {
+        guard let config, !config.intentionText.isEmpty else { return "not set" }
+        // v1.7: hidden is the louder fact — the text is still saved.
+        return config.showsIntention ? config.intentionText : "hidden"
+    }
+
+    private var cardsDetail: String? {
+        let count = MinusContainer.cards(in: deps.context).count
+        guard count > 0 else { return nil }
+        return count == 1 ? "1 card" : "\(count) cards"
+    }
 
     private var blockedDetail: String? {
         let blockList = try? deps.context.fetch(
@@ -123,6 +135,9 @@ struct SettingsView: View {
         }
         for app in (try? deps.context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
             deps.context.delete(app)
+        }
+        for card in (try? deps.context.fetch(FetchDescriptor<LauncherCard>())) ?? [] {
+            deps.context.delete(card)
         }
         for list in (try? deps.context.fetch(FetchDescriptor<BlockList>())) ?? [] {
             deps.context.delete(list)

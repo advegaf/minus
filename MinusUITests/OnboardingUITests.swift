@@ -27,11 +27,12 @@ final class OnboardingUITests: XCTestCase {
         attach(app, "ON-2")
         tapContinue(app)
 
-        // Essentials — ON-3
+        // Essentials — ON-3 (v1.6: 60 rows, categorized; tap within the
+        // first category — XCUITest doesn't auto-scroll).
         XCTAssertTrue(app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-phone"].tap()
         app.buttons["row-messages"].tap()
-        app.buttons["row-maps"].tap()
+        app.buttons["row-facetime"].tap()
         attach(app, "ON-3")
         tapContinue(app)
 
@@ -112,14 +113,15 @@ final class OnboardingUITests: XCTestCase {
 
         XCTAssertTrue(app.descendants(matching: .any)["step-essentials"].waitForExistence(timeout: 5))
 
-        // Fill the cap with the first seven catalog rows.
-        for slug in ["phone", "messages", "facetime", "mail", "maps", "music", "photos"] {
+        // Fill the cap with the first seven rows (all in communication —
+        // on-screen without scrolling).
+        for slug in ["phone", "messages", "facetime", "mail", "whatsapp", "signal", "telegram"] {
             app.buttons["row-\(slug)"].tap()
         }
         attach(app, "ON-7")
 
         // The eighth row is dimmed and inert.
-        let eighth = app.buttons["row-calendar"]
+        let eighth = app.buttons["row-slack"]
         XCTAssertFalse(eighth.isEnabled, "8th row must not be selectable once 7 are chosen")
         XCTAssertFalse(eighth.isSelected, "8th row must never enter the selected state at cap")
     }

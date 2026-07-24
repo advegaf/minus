@@ -9,6 +9,8 @@ enum Route: Hashable {
     case scheduleEditor(id: UUID?)
     case settingsIntention
     case settingsEssentials
+    case settingsCard(id: UUID?)
+    case settingsCustom(cardID: UUID?)
     case settingsBlocked
     case settingsStrictness
     case settingsPermission
@@ -25,6 +27,11 @@ final class AppRouter {
         path.append(route)
     }
 
+    func pop() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
+    }
+
     func popToRoot() {
         path.removeAll()
     }
@@ -38,6 +45,10 @@ final class AppRouter {
         case "awareness": path = [.awareness]
         case "settings": path = [.settings]
         case "schedules": path = [.focus, .schedules]
+        case "settings-cards": path = [.settings, .settingsEssentials]
+        case "settings-card-detail": path = [.settings, .settingsEssentials, .settingsCard(id: nil)]
+        // Depth capped at 3 — NavigationStack drops deeper one-shot pushes.
+        case "settings-custom": path = [.settings, .settingsEssentials, .settingsCustom(cardID: nil)]
         case "settings-blocked": path = [.settings, .settingsBlocked]
         case "settings-permission": path = [.settings, .settingsPermission]
         case "settings-strictness": path = [.settings, .settingsStrictness]

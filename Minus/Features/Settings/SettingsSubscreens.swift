@@ -7,8 +7,14 @@ import SwiftUI
 struct IntentionEditView: View {
     @Environment(AppDependencies.self) private var deps
     @Environment(\.dismiss) private var dismiss
+    @Query private var configs: [UserConfig]
     @State private var text = ""
     @State private var loaded = false
+
+    /// v1.7: the goal is always saved; this governs only whether it renders.
+    private var showsIntention: Bool {
+        configs.first { $0.id == UserConfig.wellKnownID }?.showsIntention ?? true
+    }
 
     var body: some View {
         SettingsShell(eyebrow: "INTENTION", id: "settings-intention", scrolls: true) {
@@ -24,6 +30,9 @@ struct IntentionEditView: View {
                 .onChange(of: text) { _, value in
                     if value.count > 80 { text = String(value.prefix(80)) }
                 }
+
+            visibilitySection
+                .padding(.top, MN.Space.xl)
 
             Spacer()
 
@@ -42,59 +51,50 @@ struct IntentionEditView: View {
             text = MinusContainer.userConfig(in: deps.context).intentionText
         }
     }
-}
 
-// MARK: - Essentials
-
-struct EssentialsEditView: View {
-    @Environment(AppDependencies.self) private var deps
-    @Query(sort: \EssentialApp.sortOrder) private var chosen: [EssentialApp]
-
-    private var chosenSlugs: Set<String> { Set(chosen.map(\.slug)) }
-    private var atCap: Bool { chosen.count >= EssentialAppCatalog.homeCap }
-
-    var body: some View {
-        SettingsShell(eyebrow: "ESSENTIALS", id: "settings-essentials", scrolls: true) {
-            Text("What stays?")
-                .mnType(.headingLg)
-                .foregroundStyle(MN.boneWhite)
-            Text("up to \(EssentialAppCatalog.homeCap) — order follows when you added them.")
+    /// Selection rows, not a switch — the app has no toggles (brand rule),
+    /// and these apply immediately like StrictnessView.
+    private var visibilitySection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("VISIBILITY")
                 .mnType(.caption)
+                .textCase(.uppercase)
                 .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.xs)
+                .padding(.bottom, MN.Space.xs)
 
-            VStack(spacing: 0) {
-                ForEach(EssentialAppCatalog.all) { app in
-                    let isChosen = chosenSlugs.contains(app.slug)
-                    OnboardingSelectRow(
-                        title: app.displayName.lowercased(),
-                        isSelected: isChosen,
-                        isDimmed: !isChosen && atCap,
-                        accessibilityID: "edit-row-\(app.slug)"
-                    ) {
-                        toggle(app, isChosen: isChosen)
-                    }
-                }
-            }
-            .padding(.top, MN.Space.m)
-        }
-    }
-
-    private func toggle(_ app: CatalogApp, isChosen: Bool) {
-        if isChosen {
-            for row in chosen where row.slug == app.slug {
-                deps.context.delete(row)
-            }
-        } else {
-            guard !atCap else { return }
-            let nextOrder = (chosen.map(\.sortOrder).max() ?? -1) + 1
-            deps.context.insert(
-                EssentialApp(slug: app.slug, displayName: app.displayName, urlScheme: app.urlString, sortOrder: nextOrder)
+            visibilityOption(
+                title: "shown",
+                note: "under the clock and on your widgets",
+                value: true
+            )
+            visibilityOption(
+                title: "hidden",
+                note: "your goal stays saved, just not displayed",
+                value: false
             )
         }
-        try? deps.context.save()
+    }
+
+    private func visibilityOption(title: String, note: String, value: Bool) -> some View {
+        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+            OnboardingSelectRow(
+                title: title,
+                isSelected: showsIntention == value,
+                accessibilityID: "intention-visibility-\(title)"
+            ) {
+                let config = MinusContainer.userConfig(in: deps.context)
+                config.showsIntention = value
+                try? deps.context.save()
+            }
+            Text(note)
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+                .padding(.bottom, MN.Space.s)
+        }
     }
 }
+
+// MARK: - Essentials → CardsEditorViews.swift (v1.6)
 
 // MARK: - Blocked apps
 
@@ -402,20 +402,20 @@ struct AboutView: View {
     }
 
     #if DEBUG
-    /// T3 — landing truth on device. Each row opens a candidate URL raw; the
-    /// user reports where it lands (app main vs compose vs nothing), and the
-    /// winners get hard-coded into EssentialAppCatalog.
-    private static let schemeCandidates: [(label: String, url: String)] = [
-        ("messages:", "messages:"),
-        ("messages://", "messages://"),
-        ("sms:", "sms:"),
-        ("mobilesms:", "mobilesms:"),
-        ("tel:", "tel:"),
-        ("telprompt:", "telprompt:"),
-        ("facetime:", "facetime:"),
-        ("message:", "message:"),
-        ("mailto:", "mailto:"),
-    ]
+    /// T3 — landing truth on device, v1.6: GENERATED from the catalog. Every
+    /// non-high-confidence row plus its alt candidates gets a tappable line;
+    /// the user reports where each lands (app main vs nothing), and winners
+    /// get promoted to high confidence in EssentialAppCatalog.
+    private static let schemeCandidates: [(label: String, url: String)] = {
+        var rows: [(label: String, url: String)] = []
+        for app in EssentialAppCatalog.all where app.confidence != .high || !app.altCandidates.isEmpty {
+            rows.append(("\(app.slug) \u{00B7} \(app.urlString)", app.urlString))
+            for alt in app.altCandidates {
+                rows.append(("\(app.slug) \u{00B7} \(alt)", alt))
+            }
+        }
+        return rows
+    }()
 
     private var schemeLab: some View {
         VStack(alignment: .leading, spacing: MN.Space.xxs) {

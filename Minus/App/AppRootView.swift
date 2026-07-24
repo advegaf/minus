@@ -69,7 +69,11 @@ struct AppRootView: View {
         case .settingsIntention:
             IntentionEditView()
         case .settingsEssentials:
-            EssentialsEditView()
+            CardsListView()
+        case .settingsCard(let id):
+            CardDetailView(cardID: id)
+        case .settingsCustom(let cardID):
+            CustomEntryView(cardID: cardID)
         case .settingsBlocked:
             BlockListEditView()
         case .settingsStrictness:

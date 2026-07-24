@@ -17,9 +17,12 @@ final class SmokeUITests: XCTestCase {
         app.launch()
 
         for id in [
-            "widget-preview-launcher-medium",
             "widget-preview-launcher-large",
+            "widget-preview-launcher-large-small",
+            "widget-preview-launcher-large-xl",
             "widget-preview-launcher-page",
+            "widget-preview-launcher-page-center",
+            "widget-preview-launcher-page-xl",
             "widget-preview-focus-active",
             "widget-preview-focus-next",
         ] {

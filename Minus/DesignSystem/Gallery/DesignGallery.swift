@@ -22,6 +22,7 @@ struct DesignGallery: View {
         ("Display SM · 64", .displaySm, "41"),
         ("Heading LG · 40", .headingLg, "Focus mode"),
         ("Heading · 28 · bold", .heading, "Awareness"),
+        ("Body XL · 28 · regular", .bodyXl, "phone \u{00B7} widget large"),
         ("Body · 17", .body, "The quiet architecture of attention."),
         ("Caption · 13", .caption, "Session · 24 min"),
     ]
@@ -197,15 +198,33 @@ struct DesignGallery: View {
         VStack(alignment: .leading, spacing: MN.Space.s) {
             eyebrow("Widgets")
 
-            widgetFrame(width: 364, height: 170, id: "widget-preview-launcher-medium") {
-                LauncherWidgetView(snapshot: .fixture, layout: .compact)
-            }
+            // v1.6 matrix: two sizes (D-D) × text size × placement (D-B).
             widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large") {
                 LauncherWidgetView(snapshot: .fixture, layout: .column)
             }
-            // iOS 27 full home-screen page (systemExtraLarge, 4×6 portrait).
+            widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large-small") {
+                LauncherWidgetView(snapshot: .fixture, layout: .column, textSize: .small)
+            }
+            widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large-xl") {
+                LauncherWidgetView(snapshot: .fixture, layout: .column, textSize: .large)
+            }
+            // iOS 27 full home-screen page (systemExtraLargePortrait).
             widgetFrame(width: 364, height: 680, id: "widget-preview-launcher-page") {
                 LauncherWidgetView(snapshot: .fixture, layout: .page)
+            }
+            widgetFrame(width: 364, height: 680, id: "widget-preview-launcher-page-center") {
+                LauncherWidgetView(snapshot: .fixture, layout: .page, alignment: .center)
+            }
+            widgetFrame(width: 364, height: 680, id: "widget-preview-launcher-page-xl") {
+                LauncherWidgetView(snapshot: .fixture, layout: .page, textSize: .large)
+            }
+            // Density-audit worst cases: 7 rows at .large — the type steps
+            // down a notch and spacing tightens; nothing may clip.
+            widgetFrame(width: 364, height: 382, id: "widget-preview-launcher-large-xl-dense") {
+                LauncherWidgetView(snapshot: .fixtureSeven, layout: .column, textSize: .large)
+            }
+            widgetFrame(width: 364, height: 680, id: "widget-preview-launcher-page-xl-dense") {
+                LauncherWidgetView(snapshot: .fixtureSeven, layout: .page, textSize: .large)
             }
 
             HStack(alignment: .top, spacing: MN.Space.s) {
@@ -253,6 +272,8 @@ struct DesignGallery: View {
             )
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(id)
+            // Scroll-targetable: MINUS_GALLERY_SCROLL accepts frame ids too.
+            .id(id)
     }
 
     // MARK: Prism

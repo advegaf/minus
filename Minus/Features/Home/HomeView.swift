@@ -11,7 +11,9 @@ struct HomeView: View {
     @Query private var configs: [UserConfig]
 
     private var intention: String {
-        configs.first { $0.id == UserConfig.wellKnownID }?.intentionText ?? ""
+        guard let config = configs.first(where: { $0.id == UserConfig.wellKnownID }),
+              config.showsIntention else { return "" }
+        return config.intentionText
     }
 
     var body: some View {

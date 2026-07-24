@@ -26,6 +26,13 @@ enum DemoSeed {
             for app in (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
                 context.delete(app)
             }
+            for card in (try? context.fetch(FetchDescriptor<LauncherCard>())) ?? [] {
+                context.delete(card)
+            }
+        case "cards":
+            // v1.6: multiple cards + a custom entry — the cards-editor and
+            // widget-configuration test surface.
+            seedExtraCards(context: context)
         default:
             break
         }
@@ -37,6 +44,9 @@ enum DemoSeed {
         // container must not duplicate rows (found via real-store widget seed).
         for row in (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
             context.delete(row)
+        }
+        for card in (try? context.fetch(FetchDescriptor<LauncherCard>())) ?? [] {
+            context.delete(card)
         }
         for session in (try? context.fetch(FetchDescriptor<FocusSession>())) ?? [] {
             context.delete(session)
@@ -52,11 +62,17 @@ enum DemoSeed {
            let strictness = Strictness(rawValue: raw) {
             config.strictness = strictness
         }
+        // MINUS_GOAL=hidden drives the v1.7 goal-visibility state (V-1).
+        config.showsIntention = ProcessInfo.processInfo.environment["MINUS_GOAL"] != "hidden"
 
-        for (index, slug) in ["phone", "messages", "maps", "music", "photos"].enumerated() {
-            guard let app = EssentialAppCatalog.app(slug: slug) else { continue }
-            context.insert(EssentialApp(slug: app.slug, displayName: app.displayName, urlScheme: app.urlString, sortOrder: index))
-        }
+        // v1.6: the launcher is card "one"; EssentialApp is customs-only.
+        context.insert(
+            LauncherCard(
+                name: "one",
+                orderedSlugs: ["phone", "messages", "maps", "music", "photos"],
+                sortOrder: 0
+            )
+        )
 
         let blockList = MinusContainer.defaultBlockList(in: context)
         // MINUS_BLOCK=stale plants undecodable selection data — the restored-
@@ -88,6 +104,26 @@ enum DemoSeed {
             finished.endReason = .completed
             context.insert(finished)
         }
+    }
+
+    private static func seedExtraCards(context: ModelContext) {
+        let work = LauncherCard(
+            name: "work",
+            orderedSlugs: ["slack", "gmail", "calendar", "notion"],
+            sortOrder: 1
+        )
+        context.insert(work)
+        // One custom entry, referenced by card three — the full resolve chain.
+        context.insert(
+            EssentialApp(slug: "custom-pilates", displayName: "Pilates", urlScheme: "", sortOrder: 0)
+        )
+        context.insert(
+            LauncherCard(
+                name: "weekend",
+                orderedSlugs: ["maps", "music", "custom-pilates"],
+                sortOrder: 2
+            )
+        )
     }
 
     private static func seedSchedules(context: ModelContext) {

@@ -34,25 +34,31 @@ struct GlassAwareBackground: ViewModifier {
 }
 
 /// Layout family abstraction so this file needn't import WidgetKit.
+/// v1.6 (D-D): two sizes only — medium and the iPad XL are gone.
 enum LauncherLayout {
-    /// systemMedium: single column, up to four names.
-    case compact
-    /// systemLarge: single column, up to seven, wider gaps.
+    /// systemLarge: single column, up to seven.
     case column
-    /// systemExtraLarge (iOS 27 full home page): the dumb phone itself —
-    /// names at headingLg with sculptural spacing, intention as the footer.
+    /// systemExtraLargePortrait (iOS 27 full home page): the dumb phone
+    /// itself — sculptural spacing, intention as the footer.
     case page
 }
 
-/// The home launcher: essential apps as tappable text that trampolines
-/// through minus://open/{slug}.
+/// The home launcher: one card's apps as tappable text, zero-hop launched.
+/// v1.6 (D-B/D-C): per-instance card + text size + placement from Edit Widget.
 struct LauncherWidgetView: View {
     var snapshot: LauncherSnapshot?
     var layout: LauncherLayout
+    var cardID: UUID?
+    var textSize: LauncherTextSize = .medium
+    var alignment: LauncherCellAlignment = .leading
+
+    private var card: LauncherSnapshot.Card? {
+        snapshot?.card(id: cardID)
+    }
 
     var body: some View {
-        if let snapshot, !snapshot.essentials.isEmpty {
-            content(snapshot)
+        if let card, !card.essentials.isEmpty {
+            content(card, intention: snapshot?.intention ?? "")
         } else {
             EmptyInviteView()
         }
@@ -65,31 +71,59 @@ struct LauncherWidgetView: View {
         var minRow: CGFloat
     }
 
-    private func spec(for layout: LauncherLayout) -> Spec {
-        switch layout {
-        case .compact: Spec(cap: 4, token: .bodyLg, rowSpacing: MN.Space.xxs, minRow: 34)
-        case .column: Spec(cap: 7, token: .bodyLg, rowSpacing: MN.Space.s, minRow: 40)
-        case .page: Spec(cap: 7, token: .headingLg, rowSpacing: MN.Space.l, minRow: 48)
+    /// The size matrix (D-B). Column: 17/22/28. Page: 28/40/64.
+    private func baseSpec() -> Spec {
+        switch (layout, textSize) {
+        case (.column, .small): Spec(cap: 7, token: .body, rowSpacing: MN.Space.xxs, minRow: 32)
+        case (.column, .medium): Spec(cap: 7, token: .bodyLg, rowSpacing: MN.Space.s, minRow: 40)
+        case (.column, .large): Spec(cap: 7, token: .bodyXl, rowSpacing: MN.Space.xs, minRow: 46)
+        case (.page, .small): Spec(cap: 7, token: .bodyXl, rowSpacing: MN.Space.m, minRow: 40)
+        case (.page, .medium): Spec(cap: 7, token: .headingLg, rowSpacing: MN.Space.l, minRow: 48)
+        case (.page, .large): Spec(cap: 7, token: .displaySm, rowSpacing: MN.Space.m, minRow: 72)
         }
     }
 
+    /// Density audit (D-E): the canvases are fixed, so a six-or-seven-app card
+    /// tightens spacing, and at .large steps the type down one notch — every
+    /// chosen app always renders; nothing silently clips or drops.
+    /// (7 × 64pt ≈ 775pt against the page's ~680; 7 × 22pt was already
+    /// borderline in the v1.5 column.)
+    private func spec(count: Int) -> Spec {
+        var spec = baseSpec()
+        guard count >= 6 else { return spec }
+        spec.rowSpacing = min(spec.rowSpacing, layout == .page ? MN.Space.xs : MN.Space.xxs)
+        if textSize == .large {
+            spec.token = layout == .page ? .headingLg : .bodyLg
+            spec.minRow = layout == .page ? 48 : 40
+        }
+        return spec
+    }
+
+    private var stackAlignment: HorizontalAlignment {
+        alignment == .center ? .center : .leading
+    }
+
+    private var cellAlignment: Alignment {
+        alignment == .center ? .center : .leading
+    }
+
     @ViewBuilder
-    private func content(_ snapshot: LauncherSnapshot) -> some View {
-        let spec = spec(for: layout)
-        VStack(alignment: .leading, spacing: spec.rowSpacing) {
+    private func content(_ card: LauncherSnapshot.Card, intention: String) -> some View {
+        let spec = spec(count: card.essentials.count)
+        VStack(alignment: stackAlignment, spacing: spec.rowSpacing) {
             if layout == .page {
                 Spacer(minLength: MN.Space.l)
             }
-            ForEach(snapshot.essentials.prefix(spec.cap)) { essential in
-                cell(essential, token: spec.token, minRow: spec.minRow)
+            ForEach(card.essentials.prefix(spec.cap)) { essential in
+                cell(essential, spec: spec)
             }
             if layout == .page {
                 Spacer(minLength: MN.Space.l)
             } else {
                 Spacer(minLength: 0)
             }
-            if layout != .compact, !snapshot.intention.isEmpty {
-                Text(snapshot.intention)
+            if !intention.isEmpty {
+                Text(intention)
                     .mnType(.caption)
                     .foregroundStyle(MN.fogBlue)
                     .widgetAccentable()
@@ -97,20 +131,20 @@ struct LauncherWidgetView: View {
                     .padding(.bottom, layout == .page ? MN.Space.m : 0)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment == .center ? .top : .topLeading)
     }
 
-    private func cell(_ essential: LauncherSnapshot.Essential, token: MNType, minRow: CGFloat) -> some View {
+    private func cell(_ essential: LauncherSnapshot.Essential, spec: Spec) -> some View {
         // Button(intent:) runs LaunchEssentialIntent inside the widget process
         // and the SYSTEM opens the resolved URL — minus never launches (v1.5).
         Button(intent: LaunchEssentialIntent(slug: essential.slug, urlString: essential.url)) {
             Text(essential.name.lowercased())
-                .mnType(token)
+                .mnType(spec.token)
                 .foregroundStyle(MN.boneWhite)
                 .widgetAccentable()
                 .opacity(essential.installed == false ? 0.4 : 1)
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, minHeight: minRow, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: spec.minRow, alignment: cellAlignment)
         }
         .buttonStyle(.plain)
     }

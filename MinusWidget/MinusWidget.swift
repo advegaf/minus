@@ -21,37 +21,63 @@ struct LauncherEntry: TimelineEntry, Sendable {
 
 // MARK: - Launcher
 
-struct LauncherProvider: TimelineProvider {
-    func placeholder(in context: Context) -> LauncherEntry {
-        LauncherEntry(date: .now, snapshot: .fixture)
+/// v1.6 entry: PLAIN values only — the configuration intent is not Sendable
+/// and never crosses into the entry.
+struct ConfiguredLauncherEntry: TimelineEntry, Sendable {
+    var date: Date
+    var snapshot: LauncherSnapshot?
+    var cardID: UUID?
+    var textSize: LauncherTextSize
+    var alignment: LauncherCellAlignment
+
+    static func from(_ configuration: LauncherConfigIntent, snapshot: LauncherSnapshot?) -> Self {
+        ConfiguredLauncherEntry(
+            date: .now,
+            snapshot: snapshot,
+            cardID: configuration.card?.id,
+            textSize: configuration.textSize,
+            alignment: configuration.alignment
+        )
+    }
+}
+
+struct LauncherProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> ConfiguredLauncherEntry {
+        ConfiguredLauncherEntry(date: .now, snapshot: .fixture, cardID: nil, textSize: .medium, alignment: .leading)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping @Sendable (LauncherEntry) -> Void) {
-        completion(LauncherEntry(date: .now, snapshot: LauncherSnapshot.read() ?? .fixture))
+    func snapshot(for configuration: LauncherConfigIntent, in context: Context) async -> ConfiguredLauncherEntry {
+        .from(configuration, snapshot: LauncherSnapshot.read() ?? .fixture)
     }
 
-    func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<LauncherEntry>) -> Void) {
-        completion(Timeline(entries: [LauncherEntry(date: .now, snapshot: LauncherSnapshot.read())], policy: .never))
+    func timeline(for configuration: LauncherConfigIntent, in context: Context) async -> Timeline<ConfiguredLauncherEntry> {
+        Timeline(entries: [.from(configuration, snapshot: LauncherSnapshot.read())], policy: .never)
     }
 }
 
 struct LauncherWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "MinusLauncher", provider: LauncherProvider()) { entry in
-            LauncherFamilyView(snapshot: entry.snapshot)
+        // SAME kind as the v1.5 StaticConfiguration — placed widgets survive
+        // the upgrade and render with defaults until the user edits them.
+        AppIntentConfiguration(
+            kind: "MinusLauncher",
+            intent: LauncherConfigIntent.self,
+            provider: LauncherProvider()
+        ) { entry in
+            LauncherFamilyView(entry: entry)
                 .modifier(GlassAwareBackground())
         }
         .configurationDisplayName("launcher")
-        .description("your essentials, one tap.")
+        .description("your cards, one tap each.")
         .supportedFamilies(Self.launcherFamilies)
     }
 
-    /// The iPhone full-home-page family is `systemExtraLargePortrait`,
-    /// iOS-available only in SDK 27 — the compiler gate keeps this file
-    /// building under the stable 26.4 suite toolchain while the SDK-27 device
-    /// binary declares the full page.
+    /// v1.6 (D-D): two sizes — large + the full home page. The iPhone
+    /// full-page family is `systemExtraLargePortrait`, iOS-available only in
+    /// SDK 27 — the compiler gate keeps this file building under the stable
+    /// 26.4 toolchain while the SDK-27 binary declares the page.
     static var launcherFamilies: [WidgetFamily] {
-        var families: [WidgetFamily] = [.systemMedium, .systemLarge, .systemExtraLarge]
+        var families: [WidgetFamily] = [.systemLarge]
         #if compiler(>=6.4)
         if #available(iOS 27.0, *) {
             families.append(.systemExtraLargePortrait)
@@ -65,10 +91,16 @@ struct LauncherWidget: Widget {
 /// read happens here.
 private struct LauncherFamilyView: View {
     @Environment(\.widgetFamily) private var family
-    var snapshot: LauncherSnapshot?
+    var entry: ConfiguredLauncherEntry
 
     var body: some View {
-        LauncherWidgetView(snapshot: snapshot, layout: layout)
+        LauncherWidgetView(
+            snapshot: entry.snapshot,
+            layout: layout,
+            cardID: entry.cardID,
+            textSize: entry.textSize,
+            alignment: entry.alignment
+        )
     }
 
     private var layout: LauncherLayout {
@@ -77,11 +109,7 @@ private struct LauncherFamilyView: View {
             return .page
         }
         #endif
-        switch family {
-        case .systemExtraLarge: return .page
-        case .systemLarge: return .column
-        default: return .compact
-        }
+        return .column
     }
 }
 

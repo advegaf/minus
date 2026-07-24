@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "2"
+    MARKETING_VERSION: "1.7.0"
+    CURRENT_PROJECT_VERSION: "4"
     # DEVELOPMENT_TEAM is supplied per-developer via Config/Secrets.xcconfig
     # (see Config/Secrets.example.xcconfig) so no team ID lives in the repo.
     CODE_SIGN_STYLE: Automatic
@@ -77,26 +77,66 @@ targets:
         # never hardcodes), kept in lockstep with the entitlements files.
         MinusAppGroup: group.$(MINUS_BUNDLE_ID)
         # Essential-app deep links: canOpenURL requires declaring every scheme
-        # (max 50). Keep in lockstep with EssentialAppCatalog — enforced by
-        # EssentialCatalogTests in Phase 2a.
+        # (max 50). Exactly the catalog's `declared: true` schemes — lockstep
+        # both directions enforced by EssentialCatalogTests. Undeclared catalog
+        # rows still open (open() needs no declaration); they just never dim.
         LSApplicationQueriesSchemes:
+          # communication — messages = conversation list, message = Mail inbox;
+          # their compose cousins (sms/mailto) are deliberately not used.
           - tel
-          # App-opening schemes (T1): messages = conversation list, message =
-          # Mail inbox. Their compose cousins (sms/mailto) are deliberately
-          # not used by the launcher.
           - messages
           - message
           - facetime
+          - whatsapp
+          - sgnl
+          - tg
+          - slack
+          - discord
+          - msteams
+          - ms-outlook
+          - googlegmail
+          - zoomus
+          # apple basics
           - maps
           - music
           - photos-redirect
           - calshow
           - mobilenotes
           - shortcuts
+          - x-apple-reminderkit
+          - shareddocuments
+          - ibooks
+          - podcasts
+          - shoebox
+          - x-apple-health
+          # media
           - spotify
-          - whatsapp
-          - sgnl
-          - tg
+          - youtube
+          - nflx
+          - twitch
+          - overcast
+          # social
+          - instagram
+          - twitter
+          - fb
+          - snapchat
+          - reddit
+          - pinterest
+          - linkedin
+          # getting around
+          - uber
+          - lyft
+          - waze
+          - comgooglemaps
+          # money
+          - venmo
+          # mind & body
+          - strava
+          - duolingo
+          # tools
+          - googlechrome
+          - notion
+          - things
 
   MinusMonitor:
     type: app-extension
@@ -169,6 +209,8 @@ targets:
       - path: Minus/Data/LauncherSnapshot.swift
       - path: Minus/Widgets/MinusWidgetViews.swift
       - path: Minus/Widgets/LaunchEssentialIntent.swift
+      - path: Minus/Widgets/LauncherConfigIntent.swift
+      - path: Minus/Widgets/CardEntity.swift
       - path: Minus/DesignSystem/Tokens.swift
       - path: Minus/DesignSystem/Typography.swift
       - path: Minus/Resources/Fonts/GeneralSans-Regular.otf

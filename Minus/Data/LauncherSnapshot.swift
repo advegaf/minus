@@ -25,10 +25,40 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
         var nextSchedule: String?
     }
 
+    /// v1.6: one launcher page. Each placed widget picks a card in Edit
+    /// Widget (CardQuery reads these); Home renders the first.
+    struct Card: Codable, Equatable, Sendable, Identifiable {
+        var id: UUID
+        var name: String
+        var essentials: [Essential]
+    }
+
+    /// Top-level list stays = card 1 (a v1.5 widget reading a v1.6 file, and
+    /// a v1.6 widget reading a stale v1.5 file, both keep working).
     var essentials: [Essential]
     var intention: String
     var focus: FocusState
     var generatedAt: Date
+    /// nil = pre-1.6 file → resolvedCards synthesizes the implicit card.
+    /// Explicit nil default keeps the memberwise init v1.5-source-compatible.
+    var cards: [Card]? = nil
+
+    /// The id resolvedCards gives a v1 file's implicit card — stable, so a
+    /// widget configured against it stays valid across rewrites.
+    static let implicitCardID = UUID(uuidString: "00000000-0000-0000-0000-0000000000C1")!
+
+    var resolvedCards: [Card] {
+        if let cards, !cards.isEmpty { return cards }
+        return [Card(id: Self.implicitCardID, name: "one", essentials: essentials)]
+    }
+
+    /// Per-instance lookup with the safety net: a deleted card's widget falls
+    /// back to card 1 rather than rendering nothing.
+    func card(id: UUID?) -> Card? {
+        let resolved = resolvedCards
+        guard let id else { return resolved.first }
+        return resolved.first { $0.id == id } ?? resolved.first
+    }
 
     // MARK: App Group plumbing (vita WidgetSnapshot pattern)
 
@@ -62,19 +92,36 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
         try? FileManager.default.removeItem(at: url)
     }
 
-    /// Widget-gallery placeholder fixture (never written to disk).
+    /// Widget-gallery placeholder fixture (never written to disk). Also the
+    /// pre-first-launch floor for CardQuery: placeholder previews in the
+    /// widget gallery resolve through this before minus ever publishes.
     static var fixture: LauncherSnapshot {
-        LauncherSnapshot(
-            essentials: [
-                Essential(slug: "phone", name: "phone", url: "tel:", installed: true),
-                Essential(slug: "messages", name: "messages", url: "sms:", installed: true),
-                Essential(slug: "maps", name: "maps", url: "maps:", installed: true),
-                Essential(slug: "music", name: "music", url: "music:", installed: true),
-                Essential(slug: "photos", name: "photos", url: "photos-redirect:", installed: true),
-            ],
+        let essentials = [
+            Essential(slug: "phone", name: "phone", url: "tel:", installed: true),
+            Essential(slug: "messages", name: "messages", url: "sms:", installed: true),
+            Essential(slug: "maps", name: "maps", url: "maps:", installed: true),
+            Essential(slug: "music", name: "music", url: "music:", installed: true),
+            Essential(slug: "photos", name: "photos", url: "photos-redirect:", installed: true),
+        ]
+        return LauncherSnapshot(
+            essentials: essentials,
             intention: "less phone. more life.",
             focus: FocusState(activeUntil: nil, nextSchedule: nil),
-            generatedAt: Date(timeIntervalSince1970: 0)
+            generatedAt: Date(timeIntervalSince1970: 0),
+            cards: [Card(id: implicitCardID, name: "one", essentials: essentials)]
         )
+    }
+
+    /// Full-cap fixture: the density-audit worst case (7 rows) for gallery
+    /// proof frames.
+    static var fixtureSeven: LauncherSnapshot {
+        var snapshot = fixture
+        let extra = [
+            Essential(slug: "notes", name: "notes", url: "mobilenotes:", installed: true),
+            Essential(slug: "calendar", name: "calendar", url: "calshow:", installed: true),
+        ]
+        snapshot.essentials += extra
+        snapshot.cards = [Card(id: implicitCardID, name: "one", essentials: snapshot.essentials)]
+        return snapshot
     }
 }

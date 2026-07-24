@@ -27,10 +27,6 @@ final class DeepLinkTests: XCTestCase {
 @MainActor
 final class LauncherBridgeTests: XCTestCase {
     func testSnapshotBuilder() {
-        let essentials = [
-            EssentialApp(slug: "phone", displayName: "Phone", urlScheme: "tel:", sortOrder: 0),
-            EssentialApp(slug: "messages", displayName: "Messages", urlScheme: "sms:", sortOrder: 1),
-        ]
         let schedule = FocusSchedule(name: "Deep work", weekdays: [2], startMinuteOfDay: 540, endMinuteOfDay: 660)
         let now = Date(timeIntervalSince1970: 1_772_000_000)
         let active = ActivitySnapshot(
@@ -39,7 +35,10 @@ final class LauncherBridgeTests: XCTestCase {
         )
 
         let snapshot = LauncherBridge.snapshot(
-            essentials: essentials,
+            cards: [
+                LauncherBridge.CardInput(id: UUID(), name: "one", orderedSlugs: ["phone", "messages"])
+            ],
+            customEntries: [:],
             intention: "less phone. more life.",
             activeSnapshot: active,
             schedules: [schedule],

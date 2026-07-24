@@ -19,6 +19,8 @@ struct DumbPhoneGuideView: View {
          "long-press the home screen → edit → customize → set the widget style to clear. on a dark wallpaper the launcher becomes floating words — no widget, just glass."),
         ("the four that ring",
          "in shortcuts, make four one-action shortcuts — open app → phone, named minus-phone. repeat for messages, facetime, mail. apple only lets shortcuts open these to their real screens; minus routes their taps through yours."),
+        ("any app at all",
+         "added a custom app to a card? make one more shortcut the same way — open app → the app, named exactly what minus showed you (minus-yourapp). one shortcut per custom app, once."),
     ]
 
     var body: some View {

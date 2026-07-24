@@ -34,6 +34,9 @@ enum SessionEndReason: String, Codable, Sendable {
 final class UserConfig {
     var id: UUID = UserConfig.wellKnownID
     var intentionText: String = ""
+    /// v1.7: the goal stays saved either way; this only governs whether it
+    /// renders (Home line + widget footers).
+    var showsIntention: Bool = true
     var strictnessRaw: String = Strictness.normal.rawValue
     var onboardedAt: Date?
     var createdAt: Date = Date.now
@@ -48,7 +51,11 @@ final class UserConfig {
     }
 }
 
-/// A row the user picked from `EssentialAppCatalog` — the few apps that stay.
+/// v1.6: the custom-entry registry ONLY. Catalog apps resolve from code
+/// (EssentialAppCatalog) and live as slugs inside LauncherCard.orderedSlugs;
+/// a row here is a user-typed app ("custom-" slug prefix) whose launch routes
+/// through its matching one-action Shortcut. Pre-1.6 catalog rows are folded
+/// into the default card at bootstrap (AppDependencies.migrateToCards).
 @Model
 final class EssentialApp {
     var slug: String = ""
@@ -62,6 +69,62 @@ final class EssentialApp {
         self.displayName = displayName
         self.urlScheme = urlScheme
         self.sortOrder = sortOrder
+    }
+}
+
+/// A named set of essentials — one launcher page. Each home-screen widget
+/// instance picks a card in Edit Widget; Home renders the first (sortOrder).
+@Model
+final class LauncherCard {
+    var id: UUID = UUID()
+    var name: String = ""
+    /// ≤ homeCap slugs, launcher order. Catalog slugs resolve from code;
+    /// "custom-" slugs resolve from the EssentialApp registry.
+    var orderedSlugs: [String] = []
+    var sortOrder: Int = 0
+    var createdAt: Date = Date.now
+
+    init(name: String, orderedSlugs: [String], sortOrder: Int) {
+        self.name = name
+        self.orderedSlugs = orderedSlugs
+        self.sortOrder = sortOrder
+    }
+}
+
+/// Pure slug machinery for custom entries. "Pilates Studio" → "custom-pilates-
+/// studio", launched via shortcuts://run-shortcut?name=minus-pilates-studio —
+/// the guide walks the user through creating that one-action shortcut.
+enum CustomSlug {
+    static let prefix = "custom-"
+
+    static func isCustom(_ slug: String) -> Bool { slug.hasPrefix(prefix) }
+
+    /// The shortcut-name half: "custom-pilates-studio" → "pilates-studio".
+    static func bare(_ slug: String) -> String {
+        isCustom(slug) ? String(slug.dropFirst(prefix.count)) : slug
+    }
+
+    /// Lowercase, alphanumerics kept, runs of anything else become one hyphen;
+    /// de-duped against existing slugs with -2, -3… suffixes.
+    static func make(name: String, existing: Set<String>) -> String {
+        let lowered = name.lowercased()
+        var core = ""
+        var pendingHyphen = false
+        for scalar in lowered.unicodeScalars {
+            if CharacterSet.alphanumerics.contains(scalar) {
+                if pendingHyphen && !core.isEmpty { core.append("-") }
+                pendingHyphen = false
+                core.unicodeScalars.append(scalar)
+            } else {
+                pendingHyphen = true
+            }
+        }
+        if core.isEmpty { core = "app" }
+        let base = prefix + core
+        if !existing.contains(base) { return base }
+        var counter = 2
+        while existing.contains("\(base)-\(counter)") { counter += 1 }
+        return "\(base)-\(counter)"
     }
 }
 

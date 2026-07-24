@@ -16,6 +16,7 @@ enum MNType {
     case displaySm    // 64pt, lh 1.0, -0.02em
     case headingLg    // 40pt, lh 1.05, -0.01em
     case heading      // 28pt, lh 1.2, -0.01em — the ONLY weight-700 size
+    case bodyXl       // 28pt, lh 1.2, -0.01em, REGULAR — widget large text
     case bodyLg       // 22pt, lh 1.2, -0.01em — launcher rows, list titles
     case body         // 17pt, lh 1.5, +0.01em
     case caption      // 13pt, lh 1.2, +0.02em — eyebrows, nav, uppercase labels
@@ -25,7 +26,7 @@ enum MNType {
         case .display: 96
         case .displaySm: 64
         case .headingLg: 40
-        case .heading: 28
+        case .heading, .bodyXl: 28
         case .bodyLg: 22
         case .body: 17
         case .caption: 13
@@ -40,7 +41,7 @@ enum MNType {
     var tracking: CGFloat {
         switch self {
         case .display, .displaySm: -0.02 * size
-        case .headingLg, .heading, .bodyLg: -0.01 * size
+        case .headingLg, .heading, .bodyXl, .bodyLg: -0.01 * size
         case .body: 0.01 * size
         case .caption: 0.02 * size
         }
@@ -51,7 +52,7 @@ enum MNType {
         switch self {
         case .display, .displaySm: 1.0
         case .headingLg: 1.05
-        case .heading, .bodyLg, .caption: 1.2
+        case .heading, .bodyXl, .bodyLg, .caption: 1.2
         case .body: 1.5
         }
     }

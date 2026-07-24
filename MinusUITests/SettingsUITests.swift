@@ -126,19 +126,25 @@ final class SettingsUITests: XCTestCase {
     }
 
     @MainActor
-    func testEssentialsEditTogglesMembership() {
+    func testCardDetailTogglesMembership() {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-essentials"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["settings-essentials"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
+        attach(app, "SE-2-cards")
 
-        // Seeded: phone, messages, maps, music, photos (5). Add calendar → 6.
+        // Card "one" (seeded: phone, messages, maps, music, photos).
+        app.buttons["card-row-0"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
+
+        // Add calendar → 6, remove messages → 5.
         app.buttons["edit-row-calendar"].tap()
         attach(app, "SE-2")
-        // Remove messages → 5.
         app.buttons["edit-row-messages"].tap()
 
         // Home reflects: calendar present, messages gone.
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
@@ -147,12 +153,114 @@ final class SettingsUITests: XCTestCase {
     }
 
     @MainActor
+    func testCardsSeedStateShowsThreeCards() {
+        let app = launch(state: "cards")
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
+        for index in 0...2 {
+            XCTAssertTrue(app.buttons["card-row-\(index)"].exists, "missing card-row-\(index)")
+        }
+        attach(app, "CA-1")
+    }
+
+    @MainActor
+    func testNewCardCreateAndDelete() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        XCTAssertTrue(app.buttons["cta-new-card"].waitForExistence(timeout: 5))
+        app.buttons["cta-new-card"].tap()
+
+        // Lands in the fresh card's detail.
+        XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
+        attach(app, "CA-2")
+
+        // Delete it — confirmation, then back on the list with one card.
+        app.buttons["cta-delete-card"].tap()
+        let confirm = app.buttons["Delete"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["card-row-0"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["card-row-1"].exists)
+        attach(app, "CA-3")
+    }
+
+    @MainActor
+    func testCustomEntryFlow() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        XCTAssertTrue(app.buttons["card-row-0"].waitForExistence(timeout: 5))
+        app.buttons["card-row-0"].tap()
+
+        XCTAssertTrue(app.buttons["cta-add-custom"].waitForExistence(timeout: 5))
+        app.buttons["cta-add-custom"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-custom"].waitForExistence(timeout: 5))
+
+        let field = app.textFields["field-custom-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("Pilates")
+        XCTAssertTrue(app.staticTexts["custom-slug-preview"].waitForExistence(timeout: 5))
+        attach(app, "CA-4")
+        app.buttons["cta-save-custom"].tap()
+
+        // Back at the detail: the custom row exists and is in the card.
+        XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["edit-row-custom-pilates"].waitForExistence(timeout: 5))
+        attach(app, "CA-5")
+    }
+
+    /// V-1: the goal can be hidden from Home and the widgets without losing it.
+    @MainActor
+    func testGoalVisibilityHidesIntentionOnHome() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-intention"].waitForExistence(timeout: 5))
+        app.buttons["row-intention"].tap()
+
+        XCTAssertTrue(app.buttons["intention-visibility-hidden"].waitForExistence(timeout: 5))
+        app.buttons["intention-visibility-hidden"].tap()
+        attach(app, "V-1")
+
+        // Root row says "hidden"; Home drops the line but keeps the clock.
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["hidden"].waitForExistence(timeout: 5))
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["09"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["intention-line"].exists, "goal should be hidden")
+
+        // And back on again — the text was never lost.
+        app.buttons["nav-settings"].tap()
+        XCTAssertTrue(app.buttons["row-intention"].waitForExistence(timeout: 5))
+        app.buttons["row-intention"].tap()
+        XCTAssertTrue(app.buttons["intention-visibility-shown"].waitForExistence(timeout: 5))
+        app.buttons["intention-visibility-shown"].tap()
+        app.buttons["nav-back"].firstMatch.tap()
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["intention-line"].waitForExistence(timeout: 5),
+            "goal should return"
+        )
+    }
+
+    /// The seeded hidden state renders no goal anywhere on Home.
+    @MainActor
+    func testHiddenGoalSeedState() {
+        let app = launch(state: "onboarded", extra: ["MINUS_GOAL": "hidden", "MINUS_SCREEN": ""])
+        XCTAssertTrue(app.staticTexts["09"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["intention-line"].exists)
+    }
+
+    @MainActor
     func testGuideShowsAllSteps() {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-guide"].waitForExistence(timeout: 5))
         app.buttons["row-guide"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings-guide"].waitForExistence(timeout: 5))
-        for step in 1...7 {
+        for step in 1...8 {
             XCTAssertTrue(element(app, "guide-step-\(step)"), "missing guide step \(step)")
         }
         XCTAssertTrue(element(app, "guide-honesty"))
