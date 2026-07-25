@@ -6,6 +6,10 @@ import SwiftUI
 struct AppRootView: View {
     @Environment(AppDependencies.self) private var deps
     @State private var router = AppRouter()
+    /// The root crossfade is for a real transition (finishing onboarding),
+    /// never for the first frame. `isOnboarded` comes from a @Query that can
+    /// resolve a beat late, which otherwise fades the whole app in on launch.
+    @State private var settled = false
     @Query private var configs: [UserConfig]
 
     private var isOnboarded: Bool {
@@ -35,7 +39,7 @@ struct AppRootView: View {
                     .transition(.opacity)
             }
         }
-        .animation(MMotion.signature, value: isOnboarded)
+        .animation(settled ? MMotion.signature : nil, value: isOnboarded)
         .onChange(of: deps.pendingDeepLink) { _, _ in
             consumeFocusLink()
         }
@@ -44,6 +48,7 @@ struct AppRootView: View {
             #if DEBUG
             router.jumpFromEnvironment()
             #endif
+            Task { @MainActor in settled = true }
         }
     }
 
@@ -56,7 +61,13 @@ struct AppRootView: View {
             return
         }
         deps.pendingDeepLink = nil
-        router.path = [.focus]
+        // No push animation: a widget tap asked for the focus screen, so it
+        // should already BE the focus screen. Animating here slides Home away
+        // while its own entrance is still fading up, which is the "weird"
+        // launch the user saw.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { router.path = [.focus] }
     }
 
     @ViewBuilder

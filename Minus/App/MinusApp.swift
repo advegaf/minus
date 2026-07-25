@@ -44,16 +44,17 @@ struct MinusApp: App {
         }
     }
 
-    /// The trampoline: minus://open/{slug} → wherever the resolver points
-    /// (catalog scheme, or the shortcuts route for comm + custom slugs).
+    /// The trampoline: a widget cell that cannot open its target itself
+    /// bounces here, and minus walks the whole launch plan on its behalf
+    /// (universal link, scheme, the user's shortcut). The veil stays up until
+    /// the open resolves, so Home never mounts mid-bounce.
     /// (.focus is consumed by AppRootView, which owns the router.)
     private func consumeEssentialLink() {
         guard case .openEssential(let slug) = deps.pendingDeepLink else { return }
-        deps.pendingDeepLink = nil
-        let urlString = EssentialAppCatalog.app(slug: slug)?.urlString ?? ""
-        guard !urlString.isEmpty || CustomSlug.isCustom(slug),
-              let url = EssentialLaunchURL.resolve(slug: slug, urlString: urlString) else { return }
-        UIApplication.shared.open(url)
+        Task {
+            await EssentialLauncher.open(slug: slug)
+            deps.pendingDeepLink = nil
+        }
     }
 
     /// In DEBUG, `MINUS_SCREEN=gallery` swaps in the design-system proof sheet.

@@ -10,8 +10,14 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
     struct Essential: Codable, Equatable, Sendable, Identifiable {
         var slug: String
         var name: String
-        /// Catalog urlString — informational; the bounce resolves via slug.
+        /// Catalog urlString. Informational: the launch order comes from the
+        /// resolved `target` below.
         var url: String
+        /// v1.9: the URL this cell should try FIRST, already resolved by the
+        /// bridge. https means the widget can open it with zero hops; any
+        /// other scheme means the cell must bounce through minus, because
+        /// App Intents cannot open custom schemes. nil = pre-1.9 file.
+        var target: String?
         /// Vestigial since v1.8: always nil. Kept so a stale file written by
         /// an older build still decodes.
         var installed: Bool?
@@ -98,11 +104,11 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
     /// widget gallery resolve through this before minus ever publishes.
     static var fixture: LauncherSnapshot {
         let essentials = [
-            Essential(slug: "phone", name: "phone", url: "tel:", installed: true),
-            Essential(slug: "messages", name: "messages", url: "sms:", installed: true),
-            Essential(slug: "maps", name: "maps", url: "maps:", installed: true),
-            Essential(slug: "music", name: "music", url: "music:", installed: true),
-            Essential(slug: "photos", name: "photos", url: "photos-redirect:", installed: true),
+            Essential(slug: "phone", name: "phone", url: "tel:", target: nil, installed: nil),
+            Essential(slug: "messages", name: "messages", url: "messages:", target: nil, installed: nil),
+            Essential(slug: "maps", name: "maps", url: "maps:", target: nil, installed: nil),
+            Essential(slug: "music", name: "music", url: "music:", target: nil, installed: nil),
+            Essential(slug: "photos", name: "photos", url: "photos-redirect:", target: nil, installed: nil),
         ]
         return LauncherSnapshot(
             essentials: essentials,
@@ -118,8 +124,8 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
     static var fixtureSeven: LauncherSnapshot {
         var snapshot = fixture
         let extra = [
-            Essential(slug: "notes", name: "notes", url: "mobilenotes:", installed: true),
-            Essential(slug: "calendar", name: "calendar", url: "calshow:", installed: true),
+            Essential(slug: "notes", name: "notes", url: "mobilenotes:", target: nil, installed: nil),
+            Essential(slug: "calendar", name: "calendar", url: "calshow:", target: nil, installed: nil),
         ]
         snapshot.essentials += extra
         snapshot.cards = [Card(id: implicitCardID, name: "one", essentials: snapshot.essentials)]

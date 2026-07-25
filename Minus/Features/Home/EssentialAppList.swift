@@ -33,7 +33,6 @@ struct EssentialAppList: View {
     struct Row: Identifiable {
         var slug: String
         var name: String
-        var url: URL?
 
         var id: String { slug }
     }
@@ -44,18 +43,10 @@ struct EssentialAppList: View {
     static func rows(for card: LauncherCard, customs: [String: String]) -> [Row] {
         card.orderedSlugs.compactMap { slug in
             if let app = EssentialAppCatalog.app(slug: slug) {
-                return Row(
-                    slug: slug,
-                    name: app.displayName,
-                    url: EssentialLaunchURL.resolve(slug: slug, urlString: app.urlString)
-                )
+                return Row(slug: slug, name: app.displayName)
             }
             if let name = customs[slug] {
-                return Row(
-                    slug: slug,
-                    name: name,
-                    url: EssentialLaunchURL.resolve(slug: slug, urlString: "")
-                )
+                return Row(slug: slug, name: name)
             }
             return nil
         }
@@ -75,7 +66,7 @@ struct EssentialAppList: View {
     var body: some View {
         Group {
             if cards.isEmpty {
-                emptyState
+                emptyState(for: nil)
             } else {
                 VStack(alignment: .leading, spacing: MN.Space.xs) {
                     // The strip is present at every card count, so the
@@ -90,6 +81,8 @@ struct EssentialAppList: View {
             }
         }
         .onAppear {
+            // A pending deep link means this screen is already on its way out;
+            // entering with a stagger would animate into a departure.
             appeared = true
             if activeCardID == nil { activeCardID = cards.first?.id }
         }
@@ -179,7 +172,7 @@ struct EssentialAppList: View {
     private func page(for card: LauncherCard) -> some View {
         let resolved = Self.rows(for: card, customs: customs)
         if resolved.isEmpty {
-            emptyState
+            emptyState(for: card)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 0) {
@@ -190,7 +183,7 @@ struct EssentialAppList: View {
                             .frame(height: MN.hairline)
                     }
                     AppRow(row: row) { launch(row) }
-                        .opacity(appeared ? 1 : 0)
+                        .opacity((appeared || reduceMotion) ? 1 : 0)
                         .offset(y: (appeared || reduceMotion) ? 0 : 6)
                         .animation(rowAnimation(index: index), value: appeared)
                 }
@@ -219,7 +212,7 @@ struct EssentialAppList: View {
 
     private func launch(_ row: Row) {
         Task {
-            let opened = await EssentialLauncher.open(slug: row.slug, url: row.url)
+            let opened = await EssentialLauncher.open(slug: row.slug)
             withAnimation(MMotion.micro) { failedSlug = opened ? nil : row.slug }
         }
     }
@@ -227,21 +220,33 @@ struct EssentialAppList: View {
     /// Staggered rise on first paint; reduce-motion degrades to a single
     /// no-offset crossfade with no per-item delay.
     private func rowAnimation(index: Int) -> Animation {
-        if reduceMotion {
-            return .easeInOut(duration: 0.2)
-        }
-        return MMotion.micro.delay(Double(index) * MMotion.staggerStep)
+        MMotion.settle(
+            MMotion.micro.delay(Double(index) * MMotion.staggerStep),
+            reduceMotion: reduceMotion
+        )
     }
 
-    private var emptyState: some View {
+    /// An empty card says what is missing and goes straight to fixing it:
+    /// the tap lands in THAT card's editor, not the settings root.
+    private func emptyState(for card: LauncherCard?) -> some View {
         Button {
-            router.push(.settings)
+            if let card {
+                router.push(.settingsCard(id: card.id))
+            } else {
+                router.push(.settingsEssentials)
+            }
         } label: {
-            Text("nothing here yet. choose essentials in settings")
-                .mnType(.body)
-                .foregroundStyle(MN.fogBlue)
-                .frame(maxWidth: 300, minHeight: MN.minHit, alignment: .leading)
-                .contentShape(Rectangle())
+            (
+                Text("nothing here yet. ")
+                    .font(MNType.body.font)
+                    .foregroundColor(MN.fogBlue)
+                + Text("choose essentials")
+                    .font(MNType.bodyStrong.font)
+                    .foregroundColor(MN.boneWhite)
+            )
+            .tracking(MNType.body.tracking)
+            .frame(maxWidth: 300, minHeight: MN.minHit, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.mnPress)
         .accessibilityIdentifier("essentials-empty")

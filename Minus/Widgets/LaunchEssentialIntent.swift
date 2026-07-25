@@ -1,12 +1,19 @@
 import AppIntents
 import Foundation
 
-/// Where a launcher tap actually goes. Pure and shared: the four communication
-/// apps can only reach their REAL main screens through the user's one-action
-/// Shortcuts (iOS 27 turns their schemes into quick-action sheets), and v1.6
-/// custom entries ("custom-" slugs) have no known scheme at all — both route
-/// through shortcuts://run-shortcut. Everything else opens directly by scheme.
-/// NOTE: no CustomSlug dependency — this file compiles into MinusWidget,
+/// Where a launcher tap actually goes, in order. Pure and shared between the
+/// app and the widget, which have different powers:
+///
+/// - The APP can open anything, so it walks the whole plan until something
+///   takes: universal link, then custom scheme, then the user's shortcut.
+/// - The WIDGET can only open universal links (`OpenURLIntent` rejects custom
+///   schemes, which is why v1.8's widget taps were silent no-ops). When the
+///   first step is https it opens directly with zero hops; otherwise the cell
+///   bounces through minus, which then walks the same plan.
+///
+/// The four communication apps and "custom-" entries have no openable scheme
+/// at all on iOS 27, so their plan is the user's one-action Shortcut alone.
+/// NOTE: no CustomSlug dependency here. This file compiles into MinusWidget,
 /// which never links the SwiftData layer.
 enum EssentialLaunchURL {
     static let shortcutSlugs: Set<String> = ["phone", "messages", "facetime", "mail"]
@@ -21,19 +28,28 @@ enum EssentialLaunchURL {
         return "minus-\(bare)"
     }
 
-    static func resolve(slug: String, urlString: String) -> URL? {
+    /// Every attempt for this slug, best first. Never empty for a known slug.
+    static func launchPlan(slug: String, urlString: String, universalLink: String?) -> [URL] {
         if shortcutSlugs.contains(slug) || slug.hasPrefix(customPrefix) {
-            return shortcutURL(name: shortcutName(for: slug))
+            return [shortcutURL(name: shortcutName(for: slug))].compactMap { $0 }
         }
-        return URL(string: urlString)
+        var plan: [URL] = []
+        // Universal links first: the only thing a widget can open, and they
+        // need no scheme declaration anywhere.
+        if let universalLink, let url = URL(string: universalLink) { plan.append(url) }
+        if let url = URL(string: urlString) { plan.append(url) }
+        if let shortcut = shortcutURL(name: shortcutName(for: slug)) { plan.append(shortcut) }
+        return plan
     }
 
-    /// The second chance for a scheme that opened nothing. nil when `resolve`
-    /// already returns the shortcuts route, so a caller never retries the URL
-    /// that just failed.
-    static func shortcutFallback(slug: String) -> URL? {
-        guard !shortcutSlugs.contains(slug), !slug.hasPrefix(customPrefix) else { return nil }
-        return shortcutURL(name: shortcutName(for: slug))
+    /// The single URL a widget cell should carry. https means the cell can
+    /// open it directly; anything else means the cell must bounce.
+    static func widgetTarget(slug: String, urlString: String, universalLink: String?) -> URL? {
+        launchPlan(slug: slug, urlString: urlString, universalLink: universalLink).first
+    }
+
+    static func resolve(slug: String, urlString: String, universalLink: String? = nil) -> URL? {
+        launchPlan(slug: slug, urlString: urlString, universalLink: universalLink).first
     }
 
     private static func shortcutURL(name: String) -> URL? {
@@ -43,9 +59,10 @@ enum EssentialLaunchURL {
     }
 }
 
-/// The zero-hop launch (v1.5): runs inside the widget process via
-/// Button(intent:), and returning OpenURLIntent makes the SYSTEM open the
-/// target — minus itself never comes to the foreground.
+/// The zero-hop launch: runs inside the widget process via Button(intent:),
+/// and returning OpenURLIntent makes the SYSTEM open the target, so minus
+/// never comes to the foreground. Only ever handed https targets, because
+/// App Intents cannot open custom schemes.
 struct LaunchEssentialIntent: AppIntent {
     static let title: LocalizedStringResource = "Open essential"
     static let isDiscoverable = false
@@ -64,7 +81,10 @@ struct LaunchEssentialIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & OpensIntent {
-        let url = EssentialLaunchURL.resolve(slug: slug, urlString: urlString)
+        // urlString is already the resolved target the cell decided on; the
+        // bounce URL is the honest fallback if it somehow fails to parse.
+        let url = URL(string: urlString)
+            ?? URL(string: "minus://open/\(slug)")
             ?? URL(string: "minus://focus")!
         return .result(opensIntent: OpenURLIntent(url))
     }

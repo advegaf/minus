@@ -7,9 +7,14 @@ import Foundation
 /// v1.8: minus declares no query schemes and probes nothing. Opening a URL
 /// needs no declaration; only asking whether it would open does, and that
 /// question answered wrong on iOS 27 (declared schemes for installed apps
-/// still reported false), which used to disable the row. So the catalog now
-/// carries only what it takes to launch. `confidence` and `altCandidates`
-/// survive purely to drive the DEBUG scheme lab.
+/// still reported false), which used to disable the row.
+///
+/// v1.9: rows carry a `universalLink` where the app claims one. It is tried
+/// FIRST, because it is the only thing a home-screen widget can open (App
+/// Intents reject custom schemes) and it needs no declaration at all. The
+/// scheme stays as the in-app second attempt, and the user's Shortcut as the
+/// last. `confidence`/`altCandidates` drive the DEBUG scheme lab; `altLinks`
+/// drives the DEBUG link lab.
 struct CatalogApp: Identifiable, Hashable, Sendable {
     /// How sure we are the scheme opens the app's MAIN screen. Anything below
     /// `.high` shows up in the scheme lab until a device pass confirms it.
@@ -25,6 +30,11 @@ struct CatalogApp: Identifiable, Hashable, Sendable {
     var confidence: Confidence = .high
     /// Alternate schemes worth trying in the scheme lab if the primary misses.
     var altCandidates: [String] = []
+    /// https address the app claims. Opens the app when installed, its website
+    /// when not. nil for Apple's own apps, which claim nothing useful.
+    var universalLink: String? = nil
+    /// Alternate https candidates for the DEBUG link lab.
+    var altLinks: [String] = []
 
     var id: String { slug }
     var url: URL? { URL(string: urlString) }
@@ -56,15 +66,15 @@ enum EssentialAppCatalog {
         CatalogApp(slug: "facetime", displayName: "FaceTime", urlString: "facetime:", scheme: "facetime", category: .communication),
         // message:// opens the Mail inbox; mailto: composes.
         CatalogApp(slug: "mail", displayName: "Mail", urlString: "message:", scheme: "message", category: .communication),
-        CatalogApp(slug: "whatsapp", displayName: "WhatsApp", urlString: "whatsapp:", scheme: "whatsapp", category: .communication),
+        CatalogApp(slug: "whatsapp", displayName: "WhatsApp", urlString: "whatsapp:", scheme: "whatsapp", category: .communication, universalLink: "https://wa.me/"),
         CatalogApp(slug: "signal", displayName: "Signal", urlString: "sgnl:", scheme: "sgnl", category: .communication),
-        CatalogApp(slug: "telegram", displayName: "Telegram", urlString: "tg:", scheme: "tg", category: .communication),
-        CatalogApp(slug: "slack", displayName: "Slack", urlString: "slack:", scheme: "slack", category: .communication),
-        CatalogApp(slug: "discord", displayName: "Discord", urlString: "discord:", scheme: "discord", category: .communication),
-        CatalogApp(slug: "teams", displayName: "Teams", urlString: "msteams:", scheme: "msteams", category: .communication),
-        CatalogApp(slug: "outlook", displayName: "Outlook", urlString: "ms-outlook:", scheme: "ms-outlook", category: .communication),
-        CatalogApp(slug: "gmail", displayName: "Gmail", urlString: "googlegmail:", scheme: "googlegmail", category: .communication),
-        CatalogApp(slug: "zoom", displayName: "Zoom", urlString: "zoomus:", scheme: "zoomus", category: .communication),
+        CatalogApp(slug: "telegram", displayName: "Telegram", urlString: "tg:", scheme: "tg", category: .communication, universalLink: "https://t.me/"),
+        CatalogApp(slug: "slack", displayName: "Slack", urlString: "slack:", scheme: "slack", category: .communication, universalLink: "https://app.slack.com/client"),
+        CatalogApp(slug: "discord", displayName: "Discord", urlString: "discord:", scheme: "discord", category: .communication, universalLink: "https://discord.com/app", altLinks: ["https://discord.gg"]),
+        CatalogApp(slug: "teams", displayName: "Teams", urlString: "msteams:", scheme: "msteams", category: .communication, universalLink: "https://teams.microsoft.com/"),
+        CatalogApp(slug: "outlook", displayName: "Outlook", urlString: "ms-outlook:", scheme: "ms-outlook", category: .communication, universalLink: "https://outlook.office.com/mail/"),
+        CatalogApp(slug: "gmail", displayName: "Gmail", urlString: "googlegmail:", scheme: "googlegmail", category: .communication, universalLink: "https://mail.google.com/mail/u/0/"),
+        CatalogApp(slug: "zoom", displayName: "Zoom", urlString: "zoomus:", scheme: "zoomus", category: .communication, universalLink: "https://zoom.us/join"),
 
         // MARK: apple basics (13)
         CatalogApp(slug: "maps", displayName: "Maps", urlString: "maps:", scheme: "maps", category: .apple),
@@ -82,50 +92,50 @@ enum EssentialAppCatalog {
         CatalogApp(slug: "weather", displayName: "Weather", urlString: "weather:", scheme: "weather", category: .apple, confidence: .medium),
 
         // MARK: media (7)
-        CatalogApp(slug: "spotify", displayName: "Spotify", urlString: "spotify:", scheme: "spotify", category: .media),
-        CatalogApp(slug: "youtube", displayName: "YouTube", urlString: "youtube:", scheme: "youtube", category: .media),
-        CatalogApp(slug: "netflix", displayName: "Netflix", urlString: "nflx:", scheme: "nflx", category: .media),
-        CatalogApp(slug: "twitch", displayName: "Twitch", urlString: "twitch:", scheme: "twitch", category: .media),
-        CatalogApp(slug: "overcast", displayName: "Overcast", urlString: "overcast:", scheme: "overcast", category: .media),
-        CatalogApp(slug: "pocketcasts", displayName: "Pocket Casts", urlString: "pktc:", scheme: "pktc", category: .media, confidence: .medium),
-        CatalogApp(slug: "audible", displayName: "Audible", urlString: "audible:", scheme: "audible", category: .media, confidence: .medium),
+        CatalogApp(slug: "spotify", displayName: "Spotify", urlString: "spotify:", scheme: "spotify", category: .media, universalLink: "https://open.spotify.com", altLinks: ["https://spotify.link"]),
+        CatalogApp(slug: "youtube", displayName: "YouTube", urlString: "youtube:", scheme: "youtube", category: .media, universalLink: "https://www.youtube.com"),
+        CatalogApp(slug: "netflix", displayName: "Netflix", urlString: "nflx:", scheme: "nflx", category: .media, universalLink: "https://www.netflix.com"),
+        CatalogApp(slug: "twitch", displayName: "Twitch", urlString: "twitch:", scheme: "twitch", category: .media, universalLink: "https://www.twitch.tv"),
+        CatalogApp(slug: "overcast", displayName: "Overcast", urlString: "overcast:", scheme: "overcast", category: .media, universalLink: "https://overcast.fm"),
+        CatalogApp(slug: "pocketcasts", displayName: "Pocket Casts", urlString: "pktc:", scheme: "pktc", category: .media, confidence: .medium, universalLink: "https://pocketcasts.com/web"),
+        CatalogApp(slug: "audible", displayName: "Audible", urlString: "audible:", scheme: "audible", category: .media, confidence: .medium, universalLink: "https://www.audible.com/library/titles"),
 
         // MARK: social (9)
-        CatalogApp(slug: "instagram", displayName: "Instagram", urlString: "instagram:", scheme: "instagram", category: .social),
-        CatalogApp(slug: "x", displayName: "X", urlString: "twitter:", scheme: "twitter", category: .social),
-        CatalogApp(slug: "facebook", displayName: "Facebook", urlString: "fb:", scheme: "fb", category: .social),
-        CatalogApp(slug: "snapchat", displayName: "Snapchat", urlString: "snapchat:", scheme: "snapchat", category: .social),
-        CatalogApp(slug: "tiktok", displayName: "TikTok", urlString: "tiktok:", scheme: "tiktok", category: .social, confidence: .medium, altCandidates: ["snssdk1233:"]),
-        CatalogApp(slug: "reddit", displayName: "Reddit", urlString: "reddit:", scheme: "reddit", category: .social),
-        CatalogApp(slug: "pinterest", displayName: "Pinterest", urlString: "pinterest:", scheme: "pinterest", category: .social),
-        CatalogApp(slug: "linkedin", displayName: "LinkedIn", urlString: "linkedin:", scheme: "linkedin", category: .social),
-        CatalogApp(slug: "threads", displayName: "Threads", urlString: "threads:", scheme: "threads", category: .social, confidence: .low, altCandidates: ["barcelona:"]),
+        CatalogApp(slug: "instagram", displayName: "Instagram", urlString: "instagram:", scheme: "instagram", category: .social, universalLink: "https://www.instagram.com", altLinks: ["https://instagram.com"]),
+        CatalogApp(slug: "x", displayName: "X", urlString: "twitter:", scheme: "twitter", category: .social, universalLink: "https://x.com/home", altLinks: ["https://twitter.com/home"]),
+        CatalogApp(slug: "facebook", displayName: "Facebook", urlString: "fb:", scheme: "fb", category: .social, universalLink: "https://www.facebook.com"),
+        CatalogApp(slug: "snapchat", displayName: "Snapchat", urlString: "snapchat:", scheme: "snapchat", category: .social, universalLink: "https://www.snapchat.com"),
+        CatalogApp(slug: "tiktok", displayName: "TikTok", urlString: "tiktok:", scheme: "tiktok", category: .social, confidence: .medium, altCandidates: ["snssdk1233:"], universalLink: "https://www.tiktok.com"),
+        CatalogApp(slug: "reddit", displayName: "Reddit", urlString: "reddit:", scheme: "reddit", category: .social, universalLink: "https://www.reddit.com"),
+        CatalogApp(slug: "pinterest", displayName: "Pinterest", urlString: "pinterest:", scheme: "pinterest", category: .social, universalLink: "https://www.pinterest.com"),
+        CatalogApp(slug: "linkedin", displayName: "LinkedIn", urlString: "linkedin:", scheme: "linkedin", category: .social, universalLink: "https://www.linkedin.com/feed/"),
+        CatalogApp(slug: "threads", displayName: "Threads", urlString: "threads:", scheme: "threads", category: .social, confidence: .low, altCandidates: ["barcelona:"], universalLink: "https://www.threads.net"),
 
         // MARK: getting around (4)
-        CatalogApp(slug: "uber", displayName: "Uber", urlString: "uber:", scheme: "uber", category: .gettingAround),
-        CatalogApp(slug: "lyft", displayName: "Lyft", urlString: "lyft:", scheme: "lyft", category: .gettingAround),
-        CatalogApp(slug: "waze", displayName: "Waze", urlString: "waze:", scheme: "waze", category: .gettingAround),
-        CatalogApp(slug: "googlemaps", displayName: "Google Maps", urlString: "comgooglemaps:", scheme: "comgooglemaps", category: .gettingAround),
+        CatalogApp(slug: "uber", displayName: "Uber", urlString: "uber:", scheme: "uber", category: .gettingAround, universalLink: "https://m.uber.com/looking"),
+        CatalogApp(slug: "lyft", displayName: "Lyft", urlString: "lyft:", scheme: "lyft", category: .gettingAround, universalLink: "https://ride.lyft.com"),
+        CatalogApp(slug: "waze", displayName: "Waze", urlString: "waze:", scheme: "waze", category: .gettingAround, universalLink: "https://www.waze.com/ul"),
+        CatalogApp(slug: "googlemaps", displayName: "Google Maps", urlString: "comgooglemaps:", scheme: "comgooglemaps", category: .gettingAround, universalLink: "https://maps.google.com"),
 
         // MARK: money (4)
-        CatalogApp(slug: "venmo", displayName: "Venmo", urlString: "venmo:", scheme: "venmo", category: .money),
-        CatalogApp(slug: "paypal", displayName: "PayPal", urlString: "paypal:", scheme: "paypal", category: .money, confidence: .medium),
-        CatalogApp(slug: "cashapp", displayName: "Cash App", urlString: "squarecash:", scheme: "squarecash", category: .money),
-        CatalogApp(slug: "robinhood", displayName: "Robinhood", urlString: "robinhood:", scheme: "robinhood", category: .money),
+        CatalogApp(slug: "venmo", displayName: "Venmo", urlString: "venmo:", scheme: "venmo", category: .money, universalLink: "https://venmo.com"),
+        CatalogApp(slug: "paypal", displayName: "PayPal", urlString: "paypal:", scheme: "paypal", category: .money, confidence: .medium, universalLink: "https://www.paypal.com/myaccount/summary"),
+        CatalogApp(slug: "cashapp", displayName: "Cash App", urlString: "squarecash:", scheme: "squarecash", category: .money, universalLink: "https://cash.app"),
+        CatalogApp(slug: "robinhood", displayName: "Robinhood", urlString: "robinhood:", scheme: "robinhood", category: .money, universalLink: "https://robinhood.com"),
 
         // MARK: mind & body (3)
-        CatalogApp(slug: "strava", displayName: "Strava", urlString: "strava:", scheme: "strava", category: .mindBody),
-        CatalogApp(slug: "headspace", displayName: "Headspace", urlString: "headspace:", scheme: "headspace", category: .mindBody, confidence: .medium),
-        CatalogApp(slug: "duolingo", displayName: "Duolingo", urlString: "duolingo:", scheme: "duolingo", category: .mindBody),
+        CatalogApp(slug: "strava", displayName: "Strava", urlString: "strava:", scheme: "strava", category: .mindBody, universalLink: "https://www.strava.com/dashboard"),
+        CatalogApp(slug: "headspace", displayName: "Headspace", urlString: "headspace:", scheme: "headspace", category: .mindBody, confidence: .medium, universalLink: "https://my.headspace.com"),
+        CatalogApp(slug: "duolingo", displayName: "Duolingo", urlString: "duolingo:", scheme: "duolingo", category: .mindBody, universalLink: "https://www.duolingo.com/learn"),
 
         // MARK: tools (7)
-        CatalogApp(slug: "chrome", displayName: "Chrome", urlString: "googlechrome:", scheme: "googlechrome", category: .tools),
-        CatalogApp(slug: "notion", displayName: "Notion", urlString: "notion:", scheme: "notion", category: .tools),
+        CatalogApp(slug: "chrome", displayName: "Chrome", urlString: "googlechrome:", scheme: "googlechrome", category: .tools, universalLink: "https://www.google.com"),
+        CatalogApp(slug: "notion", displayName: "Notion", urlString: "notion:", scheme: "notion", category: .tools, universalLink: "https://www.notion.so"),
         CatalogApp(slug: "things", displayName: "Things", urlString: "things:", scheme: "things", category: .tools),
-        CatalogApp(slug: "todoist", displayName: "Todoist", urlString: "todoist:", scheme: "todoist", category: .tools, confidence: .medium),
+        CatalogApp(slug: "todoist", displayName: "Todoist", urlString: "todoist:", scheme: "todoist", category: .tools, confidence: .medium, universalLink: "https://app.todoist.com/app"),
         CatalogApp(slug: "obsidian", displayName: "Obsidian", urlString: "obsidian:", scheme: "obsidian", category: .tools, confidence: .medium),
-        CatalogApp(slug: "chatgpt", displayName: "ChatGPT", urlString: "chatgpt:", scheme: "chatgpt", category: .tools, altCandidates: ["openai:"]),
-        CatalogApp(slug: "amazon", displayName: "Amazon", urlString: "com.amazon.mobile.shopping:", scheme: "com.amazon.mobile.shopping", category: .tools),
+        CatalogApp(slug: "chatgpt", displayName: "ChatGPT", urlString: "chatgpt:", scheme: "chatgpt", category: .tools, altCandidates: ["openai:"], universalLink: "https://chatgpt.com", altLinks: ["https://chat.openai.com"]),
+        CatalogApp(slug: "amazon", displayName: "Amazon", urlString: "com.amazon.mobile.shopping:", scheme: "com.amazon.mobile.shopping", category: .tools, universalLink: "https://www.amazon.com", altLinks: ["https://www.amazon.com/gp/aw/h"]),
     ]
 
     static func app(slug: String) -> CatalogApp? {

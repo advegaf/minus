@@ -153,10 +153,53 @@ final class LauncherCardTests: XCTestCase {
         XCTAssertEqual(rows.map(\.slug), ["slack", "custom-pilates"], "unknown slugs drop out")
         XCTAssertEqual(rows[0].name, "Slack")
         XCTAssertEqual(rows[1].name, "Pilates")
+    }
+
+    // MARK: v1.9 launch plans
+
+    func testLaunchPlanPrefersUniversalLinkThenSchemeThenShortcut() {
+        let plan = EssentialLaunchURL.launchPlan(
+            slug: "spotify", urlString: "spotify:", universalLink: "https://open.spotify.com"
+        ).map(\.absoluteString)
+        XCTAssertEqual(plan, [
+            "https://open.spotify.com",
+            "spotify:",
+            "shortcuts://run-shortcut?name=minus-spotify",
+        ])
+    }
+
+    func testLaunchPlanWithoutUniversalLinkStartsAtTheScheme() {
+        let plan = EssentialLaunchURL.launchPlan(
+            slug: "notes", urlString: "mobilenotes:", universalLink: nil
+        ).map(\.absoluteString)
+        XCTAssertEqual(plan, ["mobilenotes:", "shortcuts://run-shortcut?name=minus-notes"])
+    }
+
+    func testCommAndCustomSlugsOnlyEverUseTheShortcut() {
+        for slug in ["phone", "messages", "facetime", "mail"] {
+            XCTAssertEqual(
+                EssentialLaunchURL.launchPlan(slug: slug, urlString: "tel:", universalLink: "https://x.com")
+                    .map(\.absoluteString),
+                ["shortcuts://run-shortcut?name=minus-\(slug)"],
+                slug
+            )
+        }
         XCTAssertEqual(
-            rows[1].url?.absoluteString,
-            "shortcuts://run-shortcut?name=minus-pilates",
-            "custom entries launch through their shortcut"
+            EssentialLaunchURL.launchPlan(slug: "custom-pilates", urlString: "", universalLink: nil)
+                .map(\.absoluteString),
+            ["shortcuts://run-shortcut?name=minus-pilates"]
+        )
+    }
+
+    /// The widget can only open https itself; everything else has to bounce.
+    func testWidgetTargetIsHttpsOnlyWhenTheAppClaimsOne() {
+        XCTAssertEqual(
+            EssentialLaunchURL.widgetTarget(slug: "spotify", urlString: "spotify:", universalLink: "https://open.spotify.com")?.absoluteString,
+            "https://open.spotify.com"
+        )
+        XCTAssertEqual(
+            EssentialLaunchURL.widgetTarget(slug: "notes", urlString: "mobilenotes:", universalLink: nil)?.absoluteString,
+            "mobilenotes:"
         )
     }
 

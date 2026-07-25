@@ -35,9 +35,16 @@ final class WidgetHostUITests: XCTestCase {
         sb.activate()
         Thread.sleep(forTimeInterval: 1)
 
-        // Long-press empty wallpaper → jiggle mode.
+        // Long-press wallpaper to enter jiggle mode. If a minus widget from
+        // an earlier run is already placed, the press lands on IT and opens a
+        // context menu instead: "Edit Home Screen" is the way through.
         sb.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35)).press(forDuration: 2.0)
         shot("01-jiggle")
+        _ = tapFirst([
+            sb.buttons["Edit Home Screen"],
+            sb.menuItems["Edit Home Screen"],
+            sb.staticTexts["Edit Home Screen"],
+        ], timeout: 2)
 
         // iOS 18+: top-left Edit menu → Add Widget.
         if tapFirst([sb.buttons["Edit"], sb.otherElements["Edit"]]) {

@@ -19,6 +19,10 @@ enum MNType {
     case bodyXl       // 28pt, lh 1.2, -0.01em, REGULAR — widget large text
     case bodyLg       // 22pt, lh 1.2, -0.01em — launcher rows, list titles
     case body         // 17pt, lh 1.5, +0.01em
+    /// 17pt BOLD. The one sanctioned exception to "700 only at .heading":
+    /// a single emphasised word inside a body line (the empty card's
+    /// "choose essentials"). Never a whole sentence.
+    case bodyStrong
     case caption      // 13pt, lh 1.2, +0.02em — eyebrows, nav, uppercase labels
 
     var size: CGFloat {
@@ -28,13 +32,13 @@ enum MNType {
         case .headingLg: 40
         case .heading, .bodyXl: 28
         case .bodyLg: 22
-        case .body: 17
+        case .body, .bodyStrong: 17
         case .caption: 13
         }
     }
 
     var fontName: String {
-        self == .heading ? MFont.bold : MFont.regular
+        (self == .heading || self == .bodyStrong) ? MFont.bold : MFont.regular
     }
 
     /// Tracking in points (em fraction × size).
@@ -42,7 +46,7 @@ enum MNType {
         switch self {
         case .display, .displaySm: -0.02 * size
         case .headingLg, .heading, .bodyXl, .bodyLg: -0.01 * size
-        case .body: 0.01 * size
+        case .body, .bodyStrong: 0.01 * size
         case .caption: 0.02 * size
         }
     }
@@ -53,7 +57,7 @@ enum MNType {
         case .display, .displaySm: 1.0
         case .headingLg: 1.05
         case .heading, .bodyXl, .bodyLg, .caption: 1.2
-        case .body: 1.5
+        case .body, .bodyStrong: 1.5
         }
     }
 

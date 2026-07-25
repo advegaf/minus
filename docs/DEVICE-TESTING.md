@@ -63,6 +63,17 @@ The simulator can never shield apps. Every `Needs device` row in
 | 24 | V-3 | Tap around: rows, CTAs, focus start/stop, screen pushes | Motion settles instead of snapping; press feedback still immediate; nothing bounces |
 | 25 | CA-2 | Update over the v1.6 build | Store opens without a crash (no migration stage - additive property, implicit lightweight); cards and goal text survive |
 
+## v1.9 additions (universal links, widget bounce, motion)
+
+| # | Story | Do | Expect |
+|---|---|---|---|
+| 26 | L-1 | Tap spotify, discord, instagram, youtube in the HOME SCREEN WIDGET | Each opens the app directly, no minus flash. If one opens Safari instead, note it: that link needs promoting in the lab |
+| 27 | L-2 | Tap phone or a custom entry in the widget | Black blink through minus, then your shortcut runs and the app opens |
+| 28 | L-3 | Settings > about > link lab: tap every row | Note app vs Safari for each. Report back and I promote the winners |
+| 29 | M-1 | Tap the focus widget with minus closed | minus opens straight ON the focus screen: no Home flash, no slide, nothing animating in as something animates out |
+| 30 | UX-4 | Make an empty card (+ on Home), then look at Home | "nothing here yet. choose essentials" with essentials bold white; tapping it opens THAT card's editor |
+| 31 | M-2 | Move around the app generally | Motion should feel of a piece: entrances settle, exits are quicker, pushes are the system's and match the edge-swipe |
+
 Debugging: Settings → about → monitor log (DEBUG builds) is the app-group ring buffer
 the extension writes. `intervalDidEnd` can lag by up to ~2 minutes — that's Apple's
 scheduler, not a bug; the foreground sweep covers worse.

@@ -375,6 +375,7 @@ struct AboutView: View {
                 .padding(.top, MN.Space.l)
 
             #if DEBUG
+            linkLab
             schemeLab
             Text("MONITOR LOG")
                 .mnType(.caption)
@@ -402,6 +403,52 @@ struct AboutView: View {
     }
 
     #if DEBUG
+    /// v1.9 link lab: universal links are the only thing a home-screen widget
+    /// can open, but which https address an app actually claims is per-app
+    /// guesswork. Tap each row on device and note whether it lands in the app
+    /// or in Safari; the winners get promoted in EssentialAppCatalog.
+    private static let linkCandidates: [(label: String, url: String)] = {
+        var rows: [(label: String, url: String)] = []
+        for app in EssentialAppCatalog.all {
+            guard let link = app.universalLink else { continue }
+            rows.append(("\(app.slug) \u{00B7} \(link)", link))
+            for alt in app.altLinks {
+                rows.append(("\(app.slug) \u{00B7} \(alt)", alt))
+            }
+        }
+        return rows
+    }()
+
+    private var linkLab: some View {
+        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+            Text("LINK LAB")
+                .mnType(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(MN.fogBlue)
+                .padding(.top, MN.Space.section)
+            Text("tap each: did the app open, or safari?")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+            ForEach(Array(Self.linkCandidates.enumerated()), id: \.offset) { index, candidate in
+                Button {
+                    if let url = URL(string: candidate.url) {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Text(candidate.label)
+                        .mnType(.body)
+                        .foregroundStyle(MN.boneWhite)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.mnPress)
+                .accessibilityIdentifier("link-\(index)")
+            }
+        }
+        .padding(.bottom, MN.Space.l)
+    }
+
     /// T3 — landing truth on device, v1.6: GENERATED from the catalog. Every
     /// non-high-confidence row plus its alt candidates gets a tappable line;
     /// the user reports where each lands (app main vs nothing), and winners

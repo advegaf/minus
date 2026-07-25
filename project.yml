@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.8.0"
-    CURRENT_PROJECT_VERSION: "5"
+    MARKETING_VERSION: "1.9.0"
+    CURRENT_PROJECT_VERSION: "6"
     # DEVELOPMENT_TEAM is supplied per-developer via Config/Secrets.xcconfig
     # (see Config/Secrets.example.xcconfig) so no team ID lives in the repo.
     CODE_SIGN_STYLE: Automatic

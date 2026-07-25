@@ -58,24 +58,43 @@ final class EssentialCatalogTests: XCTestCase {
     }
 
     /// Communication apps and custom entries reach their app only through the
-    /// user's shortcut; everything else opens by scheme, with the shortcut as
-    /// the second chance when a scheme opens nothing.
+    /// user's shortcut. Everything else tries its universal link, then its
+    /// scheme, then the shortcut.
     func testLaunchRouting() {
         for slug in ["phone", "messages", "facetime", "mail"] {
             XCTAssertEqual(
-                EssentialLaunchURL.resolve(slug: slug, urlString: "ignored:")?.absoluteString,
-                "shortcuts://run-shortcut?name=minus-\(slug)"
+                EssentialLaunchURL.launchPlan(slug: slug, urlString: "ignored:", universalLink: nil)
+                    .map(\.absoluteString),
+                ["shortcuts://run-shortcut?name=minus-\(slug)"],
+                slug
             )
-            XCTAssertNil(EssentialLaunchURL.shortcutFallback(slug: slug), "no retry of the same URL")
         }
-        XCTAssertEqual(
-            EssentialLaunchURL.resolve(slug: "spotify", urlString: "spotify:")?.absoluteString,
-            "spotify:"
-        )
-        XCTAssertEqual(
-            EssentialLaunchURL.shortcutFallback(slug: "spotify")?.absoluteString,
-            "shortcuts://run-shortcut?name=minus-spotify"
-        )
         XCTAssertEqual(EssentialLaunchURL.shortcutName(for: "custom-pilates"), "minus-pilates")
+    }
+
+    /// Every universal link parses and is https: a custom scheme here would
+    /// silently break widget launches, since App Intents only open https.
+    func testUniversalLinksAreWellFormed() {
+        for app in EssentialAppCatalog.all {
+            for link in ([app.universalLink].compactMap { $0 } + app.altLinks) {
+                let url = URL(string: link)
+                XCTAssertNotNil(url, "\(app.slug): '\(link)' is unparseable")
+                XCTAssertEqual(url?.scheme, "https", "\(app.slug): '\(link)' must be https")
+            }
+        }
+    }
+
+    /// The apps the user named must reach the widget with an https target.
+    func testWidgetLaunchableAppsHaveUniversalLinks() {
+        for slug in ["spotify", "discord", "instagram", "youtube", "chatgpt", "amazon"] {
+            let app = EssentialAppCatalog.app(slug: slug)
+            XCTAssertNotNil(app?.universalLink, "\(slug) needs a universal link to launch from the widget")
+            XCTAssertTrue(
+                EssentialLaunchURL.widgetTarget(
+                    slug: slug, urlString: app?.urlString ?? "", universalLink: app?.universalLink
+                )?.absoluteString.hasPrefix("https") ?? false,
+                "\(slug) widget target must be https"
+            )
+        }
     }
 }

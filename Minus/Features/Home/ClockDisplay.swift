@@ -91,7 +91,7 @@ struct ClockDisplay: View {
                 .id(value)
                 .transition(lineTransition)
         }
-        .animation(reduceMotion ? .easeInOut(duration: 0.14) : MMotion.micro, value: value)
+        .animation(reduceMotion ? MMotion.settle(MMotion.exit, reduceMotion: true) : MMotion.micro, value: value)
         .accessibilityRepresentation { Text(value) }
     }
 

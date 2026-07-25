@@ -134,18 +134,41 @@ struct LauncherWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment == .center ? .top : .topLeading)
     }
 
+    /// Two cell shapes, because a widget's powers depend on the URL.
+    ///
+    /// https target: `Button(intent:)` runs LaunchEssentialIntent in the
+    /// widget process and the SYSTEM opens it, so minus never launches. This
+    /// is the zero-hop path, and universal links are the ONLY thing App
+    /// Intents can open.
+    ///
+    /// Anything else (custom schemes, the Shortcuts route): `Link` bounces
+    /// through minus, which walks the full launch plan behind a black veil.
+    /// v1.8 handed custom schemes to OpenURLIntent, which silently refuses
+    /// them, which is why third-party taps did nothing on device.
+    @ViewBuilder
     private func cell(_ essential: LauncherSnapshot.Essential, spec: Spec) -> some View {
-        // Button(intent:) runs LaunchEssentialIntent inside the widget process
-        // and the SYSTEM opens the resolved URL — minus never launches (v1.5).
-        Button(intent: LaunchEssentialIntent(slug: essential.slug, urlString: essential.url)) {
-            Text(essential.name.lowercased())
-                .mnType(spec.token)
-                .foregroundStyle(MN.boneWhite)
-                .widgetAccentable()
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, minHeight: spec.minRow, alignment: cellAlignment)
+        let target = essential.target ?? essential.url
+        if target.hasPrefix("https") {
+            Button(intent: LaunchEssentialIntent(slug: essential.slug, urlString: target)) {
+                label(essential, spec: spec)
+            }
+            .buttonStyle(.plain)
+        } else {
+            Link(destination: URL(string: "minus://open/\(essential.slug)") ?? Self.focusURL) {
+                label(essential, spec: spec)
+            }
         }
-        .buttonStyle(.plain)
+    }
+
+    private static let focusURL = URL(string: "minus://focus")!
+
+    private func label(_ essential: LauncherSnapshot.Essential, spec: Spec) -> some View {
+        Text(essential.name.lowercased())
+            .mnType(spec.token)
+            .foregroundStyle(MN.boneWhite)
+            .widgetAccentable()
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: spec.minRow, alignment: cellAlignment)
     }
 }
 

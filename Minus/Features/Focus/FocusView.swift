@@ -61,7 +61,6 @@ struct FocusView: View {
                         .transition(.opacity)
                 }
             }
-            .animation(MMotion.signature, value: deps.coordinator.isSessionActive)
         }
     }
 

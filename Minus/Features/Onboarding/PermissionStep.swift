@@ -63,7 +63,7 @@ struct PermissionStep: View {
                 .accessibilityIdentifier("state-requesting")
                 .onAppear {
                     pulse = false
-                    withAnimation(MMotion.signature.repeatForever(autoreverses: true)) {
+                    withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
                         pulse = true
                     }
                 }
