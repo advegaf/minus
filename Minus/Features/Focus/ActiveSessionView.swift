@@ -90,7 +90,7 @@ struct ActiveSessionView: View {
     }
 
     private var endTimeText: String {
-        guard let end = deps.coordinator.activeSnapshot?.plannedEndAt else { return "—" }
+        guard let end = deps.coordinator.activeSnapshot?.plannedEndAt else { return "--:--" }
         let c = Calendar.current
         return String(format: "%02d:%02d", c.component(.hour, from: end), c.component(.minute, from: end))
     }

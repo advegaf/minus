@@ -56,7 +56,10 @@ final class SettingsUITests: XCTestCase {
 
         XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
         app.buttons["nav-back"].firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["walk more"].waitForExistence(timeout: 5))
+        // v1.8: the goal line is a button (tap it to edit), so assert on its label.
+        let goal = app.descendants(matching: .any)["intention-line"]
+        XCTAssertTrue(goal.waitForExistence(timeout: 5))
+        XCTAssertTrue(goal.label.contains("walk more"), "goal did not persist, got: \(goal.label)")
         attach(app, "SE-1")
     }
 

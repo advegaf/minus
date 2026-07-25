@@ -197,11 +197,11 @@ struct ScheduleEditorView: View {
                 schedule.isEnabled = true
             } catch {
                 schedule.isEnabled = false
-                saveError = "saved, but not enabled — schedule limit reached"
+                saveError = "saved, but not enabled: schedule limit reached"
             }
         } else {
             schedule.isEnabled = false
-            saveError = "saved off — choose blocked apps to enable"
+            saveError = "saved off. choose blocked apps to enable"
         }
 
         try? deps.context.save()

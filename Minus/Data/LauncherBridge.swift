@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import UIKit
 import WidgetKit
 
 /// The single publisher of LauncherSnapshot and the ONLY caller of
@@ -16,39 +15,25 @@ enum LauncherBridge {
         var orderedSlugs: [String]
     }
 
-    /// Pure builder — everything injected. Slug resolution: catalog rows get
-    /// their compiled-in name/url (canOpenURL ONLY when the scheme is declared
-    /// — an undeclared probe always returns false, which would dim installed
-    /// apps); "custom-" slugs resolve from the registry with installed: nil.
+    /// Pure builder, everything injected. Slug resolution: catalog rows get
+    /// their compiled-in name and url, "custom-" slugs resolve from the
+    /// registry. v1.8: `installed` is always nil. minus asks nobody whether an
+    /// app exists before offering to open it (see EssentialLauncher).
     static func snapshot(
         cards: [CardInput],
         customEntries: [String: String],
         intention: String,
         activeSnapshot: ActivitySnapshot?,
         schedules: [FocusSchedule],
-        now: Date,
-        installedCheck: (URL) -> Bool
+        now: Date
     ) -> LauncherSnapshot {
-        // canOpenURL once per scheme, not once per card appearance.
-        var installedCache: [String: Bool] = [:]
         func resolve(_ slug: String) -> LauncherSnapshot.Essential? {
             if let app = EssentialAppCatalog.app(slug: slug) {
-                var installed: Bool?
-                if app.declared {
-                    if let cached = installedCache[app.scheme] {
-                        installed = cached
-                    } else if let url = app.url {
-                        let value = installedCheck(url)
-                        installedCache[app.scheme] = value
-                        installed = value
-                    }
-                }
                 return LauncherSnapshot.Essential(
-                    slug: slug, name: app.displayName, url: app.urlString, installed: installed
+                    slug: slug, name: app.displayName, url: app.urlString, installed: nil
                 )
             }
             if let name = customEntries[slug] {
-                // Launch routes via the user's shortcut; nothing to probe.
                 return LauncherSnapshot.Essential(slug: slug, name: name, url: "", installed: nil)
             }
             return nil
@@ -115,8 +100,7 @@ enum LauncherBridge {
             intention: intention,
             activeSnapshot: coordinator.activeSnapshot,
             schedules: schedules,
-            now: ClockProvider.now(),
-            installedCheck: { UIApplication.shared.canOpenURL($0) }
+            now: ClockProvider.now()
         ).write()
 
         WidgetCenter.shared.reloadAllTimelines()

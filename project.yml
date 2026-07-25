@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.7.0"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "1.8.0"
+    CURRENT_PROJECT_VERSION: "5"
     # DEVELOPMENT_TEAM is supplied per-developer via Config/Secrets.xcconfig
     # (see Config/Secrets.example.xcconfig) so no team ID lives in the repo.
     CODE_SIGN_STYLE: Automatic
@@ -76,67 +76,10 @@ targets:
         # Runtime source for the app-group id (SharedState reads Bundle.main,
         # never hardcodes), kept in lockstep with the entitlements files.
         MinusAppGroup: group.$(MINUS_BUNDLE_ID)
-        # Essential-app deep links: canOpenURL requires declaring every scheme
-        # (max 50). Exactly the catalog's `declared: true` schemes — lockstep
-        # both directions enforced by EssentialCatalogTests. Undeclared catalog
-        # rows still open (open() needs no declaration); they just never dim.
-        LSApplicationQueriesSchemes:
-          # communication — messages = conversation list, message = Mail inbox;
-          # their compose cousins (sms/mailto) are deliberately not used.
-          - tel
-          - messages
-          - message
-          - facetime
-          - whatsapp
-          - sgnl
-          - tg
-          - slack
-          - discord
-          - msteams
-          - ms-outlook
-          - googlegmail
-          - zoomus
-          # apple basics
-          - maps
-          - music
-          - photos-redirect
-          - calshow
-          - mobilenotes
-          - shortcuts
-          - x-apple-reminderkit
-          - shareddocuments
-          - ibooks
-          - podcasts
-          - shoebox
-          - x-apple-health
-          # media
-          - spotify
-          - youtube
-          - nflx
-          - twitch
-          - overcast
-          # social
-          - instagram
-          - twitter
-          - fb
-          - snapchat
-          - reddit
-          - pinterest
-          - linkedin
-          # getting around
-          - uber
-          - lyft
-          - waze
-          - comgooglemaps
-          # money
-          - venmo
-          # mind & body
-          - strava
-          - duolingo
-          # tools
-          - googlechrome
-          - notion
-          - things
+        # v1.8: minus declares NO query schemes. Opening a URL needs no
+        # declaration; only asking whether it would open does, and canOpenURL
+        # answered wrong on iOS 27 for installed apps with declared schemes.
+        # Nothing probes anymore (DesignGuardTests rule 7 enforces it).
 
   MinusMonitor:
     type: app-extension
@@ -177,6 +120,14 @@ targets:
       - path: MinusReport
         excludes:
           - "**/Icon?"
+      # The report is the one Apple-owned surface in the app; it should still
+      # be the app's typeface and colors (same share the widget makes).
+      - path: Minus/DesignSystem/Tokens.swift
+      - path: Minus/DesignSystem/Typography.swift
+      - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/GeneralSans-Bold.otf
+        buildPhase: resources
     configFiles:
       Debug: Config/Secrets.xcconfig
       Release: Config/Secrets.xcconfig
@@ -192,6 +143,9 @@ targets:
         CFBundleDisplayName: minus
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts:
+          - GeneralSans-Regular.otf
+          - GeneralSans-Bold.otf
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.deviceactivity.report-extension
 

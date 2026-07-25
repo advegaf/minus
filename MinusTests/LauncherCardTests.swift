@@ -118,53 +118,20 @@ final class LauncherCardTests: XCTestCase {
             intention: "less.",
             activeSnapshot: nil,
             schedules: [],
-            now: Date(timeIntervalSince1970: 1_000),
-            installedCheck: { _ in true }
+            now: Date(timeIntervalSince1970: 1_000)
         )
 
         let card = snapshot.resolvedCards[0]
         XCTAssertEqual(card.id, cardID)
         // ghost-slug resolves nowhere and drops out silently.
         XCTAssertEqual(card.essentials.map(\.slug), ["phone", "custom-yoga"])
-        XCTAssertEqual(card.essentials[0].installed, true)
-        XCTAssertNil(card.essentials[1].installed, "customs are never probed")
+        XCTAssertNil(card.essentials[0].installed, "v1.8 never probes")
+        XCTAssertNil(card.essentials[1].installed, "v1.8 never probes")
         // Top-level essentials mirrors card 1 for stale-reader compat.
         XCTAssertEqual(snapshot.essentials.map(\.slug), card.essentials.map(\.slug))
     }
 
-    func testBridgeNeverProbesUndeclaredSchemes() {
-        var probed: [URL] = []
-        _ = LauncherBridge.snapshot(
-            cards: [
-                // weather is catalog but undeclared; phone is declared.
-                LauncherBridge.CardInput(id: UUID(), name: "one", orderedSlugs: ["weather", "phone"])
-            ],
-            customEntries: [:],
-            intention: "",
-            activeSnapshot: nil,
-            schedules: [],
-            now: Date(timeIntervalSince1970: 0),
-            installedCheck: { probed.append($0); return true }
-        )
-        XCTAssertEqual(probed.map(\.absoluteString), ["tel:"], "only declared schemes may be probed")
-    }
 
-    func testBridgeProbesEachSchemeOnce() {
-        var probeCount = 0
-        _ = LauncherBridge.snapshot(
-            cards: [
-                LauncherBridge.CardInput(id: UUID(), name: "one", orderedSlugs: ["phone", "maps"]),
-                LauncherBridge.CardInput(id: UUID(), name: "two", orderedSlugs: ["phone", "maps"]),
-            ],
-            customEntries: [:],
-            intention: "",
-            activeSnapshot: nil,
-            schedules: [],
-            now: Date(timeIntervalSince1970: 0),
-            installedCheck: { _ in probeCount += 1; return true }
-        )
-        XCTAssertEqual(probeCount, 2, "two schemes across two cards → two probes, cached")
-    }
 
     // MARK: v1.7 — goal visibility + per-card row resolution
 
@@ -182,11 +149,7 @@ final class LauncherCardTests: XCTestCase {
             orderedSlugs: ["slack", "custom-pilates", "ghost-slug"],
             sortOrder: 1
         )
-        let rows = EssentialAppList.rows(
-            for: card,
-            customs: ["custom-pilates": "Pilates"],
-            installedCheck: { _ in true }
-        )
+        let rows = EssentialAppList.rows(for: card, customs: ["custom-pilates": "Pilates"])
         XCTAssertEqual(rows.map(\.slug), ["slack", "custom-pilates"], "unknown slugs drop out")
         XCTAssertEqual(rows[0].name, "Slack")
         XCTAssertEqual(rows[1].name, "Pilates")
@@ -197,14 +160,6 @@ final class LauncherCardTests: XCTestCase {
         )
     }
 
-    func testUndeclaredRowsNeverDim() {
-        // weather is in the catalog but undeclared — canOpenURL would lie,
-        // so the row must read as installed no matter what the probe says.
-        let card = LauncherCard(name: "one", orderedSlugs: ["weather", "phone"], sortOrder: 0)
-        let rows = EssentialAppList.rows(for: card, customs: [:], installedCheck: { _ in false })
-        XCTAssertTrue(rows[0].installed, "undeclared scheme must never dim")
-        XCTAssertFalse(rows[1].installed, "declared scheme reports the probe honestly")
-    }
 
     // MARK: custom slugs
 

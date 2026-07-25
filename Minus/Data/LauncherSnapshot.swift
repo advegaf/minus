@@ -12,7 +12,8 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
         var name: String
         /// Catalog urlString — informational; the bounce resolves via slug.
         var url: String
-        /// canOpenURL at publish time; nil = unknown (pre-1.1 snapshots).
+        /// Vestigial since v1.8: always nil. Kept so a stale file written by
+        /// an older build still decodes.
         var installed: Bool?
 
         var id: String { slug }

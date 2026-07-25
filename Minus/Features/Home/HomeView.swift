@@ -28,12 +28,21 @@ struct HomeView: View {
                 ClockDisplay()
 
                 if !intention.isEmpty {
-                    Text(intention)
-                        .mnType(.body)
-                        .foregroundStyle(MN.boneWhite)
-                        .frame(maxWidth: 300, alignment: .leading)
-                        .padding(.top, MN.Space.m)
-                        .accessibilityIdentifier("intention-line")
+                    // Tapping the goal edits the goal (v1.8 friction pass).
+                    // No minHit frame here: the monument's spacing must stay
+                    // byte-identical, so the text's own bounds are the target.
+                    Button {
+                        router.push(.settingsIntention)
+                    } label: {
+                        Text(intention)
+                            .mnType(.body)
+                            .foregroundStyle(MN.boneWhite)
+                            .frame(maxWidth: 300, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.mnPress)
+                    .padding(.top, MN.Space.m)
+                    .accessibilityIdentifier("intention-line")
                 }
 
                 EssentialAppList()

@@ -142,7 +142,6 @@ struct LauncherWidgetView: View {
                 .mnType(spec.token)
                 .foregroundStyle(MN.boneWhite)
                 .widgetAccentable()
-                .opacity(essential.installed == false ? 0.4 : 1)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: spec.minRow, alignment: cellAlignment)
         }

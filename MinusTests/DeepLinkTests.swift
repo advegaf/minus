@@ -42,13 +42,10 @@ final class LauncherBridgeTests: XCTestCase {
             intention: "less phone. more life.",
             activeSnapshot: active,
             schedules: [schedule],
-            now: now,
-            installedCheck: { $0.scheme == "tel" }
+            now: now
         )
 
         XCTAssertEqual(snapshot.essentials.map(\.slug), ["phone", "messages"])
-        XCTAssertEqual(snapshot.essentials[0].installed, true)
-        XCTAssertEqual(snapshot.essentials[1].installed, false)
         XCTAssertEqual(snapshot.intention, "less phone. more life.")
         XCTAssertEqual(snapshot.focus.activeUntil, active.plannedEndAt)
         XCTAssertNotNil(snapshot.focus.nextSchedule)

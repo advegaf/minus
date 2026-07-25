@@ -113,25 +113,44 @@ struct ReportSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: MN.Space.s) {
-            Text("DEVICE")
+            Text("your phone today")
                 .mnType(.caption)
                 .textCase(.uppercase)
                 .foregroundStyle(MN.fogBlue)
+                .accessibilityIdentifier("report-eyebrow")
+
+            Text("from apple screen time. minus never sees these numbers.")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+                .frame(maxWidth: 320, alignment: .leading)
 
             if deps.service.isMock {
                 placeholder
-            } else if deps.service.authorizationStatus == .denied {
+            } else if deps.service.authorizationStatus != .approved {
                 denied
             } else {
                 report
             }
         }
+        // A container identifier here swallows the child ids the tests query.
+        // Status is read once at launch; a grant or a revoke made since then
+        // would otherwise route a denied user into an empty report host.
+        .onAppear { deps.service.refreshAuthorizationStatus() }
     }
 
+    /// The report host paints its own opaque obsidian canvas, so the honest
+    /// line underneath is only ever visible when the extension does not render
+    /// at all. Without it the section is a word above 160pt of void.
     private var report: some View {
-        DeviceActivityReport(.dailyOverview, filter: Self.todayFilter)
-            .frame(height: 160)
-            .accessibilityIdentifier("device-report")
+        ZStack(alignment: .topLeading) {
+            Text("no numbers yet today.")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+                .accessibilityIdentifier("report-empty")
+            DeviceActivityReport(.dailyOverview, filter: Self.todayFilter)
+                .accessibilityIdentifier("device-report")
+        }
+        .frame(height: 160)
     }
 
     private static var todayFilter: DeviceActivityFilter {
@@ -145,7 +164,7 @@ struct ReportSection: View {
     private var placeholder: some View {
         VStack(alignment: .leading, spacing: MN.Space.xs) {
             PillTag("Simulator")
-            Text("screen time and pickups render from device data — the simulator has none.")
+            Text("screen time and pickups render from device data. the simulator has none.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
@@ -154,7 +173,7 @@ struct ReportSection: View {
     }
 
     private var denied: some View {
-        Text("screen time access off — grant it in settings to see device totals.")
+        Text("screen time access is off. turn it on in settings to see device totals.")
             .mnType(.caption)
             .foregroundStyle(MN.fogBlue)
             .frame(maxWidth: 320, alignment: .leading)

@@ -30,7 +30,7 @@ struct PermissionStep: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if status == .denied {
-                Text("You can grant it later in Settings — focus sessions won't shield until then.")
+                Text("You can grant it later in Settings. focus sessions won't shield until then.")
                     .mnType(.body)
                     .foregroundStyle(MN.fogBlue)
                     .frame(maxWidth: 330, alignment: .leading)

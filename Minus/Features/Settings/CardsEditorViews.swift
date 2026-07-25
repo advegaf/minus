@@ -1,9 +1,9 @@
 import SwiftData
 import SwiftUI
 
-// v1.6: the essentials editor grew into cards — named launcher pages. Card 1
+// v1.6: the essentials editor grew into cards, named launcher pages. Card 1
 // is Home and the default widget; every placed widget can pick its own card
-// in Edit Widget. Three screens: list → detail → custom entry.
+// in Edit Widget. Three screens: list, detail, custom entry.
 
 // MARK: - Cards list
 
@@ -12,15 +12,12 @@ struct CardsListView: View {
     @Environment(AppRouter.self) private var router
     @Query(sort: \LauncherCard.sortOrder) private var cards: [LauncherCard]
 
-    /// Soft cap — enough for real use, low enough to stay honest.
-    private static let cardCap = 8
-
     var body: some View {
         SettingsShell(eyebrow: "CARDS", id: "settings-cards", scrolls: true) {
             Text("Your cards.")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
-            Text("each card is one launcher page — the first is home; any widget can show any card.")
+            Text("each card is one launcher page. the first is home; any widget can show any card.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
@@ -54,7 +51,7 @@ struct CardsListView: View {
             }
             .padding(.top, MN.Space.m)
 
-            if cards.count < Self.cardCap {
+            if cards.count < MinusContainer.cardCap {
                 OutlinedCTA(title: "NEW CARD", action: addCard)
                     .padding(.top, MN.Space.l)
                     .accessibilityIdentifier("cta-new-card")
@@ -68,10 +65,7 @@ struct CardsListView: View {
     }
 
     private func addCard() {
-        let nextOrder = (cards.map(\.sortOrder).max() ?? -1) + 1
-        let card = LauncherCard(name: "card \(cards.count + 1)", orderedSlugs: [], sortOrder: nextOrder)
-        deps.context.insert(card)
-        try? deps.context.save()
+        guard let card = MinusContainer.addCard(in: deps.context) else { return }
         router.push(.settingsCard(id: card.id))
     }
 }
@@ -106,7 +100,7 @@ struct CardDetailView: View {
                     try? deps.context.save()
                 }
 
-            Text("up to \(EssentialAppCatalog.homeCap) — order follows when you added them.")
+            Text("up to \(EssentialAppCatalog.homeCap). order follows when you added them.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
                 .padding(.top, MN.Space.xs)
@@ -246,7 +240,7 @@ struct CustomEntryView: View {
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            Text("name it, then make a one-action shortcut with the matching name — open app → the app itself. that's how minus reaches apps without public schemes.")
+            Text("name it, then make a one-action shortcut with the matching name: open app → the app itself. that's how minus reaches apps without public schemes.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)

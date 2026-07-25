@@ -106,7 +106,7 @@ extension OnboardingFlow {
 // MARK: - Shared onboarding parts
 
 /// A list row where the colour *is* the state: selected names go bone-white with
-/// a leading em-dash; unselected stay fog. No checkbox, no toggle. Dimmed rows
+/// a leading minus mark (the app's own glyph); unselected stay fog. No checkbox, no toggle. Dimmed rows
 /// (a reached cap) fall to 0.35 and stop responding. Used by essentials and the
 /// mock blocked list so both read as one gesture vocabulary.
 struct OnboardingSelectRow: View {
@@ -122,7 +122,7 @@ struct OnboardingSelectRow: View {
             HStack(spacing: MN.Space.xs) {
                 // Reserved marker column keeps every name on one optical line,
                 // whether the dash is showing or not — no reflow on tap.
-                Text("\u{2014}")
+                Text("\u{2212}")
                     .mnType(.bodyLg)
                     .foregroundStyle(MN.boneWhite)
                     .opacity(isSelected ? 1 : 0)

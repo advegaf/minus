@@ -211,7 +211,7 @@ struct BlockListEditView: View {
             Text("your blocked apps didn't survive a restore.")
                 .mnType(.body)
                 .foregroundStyle(MN.boneWhite)
-            Text("re-pick them below — shields need fresh tokens.")
+            Text("re-pick them below. shields need fresh tokens.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
         }
@@ -368,7 +368,7 @@ struct AboutView: View {
                 .padding(.top, MN.Space.s)
                 .accessibilityIdentifier("about-version")
 
-            Text("a phone that asks less of you. blocking by apple screen time — deleting the app always lifts every shield.")
+            Text("a phone that asks less of you. blocking runs on apple screen time. deleting the app always lifts every shield.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
@@ -383,7 +383,7 @@ struct AboutView: View {
                 .padding(.top, MN.Space.section)
             let log = SharedState.monitorLog
             if log.isEmpty {
-                Text("empty — the extension hasn't fired yet.")
+                Text("empty. the extension hasn't fired yet.")
                     .mnType(.caption)
                     .foregroundStyle(MN.fogBlue)
                     .padding(.top, MN.Space.xs)
@@ -424,7 +424,7 @@ struct AboutView: View {
                 .textCase(.uppercase)
                 .foregroundStyle(MN.fogBlue)
                 .padding(.top, MN.Space.section)
-            Text("tap each — note where it lands.")
+            Text("tap each, note where it lands.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
             ForEach(Array(Self.schemeCandidates.enumerated()), id: \.offset) { index, candidate in

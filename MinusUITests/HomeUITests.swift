@@ -8,11 +8,16 @@ final class HomeUITests: XCTestCase {
     // MARK: - Launch
 
     @MainActor
-    private func launch(state: String, freeze: String = "09:41") -> XCUIApplication {
+    private func launch(
+        state: String,
+        freeze: String = "09:41",
+        extra: [String: String] = [:]
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode"]
         app.launchEnvironment["MINUS_STATE"] = state
         app.launchEnvironment["MINUS_FREEZE_TIME"] = freeze
+        for (key, value) in extra { app.launchEnvironment[key] = value }
         app.launch()
         return app
     }
@@ -41,7 +46,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["41"].exists, "minute line 41 missing")
 
         // The intention the user stored during onboarding.
-        XCTAssertTrue(app.staticTexts["intention-line"].exists, "intention line missing")
+        XCTAssertTrue(element(app, "intention-line").exists, "intention line missing")
 
         // The five seeded essentials, each present (installed or not).
         for slug in ["phone", "messages", "maps", "music", "photos"] {
@@ -90,8 +95,8 @@ final class HomeUITests: XCTestCase {
 
         attach(app, named: "HO-3")
 
-        // Hidden nav chrome disables the system edge-swipe (verified) — the
-        // BackGlyph is the designed return path.
+        // Two ways home since v1.8: the BackGlyph, and the edge swipe that
+        // InteractivePopEnabler restores (covered by the swipe test below).
         app.buttons["nav-back"].firstMatch.tap()
 
         XCTAssertTrue(element(app, "clock-display").waitForExistence(timeout: 5), "did not return Home")
@@ -138,12 +143,94 @@ final class HomeUITests: XCTestCase {
         )
     }
 
-    /// One card = no pager chrome at all.
+    /// One card still shows its name and the "+", so the launcher's origin
+    /// never moves as cards are born, and both shortcuts stay reachable.
     @MainActor
-    func testSingleCardShowsNoTabs() {
+    func testSingleCardShowsItsNameAndThePlus() {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-app-phone"].waitForExistence(timeout: 5))
-        XCTAssertFalse(element(app, "card-tabs").exists, "single card must not show pager chrome")
+        XCTAssertTrue(element(app, "card-tabs").exists)
+        XCTAssertTrue(app.buttons["card-tab-one"].exists)
+        XCTAssertTrue(app.buttons["card-tab-new"].exists)
+    }
+
+    /// v1.8: every row is live. Nothing is ever greyed out or disabled.
+    @MainActor
+    func testEveryLauncherRowIsTappable() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-app-phone"].waitForExistence(timeout: 5))
+        for slug in ["phone", "messages", "maps", "music", "photos"] {
+            let row = app.buttons["row-app-\(slug)"]
+            XCTAssertTrue(row.exists, "missing row \(slug)")
+            XCTAssertTrue(row.isEnabled, "row \(slug) must never be disabled")
+        }
+        XCTAssertFalse(app.staticTexts["not installed"].exists, "the dimming lie is gone")
+    }
+
+    /// A launch that opens nothing says what would fix it, and minus stays put.
+    @MainActor
+    func testFailedLaunchExplainsItselfQuietly() {
+        let app = launch(state: "onboarded", extra: ["MINUS_LAUNCH": "fail"])
+        let phone = app.buttons["row-app-phone"]
+        XCTAssertTrue(phone.waitForExistence(timeout: 5))
+        phone.tap()
+
+        XCTAssertTrue(
+            element(app, "launch-failed-phone").waitForExistence(timeout: 6),
+            "a launch that opened nothing must say so"
+        )
+        XCTAssertEqual(app.state, .runningForeground)
+        attach(app, named: "CA-9")
+    }
+
+    /// "+" makes a card and drops the user straight into its editor.
+    @MainActor
+    func testPlusCreatesACardAndOpensItsEditor() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["card-tab-new"].waitForExistence(timeout: 5))
+        app.buttons["card-tab-new"].tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5),
+            "the new card should open its own editor"
+        )
+        attach(app, named: "CA-10")
+    }
+
+    /// Tapping the card you are already on edits it (4 taps down to 2).
+    @MainActor
+    func testActiveTabOpensTheCardEditor() {
+        let app = launch(state: "cards")
+        XCTAssertTrue(app.buttons["card-tab-one"].waitForExistence(timeout: 5))
+        app.buttons["card-tab-one"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
+    }
+
+    /// Tapping the goal edits the goal.
+    @MainActor
+    func testTappingTheGoalOpensItsEditor() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(element(app, "intention-line").waitForExistence(timeout: 5))
+        element(app, "intention-line").tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-intention"].waitForExistence(timeout: 5))
+    }
+
+    /// The edge swipe pops, now that the nav bar no longer has to be visible.
+    @MainActor
+    func testEdgeSwipeReturnsHome() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["nav-settings"].waitForExistence(timeout: 5))
+        app.buttons["nav-settings"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.004, dy: 0.5))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
+
+        XCTAssertTrue(
+            element(app, "clock-display").waitForExistence(timeout: 5),
+            "edge swipe should return Home"
+        )
+        attach(app, named: "NAV-1")
     }
 
     @MainActor

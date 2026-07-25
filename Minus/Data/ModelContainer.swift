@@ -56,6 +56,25 @@ enum MinusContainer {
         return fresh
     }
 
+    /// Soft cap on cards: enough for real use, low enough to stay honest.
+    static let cardCap = 8
+
+    /// Inserts the next card and saves. nil at the cap, so every call site
+    /// enforces the limit by construction (Home's "+" and the cards list).
+    @discardableResult
+    static func addCard(in context: ModelContext) -> LauncherCard? {
+        let existing = cards(in: context)
+        guard existing.count < cardCap else { return nil }
+        let card = LauncherCard(
+            name: "card \(existing.count + 1)",
+            orderedSlugs: [],
+            sortOrder: (existing.map(\.sortOrder).max() ?? -1) + 1
+        )
+        context.insert(card)
+        try? context.save()
+        return card
+    }
+
     /// All launcher cards, launcher order. Card 1 is Home's card.
     static func cards(in context: ModelContext) -> [LauncherCard] {
         let descriptor = FetchDescriptor<LauncherCard>(sortBy: [SortDescriptor(\.sortOrder)])

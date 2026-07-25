@@ -18,6 +18,12 @@ struct AppRootView: View {
             if isOnboarded {
                 NavigationStack(path: Bindable(router).path) {
                     HomeView()
+                        // Attached at the ROOT: the pop recognizer belongs to
+                        // the navigation controller, so one instance restores
+                        // edge-swipe back on every pushed screen. On Home the
+                        // stack has one controller, so the gesture stays off
+                        // and the card pager keeps the left edge.
+                        .background(InteractivePopEnabler())
                         .navigationDestination(for: Route.self) { route in
                             destination(for: route)
                         }

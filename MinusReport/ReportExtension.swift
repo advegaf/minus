@@ -51,18 +51,16 @@ struct DailyOverviewScene: DeviceActivityReportScene {
 }
 
 // Report extensions render in a sandboxed process and cannot import the app
-// module — this view keeps its own copies of the canvas/text tokens and the
-// General Sans names (fonts registered via the extension's own UIAppFonts is
-// unnecessary: the system fallback here stays visually quiet at caption size).
+// module, but they CAN compile the design system's own sources: v1.8 shares
+// Tokens.swift + Typography.swift and registers General Sans through this
+// target's UIAppFonts, so Apple's numbers are drawn in the app's typeface
+// instead of falling back to the system face.
 struct DailyOverviewView: View {
     let summary: DailySummary
 
     nonisolated init(summary: DailySummary) {
         self.summary = summary
     }
-
-    private var boneWhite: Color { Color(red: 255 / 255, green: 253 / 255, blue: 249 / 255) }
-    private var fogBlue: Color { Color(red: 111 / 255, green: 135 / 255, blue: 156 / 255) }
 
     private var durationText: String {
         let minutes = Int(summary.totalDuration) / 60
@@ -71,29 +69,25 @@ struct DailyOverviewView: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Color(red: 16 / 255, green: 16 / 255, blue: 16 / 255)
+            MN.obsidian
 
-            HStack(alignment: .top, spacing: 40) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("SCREEN TIME")
-                        .font(.system(size: 13))
-                        .kerning(0.26)
-                        .foregroundStyle(fogBlue)
-                    Text(durationText)
-                        .font(.system(size: 40, weight: .regular))
-                        .foregroundStyle(boneWhite)
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("PICKUPS")
-                        .font(.system(size: 13))
-                        .kerning(0.26)
-                        .foregroundStyle(fogBlue)
-                    Text("\(summary.pickups)")
-                        .font(.system(size: 40, weight: .regular))
-                        .foregroundStyle(boneWhite)
-                }
+            HStack(alignment: .top, spacing: MN.Space.l) {
+                stat("SCREEN TIME", durationText)
+                stat("PICKUPS", "\(summary.pickups)")
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, MN.Space.xs)
+        }
+    }
+
+    private func stat(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+            Text(label)
+                .mnType(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(MN.fogBlue)
+            Text(value)
+                .mnType(.headingLg)
+                .foregroundStyle(MN.boneWhite)
         }
     }
 }

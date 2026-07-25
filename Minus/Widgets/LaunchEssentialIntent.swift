@@ -12,15 +12,28 @@ enum EssentialLaunchURL {
     static let shortcutSlugs: Set<String> = ["phone", "messages", "facetime", "mail"]
     static let customPrefix = "custom-"
 
+    /// The shortcut a slug expects the user to have made: "minus-phone",
+    /// "minus-pilates". Also the copy minus shows when a launch finds nothing.
+    static func shortcutName(for slug: String) -> String {
+        let bare = slug.hasPrefix(customPrefix)
+            ? String(slug.dropFirst(customPrefix.count))
+            : slug
+        return "minus-\(bare)"
+    }
+
     static func resolve(slug: String, urlString: String) -> URL? {
-        if shortcutSlugs.contains(slug) {
-            return shortcutURL(name: "minus-\(slug)")
-        }
-        if slug.hasPrefix(customPrefix) {
-            let bare = String(slug.dropFirst(customPrefix.count))
-            return shortcutURL(name: "minus-\(bare)")
+        if shortcutSlugs.contains(slug) || slug.hasPrefix(customPrefix) {
+            return shortcutURL(name: shortcutName(for: slug))
         }
         return URL(string: urlString)
+    }
+
+    /// The second chance for a scheme that opened nothing. nil when `resolve`
+    /// already returns the shortcuts route, so a caller never retries the URL
+    /// that just failed.
+    static func shortcutFallback(slug: String) -> URL? {
+        guard !shortcutSlugs.contains(slug), !slug.hasPrefix(customPrefix) else { return nil }
+        return shortcutURL(name: shortcutName(for: slug))
     }
 
     private static func shortcutURL(name: String) -> URL? {

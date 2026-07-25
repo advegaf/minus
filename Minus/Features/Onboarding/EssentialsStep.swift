@@ -22,7 +22,7 @@ struct EssentialsStep: View {
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            Text("the few apps that earn a place — up to \(cap).")
+            Text("the few apps that earn a place. up to \(cap).")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)

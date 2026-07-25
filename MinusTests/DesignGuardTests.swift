@@ -88,6 +88,80 @@ final class DesignGuardTests: XCTestCase {
         ))
     }
 
+    // MARK: - Rule 5b — nothing probes for installed apps
+
+    /// v1.8: `canOpenURL` reported false on iOS 27 for installed apps whose
+    /// schemes WERE declared, and the launcher turned that into a disabled
+    /// row. minus opens and reports honestly instead of asking first.
+    func testCanOpenURLIsBannedEverywhereUnderMinus() {
+        let found = Self.findViolations(
+            in: Self.swiftFiles(),
+            patterns: ["canOpenURL"]
+        )
+        guard !found.isEmpty else { return }
+        XCTFail(Self.report(
+            rule: "Rule 5b (nothing probes): `canOpenURL` must not appear under Minus/. Open the URL and handle the failure (see EssentialLauncher).",
+            violations: found
+        ))
+    }
+
+    // MARK: - Rule 6 — no dashes in copy
+
+    /// Em and en dashes are banned from user-facing text. Comments are
+    /// dev-facing and exempt, so this rule scans string literals only.
+    func testDashesAreBannedInStringLiteralsUnderMinus() {
+        var violations: [Violation] = []
+        for url in Self.swiftFiles().sorted(by: { $0.path < $1.path }) {
+            guard let contents = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            var lines: [Int] = []
+            for (index, line) in contents.components(separatedBy: .newlines).enumerated() {
+                let literals = Self.stringLiteralText(in: line)
+                if literals.contains("\u{2014}") || literals.contains("\u{2013}")
+                    || literals.contains("u{2014}") || literals.contains("u{2013}") {
+                    lines.append(index + 1)
+                }
+            }
+            if !lines.isEmpty { violations.append(Violation(path: url.path, lines: lines)) }
+        }
+        guard !violations.isEmpty else { return }
+        XCTFail(Self.report(
+            rule: "Rule 6 (no dashes in copy): em/en dashes must not appear in string literals under Minus/. Recast the sentence with a period, comma, colon, or the app's \u{00B7} separator.",
+            violations: violations
+        ))
+    }
+
+    /// Everything inside double-quoted literals on `line`, concatenated. A
+    /// single character walk: quotes toggle (escaped quotes don't), and `//`
+    /// outside a literal ends the line.
+    private static func stringLiteralText(in line: String) -> String {
+        var inLiteral = false
+        var escaped = false
+        var previous: Character?
+        var result = ""
+        for character in line {
+            if inLiteral {
+                if escaped {
+                    escaped = false
+                } else if character == "\\" {
+                    escaped = true
+                } else if character == "\"" {
+                    inLiteral = false
+                    previous = character
+                    continue
+                }
+                result.append(character)
+            } else {
+                if character == "\"" {
+                    inLiteral = true
+                } else if character == "/", previous == "/" {
+                    break
+                }
+            }
+            previous = character
+        }
+        return result
+    }
+
     // MARK: - Rule 5 — springs only
 
     func testTimingCurvesAreBannedEverywhereUnderMinus() {

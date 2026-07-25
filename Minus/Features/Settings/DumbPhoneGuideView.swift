@@ -12,15 +12,15 @@ struct DumbPhoneGuideView: View {
         ("the app library is enough",
          "everything else lives one swipe right. in settings → home screen & app library, turn off notification badges in the library."),
         ("only humans ring",
-         "allow notifications for phone, messages, and facetime. silence the rest — apps don't get to interrupt you."),
+         "allow notifications for phone, messages, and facetime. silence the rest. apps don't get to interrupt you."),
         ("the small widget",
          "add the focus widget too, so a running session is visible from the home screen."),
         ("let it disappear",
-         "long-press the home screen → edit → customize → set the widget style to clear. on a dark wallpaper the launcher becomes floating words — no widget, just glass."),
+         "long-press the home screen → edit → customize → set the widget style to clear. on a dark wallpaper the launcher becomes floating words: no widget, just glass."),
         ("the four that ring",
-         "in shortcuts, make four one-action shortcuts — open app → phone, named minus-phone. repeat for messages, facetime, mail. apple only lets shortcuts open these to their real screens; minus routes their taps through yours."),
+         "in shortcuts, make four one-action shortcuts: open app → phone, named minus-phone. repeat for messages, facetime, mail. apple only lets shortcuts open these to their real screens; minus routes their taps through yours."),
         ("any app at all",
-         "added a custom app to a card? make one more shortcut the same way — open app → the app, named exactly what minus showed you (minus-yourapp). one shortcut per custom app, once."),
+         "added a custom app to a card? make one more shortcut the same way: open app → the app, named exactly what minus showed you (minus-yourapp). one shortcut per custom app, once."),
     ]
 
     var body: some View {
@@ -47,7 +47,7 @@ struct DumbPhoneGuideView: View {
             }
             .padding(.top, MN.Space.l)
 
-            Text("minus can't rearrange your home screen for you — apple doesn't allow it. ten minutes by hand, once.")
+            Text("minus can't rearrange your home screen for you. apple doesn't allow it. ten minutes by hand, once.")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 340, alignment: .leading)

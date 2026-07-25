@@ -19,7 +19,9 @@ struct FocusStateLine: View {
 
     var body: some View {
         Button {
-            router.push(showsDeniedNotice ? .settings : .focus)
+            // The denied line lands on the screen that fixes it, not the
+            // settings root (v1.8 friction pass).
+            router.push(showsDeniedNotice ? .settingsPermission : .focus)
         } label: {
             content
                 .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
@@ -34,7 +36,7 @@ struct FocusStateLine: View {
         if let snapshot = deps.coordinator.activeSnapshot {
             activeCountdown(snapshot)
         } else if showsDeniedNotice {
-            Text("screen time off — focus won't shield · settings")
+            Text("screen time off · focus won't shield · settings")
                 .mnType(.caption)
                 .foregroundStyle(MN.fogBlue)
         } else if let next = nextScheduleLine() {

@@ -1,61 +1,21 @@
 import XCTest
 @testable import Minus
 
+/// v1.8: minus declares no query schemes and probes nothing, so there is no
+/// plist contract left to enforce. What remains is catalog integrity plus the
+/// device-verified launch URLs.
 final class EssentialCatalogTests: XCTestCase {
-    private var plistSchemes: [String] {
-        (Bundle.main.object(forInfoDictionaryKey: "LSApplicationQueriesSchemes") as? [String]) ?? []
-    }
-
-    /// v1.6 inversion: not every catalog scheme is declared anymore (60 apps
-    /// vs Apple's 50-scheme cap). The contract is now bidirectional over the
-    /// `declared` flag: every declared row's scheme is in the plist, and every
-    /// plist scheme belongs to a declared row (no orphans drifting in project.yml).
-    func testDeclaredFlagMatchesPlistBothDirections() throws {
-        let declared = plistSchemes
-        XCTAssertFalse(declared.isEmpty, "LSApplicationQueriesSchemes missing from Info.plist")
-
-        for app in EssentialAppCatalog.all where app.declared {
-            XCTAssertTrue(
-                declared.contains(app.scheme),
-                "\(app.slug) is declared:true but '\(app.scheme)' is not in LSApplicationQueriesSchemes"
-            )
-        }
-        let catalogDeclared = EssentialAppCatalog.declaredSchemes
-        for scheme in declared {
-            XCTAssertTrue(
-                catalogDeclared.contains(scheme),
-                "plist declares '\(scheme)' but no catalog row owns it — remove it or flag its row declared:true"
-            )
-        }
-    }
-
-    func testUndeclaredRowsAreHonestAboutIt() {
-        let declared = Set(plistSchemes)
-        for app in EssentialAppCatalog.all where !app.declared {
-            XCTAssertFalse(
-                declared.contains(app.scheme),
-                "\(app.slug) is declared:false but its scheme IS in the plist — flip the flag"
-            )
-        }
-    }
-
-    func testDeclaredSchemesStayUnderAppleCap() {
-        XCTAssertLessThanOrEqual(plistSchemes.count, 50, "Apple caps LSApplicationQueriesSchemes at 50")
-    }
-
-    /// The launcher's own machinery (comm trampoline + shortcuts) must never
-    /// lose declaration to a future trim.
-    func testCoreSchemesStayDeclared() {
-        for scheme in EssentialAppCatalog.mustDeclare {
-            XCTAssertTrue(
-                EssentialAppCatalog.declaredSchemes.contains(scheme),
-                "core scheme '\(scheme)' fell out of the declared set"
-            )
-        }
+    /// The lock on the probe removal: if `LSApplicationQueriesSchemes` ever
+    /// comes back, something started asking permission to ask.
+    func testNoQuerySchemesAreDeclared() {
+        XCTAssertNil(
+            Bundle.main.object(forInfoDictionaryKey: "LSApplicationQueriesSchemes"),
+            "minus does not probe, so it must not declare query schemes"
+        )
     }
 
     func testCatalogEntriesAreWellFormed() {
-        XCTAssertEqual(EssentialAppCatalog.all.count, 60, "catalog should carry the v1.6 sixty")
+        XCTAssertEqual(EssentialAppCatalog.all.count, 60, "catalog should carry the sixty")
         for app in EssentialAppCatalog.all {
             XCTAssertNotNil(app.url, "\(app.slug) has an unparseable urlString")
             XCTAssertTrue(app.urlString.hasPrefix(app.scheme), "\(app.slug): urlString should start with its scheme")
@@ -66,12 +26,18 @@ final class EssentialCatalogTests: XCTestCase {
         }
     }
 
-    /// Low-confidence schemes (past knowledge cutoff) never ship declared —
-    /// a wrong declared scheme would dim an installed app, which is a lie.
-    /// Undeclared + nil installed = worst case is a no-op tap.
-    func testLowConfidenceRowsAreNeverDeclared() {
-        for app in EssentialAppCatalog.all where app.confidence == .low {
-            XCTAssertFalse(app.declared, "\(app.slug) is low-confidence but declared — undeclare until lab-verified")
+    /// Verified by hand on device through the DEBUG scheme lab.
+    func testDeviceVerifiedSchemesArePromoted() {
+        let expected: [String: String] = [
+            "cashapp": "squarecash:",
+            "amazon": "com.amazon.mobile.shopping:",
+            "robinhood": "robinhood:",
+            "chatgpt": "chatgpt:",
+        ]
+        for (slug, urlString) in expected {
+            let app = EssentialAppCatalog.app(slug: slug)
+            XCTAssertEqual(app?.urlString, urlString, slug)
+            XCTAssertEqual(app?.confidence, .high, "\(slug) was confirmed on device")
         }
     }
 
@@ -89,5 +55,27 @@ final class EssentialCatalogTests: XCTestCase {
                 "category '\(category.rawValue)' is empty"
             )
         }
+    }
+
+    /// Communication apps and custom entries reach their app only through the
+    /// user's shortcut; everything else opens by scheme, with the shortcut as
+    /// the second chance when a scheme opens nothing.
+    func testLaunchRouting() {
+        for slug in ["phone", "messages", "facetime", "mail"] {
+            XCTAssertEqual(
+                EssentialLaunchURL.resolve(slug: slug, urlString: "ignored:")?.absoluteString,
+                "shortcuts://run-shortcut?name=minus-\(slug)"
+            )
+            XCTAssertNil(EssentialLaunchURL.shortcutFallback(slug: slug), "no retry of the same URL")
+        }
+        XCTAssertEqual(
+            EssentialLaunchURL.resolve(slug: "spotify", urlString: "spotify:")?.absoluteString,
+            "spotify:"
+        )
+        XCTAssertEqual(
+            EssentialLaunchURL.shortcutFallback(slug: "spotify")?.absoluteString,
+            "shortcuts://run-shortcut?name=minus-spotify"
+        )
+        XCTAssertEqual(EssentialLaunchURL.shortcutName(for: "custom-pilates"), "minus-pilates")
     }
 }

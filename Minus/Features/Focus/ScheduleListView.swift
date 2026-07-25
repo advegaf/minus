@@ -62,7 +62,7 @@ struct ScheduleListView: View {
             Text("No schedules yet.")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
-            Text("windows of time when blocked apps stay blocked — every week, without asking.")
+            Text("windows of time when blocked apps stay blocked, every week, without asking.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
@@ -126,7 +126,7 @@ struct ScheduleListView: View {
                 try deps.coordinator.register(schedule: schedule, blockList: blockList)
                 schedule.isEnabled = true
             } catch {
-                toggleError = "couldn't enable — schedule limit reached"
+                toggleError = "couldn't enable. schedule limit reached"
             }
         }
         try? deps.context.save()
@@ -143,7 +143,7 @@ struct ScheduleListView: View {
     }
 
     static func windowText(_ schedule: FocusSchedule) -> String {
-        "\(timeText(schedule.startMinuteOfDay))–\(timeText(schedule.endMinuteOfDay))"
+        "\(timeText(schedule.startMinuteOfDay)) to \(timeText(schedule.endMinuteOfDay))"
     }
 
     static func timeText(_ minuteOfDay: Int) -> String {

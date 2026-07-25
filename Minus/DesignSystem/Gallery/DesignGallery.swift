@@ -156,7 +156,7 @@ struct DesignGallery: View {
                     Text("Hairline card")
                         .mnType(.body)
                         .foregroundStyle(MN.boneWhite)
-                    Text("Obsidian surface — depth from contrast, never shadow.")
+                    Text("Obsidian surface. depth from contrast, never shadow.")
                         .mnType(.caption)
                         .foregroundStyle(MN.fogBlue)
                 }

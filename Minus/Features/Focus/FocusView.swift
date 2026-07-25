@@ -163,7 +163,7 @@ struct FocusView: View {
             try deps.coordinator.start(minutes: minutes, blockList: blockList)
             startError = nil
         } catch {
-            startError = "couldn't start — try again"
+            startError = "couldn't start. try again"
         }
     }
 
