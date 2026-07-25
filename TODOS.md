@@ -1,6 +1,6 @@
 # minus — deferred scope
 
-## What still stands between 1.12 and a release (as of 1.12.0)
+## What still stands between here and a release (as of 1.13.0)
 
 Ranked by what actually blocks, not by effort.
 
@@ -23,19 +23,28 @@ Ranked by what actually blocks, not by effort.
 4. **iOS 27 simulator stalls any test that types.** A beta-runtime keyboard
    problem, not an app one; the 26.4 simulator covers those paths and the full
    suite is green there. Recorded rather than papered over.
-5. **Two CSV rows sit at Fixed–retest** (L-4 link verification, and the
+5. **The Oura fix needs one tap to confirm.** Threading the identity through
+   Home, the trampoline and the snapshot is unit-tested, but the acceptance
+   test is a human tapping an added app on hardware and NOT seeing "could not
+   open shortcut".
+6. **Two CSV rows sit at Fixed–retest** (L-4 link verification, and the
    pre-1.10 launch rows) pending a device walk. Seven more are Needs device by
    nature: shields, schedules and the report extension cannot run on a
    simulator.
 
 Worth improving, in order of what a user would feel:
 
-- **Added apps cannot be renamed**, only removed and re-added. Removal landed
-  in 1.12; renaming did not.
-- **No search history or recents** on the add screen: adding three apps means
-  three round trips through the same typing.
+- **Added apps cannot be renamed**, only removed and re-added.
 - **The launcher has no reordering.** Card membership is toggle-only, so the
-  order is the catalog's, not yours.
+  order is the catalog's, not yours. At 268 rows this is felt more than it was
+  at 60.
+- **Nine apps from the library were left out** as too ambiguous to resolve
+  safely: Genie, Nutri Coach, Shopper, Workouts, Playground (Apple's Image
+  Playground shipped instead), Bites' near-namesakes, and Superpower and Zelle,
+  which have no launchable identity at all. Each is still one search away.
+- **The catalog needs re-verifying when it changes.** `python3
+  scripts/build_catalog.py` prints every resolution; reading that log is what
+  catches a valid id pointing at the wrong app.
 - **iCloud sync, Lock Screen widgets, a per-card default for new widgets** —
   real features, none of them blocking.
 
