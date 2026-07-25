@@ -175,6 +175,12 @@ struct EssentialAppList: View {
                     }
                     .buttonStyle(.mnPress)
                     .accessibilityIdentifier("card-tab-\(card.name.lowercased())")
+                    // Sighted, the active tab is the bone-white one. Spoken,
+                    // nothing distinguished them at all: five card names in a
+                    // row with no state and no purpose.
+                    .accessibilityLabel("card \(card.name.isEmpty ? "untitled" : card.name.lowercased())")
+                    .accessibilityAddTraits(isActive ? [.isSelected] : [])
+                    .accessibilityHint(isActive ? "edit this card" : "show this card")
                 }
 
                 if cards.count < MinusContainer.cardCap {
@@ -188,6 +194,7 @@ struct EssentialAppList: View {
                     .buttonStyle(.mnPress)
                     .padding(.leading, MN.Space.xs)
                     .accessibilityIdentifier("card-tab-new")
+                    .accessibilityLabel("new card")
                 }
             }
         }
@@ -235,6 +242,9 @@ struct EssentialAppList: View {
                         .padding(.top, MN.Space.xs)
                         .transition(.opacity)
                         .accessibilityIdentifier("launch-failed-\(failedSlug)")
+                        // It appears four seconds after a tap and leaves on its
+                        // own; without this VoiceOver never mentions it.
+                        .accessibilityAddTraits(.updatesFrequently)
                 }
             }
             .task(id: failedSlug) {
