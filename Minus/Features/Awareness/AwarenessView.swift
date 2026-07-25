@@ -113,17 +113,6 @@ struct ReportSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: MN.Space.s) {
-            Text("your phone today")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .accessibilityIdentifier("report-eyebrow")
-
-            Text("from apple screen time. minus never sees these numbers.")
-                .mnType(.caption)
-                .foregroundStyle(MN.fogBlue)
-                .frame(maxWidth: 320, alignment: .leading)
-
             if deps.service.isMock {
                 placeholder
             } else if deps.service.authorizationStatus != .approved {

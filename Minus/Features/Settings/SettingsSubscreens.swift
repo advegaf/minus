@@ -122,23 +122,33 @@ struct BlockListEditView: View {
         return summary.apps == 0 && summary.categories == 0
     }
 
+    /// A running session freezes the list. Editing it mid-focus was a way
+    /// straight through the shield: un-block an app and it opens, without
+    /// ever passing the strictness gate that guards ending a session.
+    private var isLocked: Bool { deps.coordinator.activeSnapshot != nil }
+
     var body: some View {
         SettingsShell(eyebrow: "BLOCKED", id: "settings-blocked", scrolls: true) {
             Text("What gets blocked?")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            if isStale {
-                staleRecovery
-                    .padding(.top, MN.Space.m)
-            }
-
-            if deps.service.isMock {
-                mockList
+            if isLocked {
+                locked
                     .padding(.top, MN.Space.m)
             } else {
-                deviceEditor
-                    .padding(.top, MN.Space.m)
+                if isStale {
+                    staleRecovery
+                        .padding(.top, MN.Space.m)
+                }
+
+                if deps.service.isMock {
+                    mockList
+                        .padding(.top, MN.Space.m)
+                } else {
+                    deviceEditor
+                        .padding(.top, MN.Space.m)
+                }
             }
         }
         // Attached to the stable shell root, never inside a conditional branch:
@@ -150,6 +160,23 @@ struct BlockListEditView: View {
             persistLiveSelection()
         }
         .onAppear(perform: seedLiveSelection)
+    }
+
+    private var locked: some View {
+        VStack(alignment: .leading, spacing: MN.Space.s) {
+            Text(SelectionSummaryText.line(
+                apps: liveSummary.apps, categories: liveSummary.categories
+            ))
+            .mnType(.body)
+            .foregroundStyle(MN.fogBlue)
+            .accessibilityIdentifier("blocked-summary")
+
+            Text("a session is running. this list stays put until it ends, or the shield would be one tap away from nothing.")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+                .frame(maxWidth: 320, alignment: .leading)
+                .accessibilityIdentifier("blocked-locked")
+        }
     }
 
     // MARK: Device branch

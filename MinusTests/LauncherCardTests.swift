@@ -157,13 +157,13 @@ final class LauncherCardTests: XCTestCase {
 
     // MARK: v1.9 launch plans
 
-    func testLaunchPlanPrefersUniversalLinkThenSchemeThenShortcut() {
+    func testLaunchPlanTriesSchemeThenLinkThenShortcut() {
         let plan = EssentialLaunchURL.launchPlan(
             slug: "spotify", urlString: "spotify:", universalLink: "https://open.spotify.com"
         ).map(\.absoluteString)
         XCTAssertEqual(plan, [
-            "https://open.spotify.com",
             "spotify:",
+            "https://open.spotify.com",
             "shortcuts://run-shortcut?name=minus-spotify",
         ])
     }
@@ -191,15 +191,13 @@ final class LauncherCardTests: XCTestCase {
         )
     }
 
-    /// The widget can only open https itself; everything else has to bounce.
-    func testWidgetTargetIsHttpsOnlyWhenTheAppClaimsOne() {
+    /// Apple's own apps carry no link, so they always bounce through minus.
+    func testAppleAppsBounce() {
         XCTAssertEqual(
-            EssentialLaunchURL.widgetTarget(slug: "spotify", urlString: "spotify:", universalLink: "https://open.spotify.com")?.absoluteString,
-            "https://open.spotify.com"
-        )
-        XCTAssertEqual(
-            EssentialLaunchURL.widgetTarget(slug: "notes", urlString: "mobilenotes:", universalLink: nil)?.absoluteString,
-            "mobilenotes:"
+            EssentialLaunchURL.widgetTarget(
+                slug: "notes", urlString: "mobilenotes:", universalLink: nil, linkVerified: false
+            )?.absoluteString,
+            "minus://open/notes"
         )
     }
 

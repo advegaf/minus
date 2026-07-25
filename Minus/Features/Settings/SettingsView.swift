@@ -89,7 +89,14 @@ struct SettingsView: View {
         return count == 1 ? "1 card" : "\(count) cards"
     }
 
+    /// While a session runs the list is frozen, and the row says so before
+    /// the user makes the trip.
     private var blockedDetail: String? {
+        if deps.coordinator.activeSnapshot != nil { return "locked while focused" }
+        return blockedDetailText
+    }
+
+    private var blockedDetailText: String? {
         let blockList = try? deps.context.fetch(
             FetchDescriptor<BlockList>(predicate: #Predicate { $0.isDefault })
         ).first

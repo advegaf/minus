@@ -84,17 +84,42 @@ final class EssentialCatalogTests: XCTestCase {
         }
     }
 
-    /// The apps the user named must reach the widget with an https target.
-    func testWidgetLaunchableAppsHaveUniversalLinks() {
-        for slug in ["spotify", "discord", "instagram", "youtube", "chatgpt", "amazon"] {
-            let app = EssentialAppCatalog.app(slug: slug)
-            XCTAssertNotNil(app?.universalLink, "\(slug) needs a universal link to launch from the widget")
-            XCTAssertTrue(
+    /// An unverified link must never reach the widget: on device, bare
+    /// homepages (t.me, robinhood.com, chatgpt.com) opened Safari. Unverified
+    /// rows bounce instead, so the app's own scheme gets first refusal.
+    func testUnverifiedLinksBounceRatherThanRiskSafari() {
+        for app in EssentialAppCatalog.all where !app.linkVerified {
+            XCTAssertEqual(
                 EssentialLaunchURL.widgetTarget(
-                    slug: slug, urlString: app?.urlString ?? "", universalLink: app?.universalLink
-                )?.absoluteString.hasPrefix("https") ?? false,
-                "\(slug) widget target must be https"
+                    slug: app.slug,
+                    urlString: app.urlString,
+                    universalLink: app.universalLink,
+                    linkVerified: app.linkVerified
+                )?.absoluteString,
+                "minus://open/\(app.slug)",
+                "\(app.slug) is unverified and must bounce"
             )
         }
+    }
+
+    func testVerifiedLinkGoesStraightToTheApp() {
+        XCTAssertEqual(
+            EssentialLaunchURL.widgetTarget(
+                slug: "spotify",
+                urlString: "spotify:",
+                universalLink: "https://open.spotify.com",
+                linkVerified: true
+            )?.absoluteString,
+            "https://open.spotify.com"
+        )
+    }
+
+    /// The scheme leads in-app: a miss is silent, a wrong link is Safari.
+    func testSchemeLeadsTheInAppPlan() {
+        let plan = EssentialLaunchURL.launchPlan(
+            slug: "telegram", urlString: "tg:", universalLink: "https://t.me/"
+        ).map(\.absoluteString)
+        XCTAssertEqual(plan.first, "tg:")
+        XCTAssertEqual(plan.dropFirst().first, "https://t.me/")
     }
 }

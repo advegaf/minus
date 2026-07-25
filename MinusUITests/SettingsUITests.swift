@@ -257,6 +257,23 @@ final class SettingsUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["intention-line"].exists)
     }
 
+    /// The shield has to mean something: mid-session the blocked list is
+    /// frozen, or un-blocking an app would walk straight past the strictness
+    /// gate that guards ending a session.
+    @MainActor
+    func testBlockedListIsLockedDuringASession() {
+        let app = launch(state: "active")
+        XCTAssertTrue(app.buttons["row-blocked"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["locked while focused"].exists, "the row should say so first")
+        app.buttons["row-blocked"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["settings-blocked"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "blocked-locked"), "missing the honest lock line")
+        XCTAssertFalse(app.buttons["cta-repick"].exists, "re-pick must be gone")
+        XCTAssertFalse(app.buttons["block-row-instagram"].exists, "rows must not be editable")
+        attach(app, "SE-14")
+    }
+
     @MainActor
     func testGuideShowsAllSteps() {
         let app = launch(state: "onboarded")

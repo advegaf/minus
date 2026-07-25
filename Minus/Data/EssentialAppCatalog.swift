@@ -30,9 +30,16 @@ struct CatalogApp: Identifiable, Hashable, Sendable {
     var confidence: Confidence = .high
     /// Alternate schemes worth trying in the scheme lab if the primary misses.
     var altCandidates: [String] = []
-    /// https address the app claims. Opens the app when installed, its website
-    /// when not. nil for Apple's own apps, which claim nothing useful.
+    /// https address the app might claim. Opens the app when installed and
+    /// when the app actually claims THAT path; otherwise iOS opens the web
+    /// page. nil for Apple's own apps, which claim nothing useful.
     var universalLink: String? = nil
+    /// Device-confirmed to open the app rather than Safari. Only a verified
+    /// link is used for a zero-hop widget launch; everything else bounces
+    /// through minus, where the app's own scheme gets first refusal. Bare
+    /// homepages (t.me, robinhood.com, chatgpt.com) went to Safari on device,
+    /// which is why this defaults to false.
+    var linkVerified: Bool = false
     /// Alternate https candidates for the DEBUG link lab.
     var altLinks: [String] = []
 

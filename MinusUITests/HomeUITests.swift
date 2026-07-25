@@ -104,31 +104,35 @@ final class HomeUITests: XCTestCase {
 
     // MARK: - (e) CA-8 — the card pager (v1.7)
 
-    /// Offscreen pages stay in the accessibility hierarchy (plain HStack) and
-    /// SwiftUI still reports them hittable, so "which card am I on" is asserted
-    /// geometrically: is the row's centre inside the window?
+    /// Only the active card is built, so a card that is not showing does not
+    /// exist at all. That is the point: a page can never be the wrong page.
     @MainActor
     func testCardPagerSwipesBetweenCards() {
         let app = launch(state: "cards")
         XCTAssertTrue(app.buttons["row-app-phone"].waitForExistence(timeout: 5))
-        XCTAssertTrue(onScreen(app, app.buttons["row-app-phone"]), "card one should be showing")
-        XCTAssertFalse(onScreen(app, app.buttons["row-app-slack"]), "card two must start offscreen")
+        XCTAssertFalse(app.buttons["row-app-slack"].exists, "only the active card is built")
         XCTAssertTrue(app.buttons["card-tab-one"].exists, "card tabs missing")
         attach(app, named: "CA-8")
 
         element(app, "card-pager").swipeLeft()
-        XCTAssertTrue(waitOnScreen(app, app.buttons["row-app-slack"]), "swipe should reveal card two")
-        XCTAssertFalse(onScreen(app, app.buttons["row-app-phone"]), "card one should have left")
+        XCTAssertTrue(
+            app.buttons["row-app-slack"].waitForExistence(timeout: 5),
+            "swipe should reveal card two"
+        )
+        XCTAssertFalse(app.buttons["row-app-phone"].exists, "card one should have left")
         attach(app, named: "CA-8-work")
 
         element(app, "card-pager").swipeLeft()
         XCTAssertTrue(
-            waitOnScreen(app, app.buttons["row-app-custom-pilates"]),
+            app.buttons["row-app-custom-pilates"].waitForExistence(timeout: 5),
             "card three (custom entry) missing"
         )
 
         element(app, "card-pager").swipeRight()
-        XCTAssertTrue(waitOnScreen(app, app.buttons["row-app-slack"]), "swipe back should return to card two")
+        XCTAssertTrue(
+            app.buttons["row-app-slack"].waitForExistence(timeout: 5),
+            "swipe back should return to card two"
+        )
     }
 
     /// Tapping a card name is the shortcut for the swipe.
@@ -138,7 +142,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["card-tab-weekend"].waitForExistence(timeout: 5))
         app.buttons["card-tab-weekend"].tap()
         XCTAssertTrue(
-            waitOnScreen(app, app.buttons["row-app-custom-pilates"]),
+            app.buttons["row-app-custom-pilates"].waitForExistence(timeout: 5),
             "tab tap should page to weekend"
         )
     }
@@ -231,28 +235,6 @@ final class HomeUITests: XCTestCase {
             "edge swipe should return Home"
         )
         attach(app, named: "NAV-1")
-    }
-
-    @MainActor
-    private func onScreen(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
-        guard element.exists else { return false }
-        let window = app.windows.firstMatch.frame
-        let centre = CGPoint(x: element.frame.midX, y: element.frame.midY)
-        return window.contains(centre)
-    }
-
-    @MainActor
-    private func waitOnScreen(
-        _ app: XCUIApplication,
-        _ element: XCUIElement,
-        timeout: TimeInterval = 5
-    ) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if onScreen(app, element) { return true }
-            Thread.sleep(forTimeInterval: 0.2)
-        }
-        return false
     }
 
     // MARK: - (d) HO-6 — fresh state shows onboarding, not Home

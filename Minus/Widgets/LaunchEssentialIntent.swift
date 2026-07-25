@@ -29,23 +29,33 @@ enum EssentialLaunchURL {
     }
 
     /// Every attempt for this slug, best first. Never empty for a known slug.
+    ///
+    /// The scheme leads, because a scheme that misses fails silently while a
+    /// universal link the app does not claim opens Safari, which is a worse
+    /// outcome than nothing. The link is the second chance for apps whose
+    /// scheme is wrong or gone, and the user's Shortcut is the last.
     static func launchPlan(slug: String, urlString: String, universalLink: String?) -> [URL] {
         if shortcutSlugs.contains(slug) || slug.hasPrefix(customPrefix) {
             return [shortcutURL(name: shortcutName(for: slug))].compactMap { $0 }
         }
         var plan: [URL] = []
-        // Universal links first: the only thing a widget can open, and they
-        // need no scheme declaration anywhere.
-        if let universalLink, let url = URL(string: universalLink) { plan.append(url) }
         if let url = URL(string: urlString) { plan.append(url) }
+        if let universalLink, let url = URL(string: universalLink) { plan.append(url) }
         if let shortcut = shortcutURL(name: shortcutName(for: slug)) { plan.append(shortcut) }
         return plan
     }
 
-    /// The single URL a widget cell should carry. https means the cell can
-    /// open it directly; anything else means the cell must bounce.
-    static func widgetTarget(slug: String, urlString: String, universalLink: String?) -> URL? {
-        launchPlan(slug: slug, urlString: urlString, universalLink: universalLink).first
+    /// The single URL a widget cell should carry. App Intents can only open
+    /// https, so a cell goes zero-hop ONLY with a device-verified link.
+    /// Everything else returns the bounce URL, and minus walks the full plan.
+    static func widgetTarget(
+        slug: String,
+        urlString: String,
+        universalLink: String?,
+        linkVerified: Bool
+    ) -> URL? {
+        if linkVerified, let universalLink, let url = URL(string: universalLink) { return url }
+        return URL(string: "minus://open/\(slug)")
     }
 
     static func resolve(slug: String, urlString: String, universalLink: String? = nil) -> URL? {

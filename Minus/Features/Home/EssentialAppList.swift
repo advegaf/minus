@@ -41,7 +41,11 @@ struct EssentialAppList: View {
     /// name and scheme, "custom-" slugs resolve from the registry, unknown
     /// slugs drop out silently.
     static func rows(for card: LauncherCard, customs: [String: String]) -> [Row] {
-        card.orderedSlugs.compactMap { slug in
+        var seen = Set<String>()
+        return card.orderedSlugs.compactMap { slug in
+            // A pre-1.6 store could fold duplicate rows into one card, and a
+            // duplicate id collapses the ForEach that renders them.
+            guard seen.insert(slug).inserted else { return nil }
             if let app = EssentialAppCatalog.app(slug: slug) {
                 return Row(slug: slug, name: app.displayName)
             }
@@ -72,20 +76,19 @@ struct EssentialAppList: View {
                     // The strip is present at every card count, so the
                     // launcher's origin never shifts as cards are born.
                     cardTabs
-                    if cards.count == 1 {
-                        page(for: cards[0])
-                    } else {
-                        pager
-                    }
+                    pager
                 }
             }
         }
         .onAppear {
-            // A pending deep link means this screen is already on its way out;
-            // entering with a stagger would animate into a departure.
             appeared = true
             if activeCardID == nil { activeCardID = cards.first?.id }
         }
+        // Belt and braces: `appeared` gates row opacity, and onAppear is
+        // attached to a Group whose branch can be swapped underneath it. A
+        // task on the same view cannot be skipped, so rows can never be left
+        // invisible with the hairlines still drawn.
+        .task { appeared = true }
         .onChange(of: cards) { _, updated in
             // A deleted card must not strand the pager on nothing.
             if !updated.contains(where: { $0.id == activeCardID }) {
@@ -96,23 +99,56 @@ struct EssentialAppList: View {
 
     // MARK: Pager
 
+    /// v1.10: ONLY the active card is built. The previous ScrollView pager
+    /// kept every page mounted and drove position through scrollPosition(id:),
+    /// which could rest between pages and show a blank launcher even though
+    /// the card had apps (seen on device). One page cannot be the wrong page.
+    ///
+    /// Height is reserved for the longest card so the monument never jumps as
+    /// you move between a one-app card and a seven-app one. Computed from the
+    /// row metrics, never measured, so it is stable before first layout.
     private var pager: some View {
-        ScrollView(.horizontal) {
-            // Plain HStack, not lazy: at most seven text rows per card, and
-            // the stack sizes to the tallest page ONCE, so the monument never
-            // jumps vertically mid-swipe.
-            HStack(alignment: .top, spacing: 0) {
-                ForEach(cards) { card in
-                    page(for: card)
-                        .containerRelativeFrame(.horizontal)
-                }
+        Group {
+            if let card = activeCard {
+                page(for: card)
+                    .id(card.id)
+                    .transition(.opacity)
             }
-            .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $activeCardID)
-        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, minHeight: reservedHeight, alignment: .topLeading)
+        .contentShape(Rectangle())
+        // Simultaneous, not exclusive: an exclusive gesture on the container
+        // takes ownership of the whole block and the row buttons disappear
+        // from the accessibility tree (caught by HomeUITests).
+        .simultaneousGesture(cardSwipe)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card-pager")
+    }
+
+    /// The tallest card decides the reserved height: rows at the minimum hit
+    /// target plus the hairlines between them.
+    private var reservedHeight: CGFloat {
+        let longest = cards.map { Self.rows(for: $0, customs: customs).count }.max() ?? 0
+        guard longest > 0 else { return MN.minHit }
+        return CGFloat(longest) * MN.minHit + CGFloat(longest - 1) * MN.hairline
+    }
+
+    /// Horizontal drag moves one card, the way the tabs above imply. Vertical
+    /// intent is ignored, so the gesture never fights the page it sits on.
+    private var cardSwipe: some Gesture {
+        DragGesture(minimumDistance: 24)
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                step(by: value.translation.width < 0 ? 1 : -1)
+            }
+    }
+
+    private func step(by delta: Int) {
+        guard cards.count > 1,
+              let current = cards.firstIndex(where: { $0.id == activeCard?.id }) else { return }
+        let next = current + delta
+        guard cards.indices.contains(next) else { return }
+        withAnimation(MMotion.signature) { activeCardID = cards[next].id }
     }
 
     /// The only chrome the launcher gets: card names as caption text, bone for
@@ -237,19 +273,18 @@ struct EssentialAppList: View {
             }
         } label: {
             (
-                Text("nothing here yet. ")
-                    .font(MNType.body.font)
+                Text("nothing here yet. choose ")
                     .foregroundColor(MN.fogBlue)
-                + Text("choose essentials")
-                    .font(MNType.bodyStrong.font)
+                + Text("essentials")
                     .foregroundColor(MN.boneWhite)
             )
+            .font(MNType.body.font)
             .tracking(MNType.body.tracking)
             .frame(maxWidth: 300, minHeight: MN.minHit, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(.mnPress)
-        .accessibilityIdentifier("essentials-empty")
+        .accessibilityIdentifier(card == nil ? "essentials-empty" : "essentials-empty-card")
     }
 
     /// One launcher row: a bone-white name that opens its app. Always enabled,
