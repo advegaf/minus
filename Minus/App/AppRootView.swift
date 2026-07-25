@@ -89,8 +89,8 @@ struct AppRootView: View {
             CardsListView()
         case .settingsCard(let id):
             CardDetailView(cardID: id)
-        case .settingsCustom(let cardID):
-            CustomEntryView(cardID: cardID)
+        case .settingsCustom(let cardID, let term):
+            CustomEntryView(cardID: cardID, term: term)
         case .settingsBlocked:
             BlockListEditView()
         case .settingsStrictness:

@@ -190,6 +190,59 @@ final class SettingsUITests: XCTestCase {
         attach(app, "CA-3")
     }
 
+    /// v1.13: the catalog covers a whole phone, so the picker has to be
+    /// searchable or it is ten screens of scrolling.
+    @MainActor
+    func testPickerSearchFindsAndAddsAnApp() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        app.buttons["card-row-0"].tap()
+
+        let search = app.textFields["field-app-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("oura")
+
+        // The row the user actually came for, and the category eyebrows gone.
+        let row = app.buttons["edit-row-oura"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "search did not surface oura")
+        XCTAssertFalse(app.staticTexts["communication"].exists, "search should not keep browsing chrome")
+        attach(app, "PK-1")
+        row.tap()
+
+        // Clearing the search returns the browse list with oura now chosen.
+        search.tap()
+        search.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
+        XCTAssertTrue(app.staticTexts["communication"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["edit-row-oura"].exists)
+    }
+
+    /// A name minus does not carry still has somewhere to go, and the typed
+    /// word travels with it.
+    @MainActor
+    func testPickerSearchFallsThroughToAddByName() {
+        let app = launch(state: "onboarded", extra: ["MINUS_SEARCH": "stub"])
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        app.buttons["card-row-0"].tap()
+
+        let search = app.textFields["field-app-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap()
+        search.typeText("zzzqq")
+
+        XCTAssertTrue(app.staticTexts["search-empty"].waitForExistence(timeout: 5))
+        attach(app, "PK-2")
+        app.buttons["cta-search-add"].tap()
+
+        // The term carried: the add screen opens already holding it.
+        let field = app.textFields["field-custom-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        XCTAssertEqual(field.value as? String, "zzzqq", "the typed name did not carry over")
+        attach(app, "PK-3")
+    }
+
     @MainActor
     func testCustomEntryFlow() {
         let app = launch(state: "onboarded", extra: ["MINUS_SEARCH": "stub"])

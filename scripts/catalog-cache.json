@@ -1,0 +1,594 @@
+{
+ "1.1.1.1": {
+  "bundleID": "com.cloudflare.1dot1dot1dot1",
+  "storeName": "1.1.1.1: Faster Internet"
+ },
+ "1Password": {
+  "bundleID": "com.1password.1password",
+  "storeName": "1Password: Password Manager"
+ },
+ "7-Eleven": {
+  "bundleID": "com.ecoworkinc.711.SevenMobileApp",
+  "storeName": "7-ELEVEN"
+ },
+ "Airbnb": {
+  "bundleID": "com.airbnb.app",
+  "storeName": "Airbnb"
+ },
+ "AllTrails": {
+  "bundleID": "com.alltrails.AllTrails",
+  "storeName": "AllTrails: Hike, Bike & Run"
+ },
+ "American Airlines": {
+  "bundleID": "com.aa.AmericanAirlines",
+  "storeName": "American Airlines"
+ },
+ "Amex": {
+  "bundleID": "com.americanexpress.amexservice",
+  "storeName": "Amex"
+ },
+ "Apple Music Classical": {
+  "bundleID": "com.apple.music.classical",
+  "storeName": "Apple Music Classical"
+ },
+ "Are.na": {
+  "bundleID": "na.are.arenaapp",
+  "storeName": "Are.na"
+ },
+ "Autopilot": {
+  "bundleID": "finance.iris.autopilot",
+  "storeName": "Autopilot: Automated Investing"
+ },
+ "Bambu Handy": {
+  "bundleID": "bbl.intl.bambulab.com",
+  "storeName": "Bambu Handy"
+ },
+ "Bank of America": {
+  "bundleID": "com.bankofamerica.BofA",
+  "storeName": "Bank of America Mobile Banking"
+ },
+ "Bear": {
+  "bundleID": "net.shinyfrog.bear-iOS",
+  "storeName": "Bear - Markdown Notes"
+ },
+ "Best Buy": {
+  "bundleID": "com.bestbuy.buyphone",
+  "storeName": "Best Buy: Tech Deals & Savings"
+ },
+ "Bilt Rewards": {
+  "bundleID": "com.biltrewards.bilt",
+  "storeName": "Bilt Rewards"
+ },
+ "Bites": {
+  "bundleID": "com.clintonst.bites",
+  "storeName": "Bites - Eat Where You Want"
+ },
+ "Bitwarden": {
+  "bundleID": "com.8bit.bitwarden",
+  "storeName": "Bitwarden Password Manager"
+ },
+ "Bluesky": {
+  "bundleID": "xyz.blueskyweb.app",
+  "storeName": "Bluesky Social"
+ },
+ "Booking.com": {
+  "bundleID": "com.booking.BookingApp",
+  "storeName": "Booking.com: Hotels & Travel"
+ },
+ "Brick": {
+  "bundleID": "com.brickllc.brick-app",
+  "storeName": "Brick - Ditch Distractions"
+ },
+ "Calm": {
+  "bundleID": "com.calm.calmapp",
+  "storeName": "Calm"
+ },
+ "Canvas": {
+  "bundleID": "com.instructure.icanvas",
+  "storeName": "Canvas by Instructure"
+ },
+ "Capital One": {
+  "bundleID": "com.capitalone.enterprisemobilebanking",
+  "storeName": "Capital One Mobile"
+ },
+ "ChargePoint": {
+  "bundleID": "com.coulomb.ChargePoint",
+  "storeName": "ChargePoint\u00ae"
+ },
+ "Chase": {
+  "bundleID": "com.chase",
+  "storeName": "Chase Mobile\u00ae: Bank & Invest"
+ },
+ "Chick-fil-A": {
+  "bundleID": "com.engauge.Chick-fil-A",
+  "storeName": "Chick-fil-A"
+ },
+ "Chipotle": {
+  "bundleID": "com.chipotle.Chipotle",
+  "storeName": "Chipotle"
+ },
+ "Citymapper": {
+  "bundleID": "azdev.citymapper",
+  "storeName": "Citymapper: All Live Transit"
+ },
+ "Clash Royale": {
+  "bundleID": "com.supercell.scroll",
+  "storeName": "Clash Royale"
+ },
+ "Clash of Clans": {
+  "bundleID": "com.supercell.magic",
+  "storeName": "Clash of Clans"
+ },
+ "Cosmos": {
+  "bundleID": "com.cosmos.staging",
+  "storeName": "Cosmos: Search & Discover"
+ },
+ "Costco": {
+  "bundleID": "com.costco.costco",
+  "storeName": "Costco"
+ },
+ "Craft": {
+  "bundleID": "com.lukilabs.lukiapp",
+  "storeName": "Craft: Notes, Documents, AI"
+ },
+ "Credit Karma": {
+  "bundleID": "com.creditkarma.mobile",
+  "storeName": "Intuit Credit Karma"
+ },
+ "Day One": {
+  "bundleID": "com.bloombuilt.dayone-ios",
+  "storeName": "Day One: Daily Journal & Diary"
+ },
+ "Discover": {
+  "bundleID": "com.discoverfinancial.mobile",
+  "storeName": "Discover Mobile"
+ },
+ "Disney+": {
+  "bundleID": "com.disney.disneyplus",
+  "storeName": "Disney+"
+ },
+ "DoorDash": {
+  "bundleID": "doordash.DoorDashConsumer",
+  "storeName": "DoorDash: Food, Grocery, More"
+ },
+ "Dropbox": {
+  "bundleID": "com.getdropbox.Dropbox",
+  "storeName": "Dropbox: Cloud Storage Backup"
+ },
+ "Dropset": {
+  "bundleID": "com.hoopsworkouts.app",
+  "storeName": "Dropset: Gym tracker"
+ },
+ "Dunkin'": {
+  "bundleID": "com.dunkinbrands.otgo",
+  "storeName": "Dunkin'"
+ },
+ "Duo Mobile": {
+  "bundleID": "com.duosecurity.DuoMobile",
+  "storeName": "Duo Mobile"
+ },
+ "ElevenReader": {
+  "bundleID": "io.elevenlabs.readerapp",
+  "storeName": "ElevenReader: Read Books Aloud"
+ },
+ "Empower": {
+  "bundleID": "com.empower-retirement.ios.Participant-Mobile",
+  "storeName": "Empower \u00ae"
+ },
+ "Equinox+": {
+  "bundleID": "com.equinoxfitness.Equinox",
+  "storeName": "Equinox+"
+ },
+ "Excel": {
+  "bundleID": "com.microsoft.Office.Excel",
+  "storeName": "Microsoft Excel"
+ },
+ "Expedia": {
+  "bundleID": "com.expedia.booking",
+  "storeName": "Expedia: Hotels, Flights, Cars"
+ },
+ "Experian": {
+  "bundleID": "com.experian.experianapp",
+  "storeName": "Experian\u00ae"
+ },
+ "Fidelity": {
+  "bundleID": "com.fidelity.watchlist",
+  "storeName": "Fidelity Investments"
+ },
+ "Figma": {
+  "bundleID": "com.figma.FigmaMirror",
+  "storeName": "Figma"
+ },
+ "Five Guys": {
+  "bundleID": "com.fiveguys.mobile",
+  "storeName": "Five Guys Burgers & Fries"
+ },
+ "Flighty": {
+  "bundleID": "com.flightyapp.flighty",
+  "storeName": "Flighty \u2013 Live Flight Tracker"
+ },
+ "Flo": {
+  "bundleID": "org.iggymedia.periodtracker",
+  "storeName": "Flo Cycle & Period Tracker"
+ },
+ "GOAT": {
+  "bundleID": "com.airgoat.goat.ios",
+  "storeName": "GOAT \u2013 Sneakers & Apparel"
+ },
+ "Garmin Connect": {
+  "bundleID": "com.garmin.connect.mobile",
+  "storeName": "Garmin Connect\u2122"
+ },
+ "GitHub": {
+  "bundleID": "com.github.stormbreaker.prod",
+  "storeName": "GitHub"
+ },
+ "Goodnotes": {
+  "bundleID": "com.goodnotesapp.x",
+  "storeName": "Goodnotes: AI Notes, Docs, PDF"
+ },
+ "Goodreads": {
+  "bundleID": "com.goodreads.Goodreads",
+  "storeName": "Goodreads: Book Tracker & More"
+ },
+ "Google Authenticator": {
+  "bundleID": "com.google.Authenticator",
+  "storeName": "Google Authenticator"
+ },
+ "Google Docs": {
+  "bundleID": "com.google.Docs",
+  "storeName": "Google Docs"
+ },
+ "Google Drive": {
+  "bundleID": "com.google.Drive",
+  "storeName": "Google Drive"
+ },
+ "Google Earth": {
+  "bundleID": "com.google.b612",
+  "storeName": "Google Earth"
+ },
+ "Google Sheets": {
+  "bundleID": "com.google.Sheets",
+  "storeName": "Google Sheets"
+ },
+ "Google Voice": {
+  "bundleID": "com.google.GVDialer",
+  "storeName": "Google Voice"
+ },
+ "Govee Home": {
+  "bundleID": "com.ihoment.GoVeeSensor",
+  "storeName": "Govee Home"
+ },
+ "Gradescope": {
+  "bundleID": "com.gradescope.student",
+  "storeName": "Gradescope"
+ },
+ "Granola": {
+  "bundleID": "com.granola.ios-prod",
+  "storeName": "Granola - AI Meeting Notes"
+ },
+ "GroupMe": {
+  "bundleID": "com.groupme.iphone-app",
+  "storeName": "GroupMe"
+ },
+ "Grubhub": {
+  "bundleID": "com.grubhub.search",
+  "storeName": "Grubhub: Food Delivery"
+ },
+ "Handshake": {
+  "bundleID": "com.joinhandshake.Handshake.student",
+  "storeName": "Handshake Jobs & New Careers"
+ },
+ "Helium Wallet": {
+  "bundleID": "com.helium.wallet.app",
+  "storeName": "Helium Wallet"
+ },
+ "Hevy": {
+  "bundleID": "com.hevyapp.hevy",
+  "storeName": "Hevy - Workout Tracker Gym Log"
+ },
+ "Hilton Honors": {
+  "bundleID": "com.hilton.hhonors",
+  "storeName": "Hilton Honors: Book Hotels"
+ },
+ "Home Depot": {
+  "bundleID": "com.thehomedepot.homedepot",
+  "storeName": "The Home Depot"
+ },
+ "Hopper": {
+  "bundleID": "com.hopper.flights",
+  "storeName": "Hopper: Flights, Hotels & Cars"
+ },
+ "Hulu": {
+  "bundleID": "com.hulu.plus",
+  "storeName": "Hulu: Stream TV shows & movies"
+ },
+ "IKEA": {
+  "bundleID": "com.ingka.ikea.app",
+  "storeName": "IKEA"
+ },
+ "INVNCIBLE": {
+  "bundleID": "com.invncible.app",
+  "storeName": "INVNCIBLE"
+ },
+ "Instacart": {
+  "bundleID": "com.instacart",
+  "storeName": "Instacart: Groceries & Food"
+ },
+ "Kalshi": {
+  "bundleID": "com.kalshi.mobile",
+  "storeName": "Kalshi: Trade Events & Sports"
+ },
+ "Kindle": {
+  "bundleID": "com.amazon.Lassen",
+  "storeName": "Amazon Kindle: Reading App"
+ },
+ "LazyWeather": {
+  "bundleID": "com.theleftbit.WeatherMan",
+  "storeName": "Colder or Warmer: Lazy Weather"
+ },
+ "Letterboxd": {
+  "bundleID": "com.letterboxd.LetterboxdApp",
+  "storeName": "Letterboxd"
+ },
+ "Libby": {
+  "bundleID": "com.overdrive.dewey",
+  "storeName": "Libby, the library app"
+ },
+ "Life Time": {
+  "bundleID": "com.lifetimefitness.interests.ltfitness",
+  "storeName": "Life Time Digital"
+ },
+ "Linear": {
+  "bundleID": "com.linear.ios",
+  "storeName": "Linear Mobile"
+ },
+ "Louis Vuitton": {
+  "bundleID": "com.louisvuitton.lv",
+  "storeName": "Louis Vuitton"
+ },
+ "MacroFactor": {
+  "bundleID": "com.sbs.diet",
+  "storeName": "MacroFactor - Macro Tracker"
+ },
+ "Maroon Rides": {
+  "bundleID": "com.bwees.reveille-rides",
+  "storeName": "Maroon Rides"
+ },
+ "Marriott Bonvoy": {
+  "bundleID": "com.marriott.iphoneprod",
+  "storeName": "Marriott Bonvoy: Book Hotels"
+ },
+ "McDonald's": {
+  "bundleID": "com.mcdonalds.gma",
+  "storeName": "McDonald's"
+ },
+ "Microsoft Authenticator": {
+  "bundleID": "com.microsoft.azureauthenticator",
+  "storeName": "Microsoft Authenticator"
+ },
+ "Monopoly Go": {
+  "bundleID": "com.scopely.monopolygo",
+  "storeName": "MONOPOLY GO!"
+ },
+ "MyFitnessPal": {
+  "bundleID": "com.myfitnesspal.mfp",
+  "storeName": "MyFitnessPal: Calorie Counter"
+ },
+ "Nike": {
+  "bundleID": "com.nike.omega",
+  "storeName": "Nike: Engineered for Athletes"
+ },
+ "Nike Run Club": {
+  "bundleID": "com.nike.nikeplus-gps",
+  "storeName": "Nike Run Club: Running Coach"
+ },
+ "OneDrive": {
+  "bundleID": "com.microsoft.skydrive",
+  "storeName": "Microsoft OneDrive"
+ },
+ "Opal": {
+  "bundleID": "com.withopal.opal",
+  "storeName": "Opal: Screen Time Control"
+ },
+ "OpenTable": {
+  "bundleID": "com.contextoptional.OpenTable",
+  "storeName": "OpenTable"
+ },
+ "Oura": {
+  "bundleID": "com.ouraring.oura",
+  "storeName": "Oura"
+ },
+ "PalGate": {
+  "bundleID": "com.pal-es.palgate",
+  "storeName": "PalGate"
+ },
+ "Panera Bread": {
+  "bundleID": "com.panerabread.mobile.minneapolis",
+  "storeName": "Panera Bread"
+ },
+ "Paramount+": {
+  "bundleID": "com.cbsvideo.app",
+  "storeName": "Paramount+"
+ },
+ "Peacock": {
+  "bundleID": "com.peacocktv.peacock",
+  "storeName": "Peacock TV: Stream TV & Movies"
+ },
+ "Peloton": {
+  "bundleID": "com.Peloton.PelotonApp",
+  "storeName": "Peloton: Fitness & Workouts"
+ },
+ "Perplexity": {
+  "bundleID": "ai.perplexity.app",
+  "storeName": "Perplexity - AI Search & Chat"
+ },
+ "Pie": {
+  "bundleID": "com.whippedCream.pumpkinPie",
+  "storeName": "Pie: Free Events, Cool People"
+ },
+ "Polymarket": {
+  "bundleID": "com.polymarket.ios-app",
+  "storeName": "Polymarket"
+ },
+ "Poshmark": {
+  "bundleID": "com.poshmark.poshmark",
+  "storeName": "Poshmark: Shop & Sell Fashion"
+ },
+ "Prime Video": {
+  "bundleID": "com.amazon.aiv.AIVApp",
+  "storeName": "Amazon Prime Video"
+ },
+ "QuikTrip": {
+  "bundleID": "com.quiktrip.qt",
+  "storeName": "QuikTrip: Coupons, Fuel, Food"
+ },
+ "Raycast": {
+  "bundleID": "com.raycast.ios.release",
+  "storeName": "Raycast: AI, Notes and more"
+ },
+ "Readwise": {
+  "bundleID": "io.readwise",
+  "storeName": "Readwise"
+ },
+ "Rec Sports": {
+  "bundleID": "com.getrecdapp.texasam",
+  "storeName": "Texas A&M Rec Sports"
+ },
+ "Resy": {
+  "bundleID": "com.resy.ResyApp",
+  "storeName": "Resy"
+ },
+ "Ring": {
+  "bundleID": "com.ring",
+  "storeName": "Ring - Always Home"
+ },
+ "Royal Match": {
+  "bundleID": "com.dreamgames.royalmatch",
+  "storeName": "Royal Match"
+ },
+ "SHEIN": {
+  "bundleID": "zzkko.com.ZZKKO",
+  "storeName": "SHEIN - Shopping Online"
+ },
+ "Schwab": {
+  "bundleID": "com.schwab.schwabmobile",
+  "storeName": "Schwab Mobile"
+ },
+ "Sephora": {
+  "bundleID": "com.sephora.sephoramobile",
+  "storeName": "Sephora US: Makeup & Skincare"
+ },
+ "Shop": {
+  "bundleID": "com.jadedlabs.arrive",
+  "storeName": "Shop: All your favorite brands"
+ },
+ "Southwest Airlines": {
+  "bundleID": "com.southwest.iphoneprod",
+  "storeName": "Southwest Airlines: Travel App"
+ },
+ "Starbucks": {
+  "bundleID": "com.starbucks.mystarbucks",
+  "storeName": "Starbucks"
+ },
+ "StockX": {
+  "bundleID": "com.Campless.Campless",
+  "storeName": "StockX - Sneakers and Apparel"
+ },
+ "Substack": {
+  "bundleID": "com.substack.Substack",
+  "storeName": "Substack"
+ },
+ "Sunterra": {
+  "bundleID": "com.readinsite.sunterralife",
+  "storeName": "Sunterra"
+ },
+ "Target": {
+  "bundleID": "com.target.Target",
+  "storeName": "Target: Shop. Style. Save."
+ },
+ "Temu": {
+  "bundleID": "com.einnovation.temu",
+  "storeName": "Temu: Shop Like a Billionaire"
+ },
+ "Tesla": {
+  "bundleID": "com.teslamotors.TeslaApp",
+  "storeName": "Tesla"
+ },
+ "Texas A&M": {
+  "bundleID": "edu.tamu.tamumobile",
+  "storeName": "Texas A&M University"
+ },
+ "Transit": {
+  "bundleID": "com.samvermette.Transit",
+  "storeName": "Transit \u2022 Subway & Bus Times"
+ },
+ "TripIt": {
+  "bundleID": "com.tripit.tripitmobile",
+  "storeName": "TripIt: Travel Planner"
+ },
+ "Uber Eats": {
+  "bundleID": "com.ubercab.UberEats",
+  "storeName": "Uber Eats: Food & Groceries"
+ },
+ "United Airlines": {
+  "bundleID": "com.united.UnitedCustomerFacingIPhone",
+  "storeName": "United Airlines"
+ },
+ "Unsplash": {
+  "bundleID": "com.unsplash.Unsplash",
+  "storeName": "Unsplash"
+ },
+ "Vanguard": {
+  "bundleID": "com.vanguard.app",
+  "storeName": "Vanguard: Save, Invest, Retire"
+ },
+ "Wabi": {
+  "bundleID": "ai.wabi.app",
+  "storeName": "Wabi"
+ },
+ "Walmart": {
+  "bundleID": "com.walmart.electronics",
+  "storeName": "Walmart: Shopping & Savings"
+ },
+ "Wells Fargo": {
+  "bundleID": "com.wf.mobilebanking",
+  "storeName": "Wells Fargo Mobile\u00ae"
+ },
+ "Whataburger": {
+  "bundleID": "com.Whataburger.Production",
+  "storeName": "Whataburger"
+ },
+ "Whoop": {
+  "bundleID": "com.whoop.iphone",
+  "storeName": "WHOOP"
+ },
+ "Wise": {
+  "bundleID": "com.transferwise.Transferwise",
+  "storeName": "Wise: Global Money Transfer"
+ },
+ "Wordle": {
+  "bundleID": "com.vottzapps.wordle",
+  "storeName": "Wordle!"
+ },
+ "YNAB": {
+  "bundleID": "com.youneedabudget.evergreen.YNAB-Evergreen",
+  "storeName": "YNAB"
+ },
+ "Yelp": {
+  "bundleID": "com.yelp.yelpiphone",
+  "storeName": "Yelp: Food, Services & Reviews"
+ },
+ "Yuka": {
+  "bundleID": "yuca.scanner",
+  "storeName": "Yuka - Food & Cosmetic Scanner"
+ },
+ "eBay": {
+  "bundleID": "com.ebay.iphone",
+  "storeName": "eBay online shopping & selling"
+ },
+ "lululemon": {
+  "bundleID": "com.lululemon.shopapp",
+  "storeName": "lululemon"
+ }
+}

@@ -85,6 +85,9 @@ struct CardDetailView: View {
     @State private var name = ""
     @State private var loaded = false
     @State private var confirmingDelete = false
+    /// The catalog covers a whole phone now, so browsing alone is ten screens
+    /// of scrolling. Empty query keeps the categorised list exactly as it was.
+    @State private var query = ""
     /// The added app awaiting a removal confirmation. Removal deletes the
     /// registry row itself, so it needs the same gate the card does.
     @State private var pendingRemoval: EssentialApp?
@@ -94,6 +97,29 @@ struct CardDetailView: View {
     }
     private var customs: [EssentialApp] { registry.filter { CustomSlug.isCustom($0.slug) } }
     private var atCap: Bool { (card?.orderedSlugs.count ?? 0) >= EssentialAppCatalog.homeCap }
+
+    private var trimmedQuery: String {
+        query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+    private var isSearching: Bool { !trimmedQuery.isEmpty }
+
+    /// Catalog rows matching the query. Prefix matches lead, because typing
+    /// "ma" should reach maps before macrofactor's neighbours.
+    private var catalogResults: [CatalogApp] {
+        let term = trimmedQuery
+        return EssentialAppCatalog.all
+            .filter { $0.displayName.lowercased().contains(term) }
+            .sorted { first, second in
+                let firstLeads = first.displayName.lowercased().hasPrefix(term)
+                let secondLeads = second.displayName.lowercased().hasPrefix(term)
+                if firstLeads != secondLeads { return firstLeads }
+                return first.displayName.lowercased() < second.displayName.lowercased()
+            }
+    }
+
+    private var customResults: [EssentialApp] {
+        customs.filter { $0.displayName.lowercased().contains(trimmedQuery) }
+    }
 
     var body: some View {
         SettingsShell(eyebrow: "CARD", id: "settings-card-detail", scrolls: true) {
@@ -109,60 +135,18 @@ struct CardDetailView: View {
                 .foregroundStyle(MN.fogBlue)
                 .padding(.top, MN.Space.xs)
 
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(CatalogCategory.allCases, id: \.rawValue) { category in
-                    Text(category.rawValue)
-                        .mnType(.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(MN.fogBlue)
-                        .padding(.top, MN.Space.m)
-                        .padding(.bottom, MN.Space.xxs)
-                    ForEach(EssentialAppCatalog.apps(in: category)) { app in
-                        let isChosen = card?.orderedSlugs.contains(app.slug) ?? false
-                        OnboardingSelectRow(
-                            title: app.displayName.lowercased(),
-                            isSelected: isChosen,
-                            isDimmed: !isChosen && atCap,
-                            accessibilityID: "edit-row-\(app.slug)"
-                        ) {
-                            toggle(app.slug, isChosen: isChosen)
-                        }
-                    }
-                }
+            FieldShell(placeholder: "search apps", text: $query, accessibilityID: "field-app-search")
+                .padding(.top, MN.Space.m)
 
-                Text("yours")
-                    .mnType(.caption)
-                    .textCase(.uppercase)
-                    .foregroundStyle(MN.fogBlue)
-                    .padding(.top, MN.Space.m)
-                    .padding(.bottom, MN.Space.xxs)
-                ForEach(customs, id: \.slug) { entry in
-                    let isChosen = card?.orderedSlugs.contains(entry.slug) ?? false
-                    // Catalog rows can only be toggled; an app YOU added can
-                    // also be taken back out, because a typo would otherwise
-                    // sit in this list until the app was reinstalled.
-                    AddedAppRow(
-                        title: entry.displayName.lowercased(),
-                        isSelected: isChosen,
-                        isDimmed: !isChosen && atCap,
-                        slug: entry.slug,
-                        toggle: { toggle(entry.slug, isChosen: isChosen) },
-                        remove: { pendingRemoval = entry }
-                    )
+            VStack(alignment: .leading, spacing: 0) {
+                if isSearching {
+                    searchResults
+                } else {
+                    browse
                 }
-                Button {
-                    router.push(.settingsCustom(cardID: cardID))
-                } label: {
-                    Text("+ an app we don't list")
-                        .mnType(.body)
-                        .foregroundStyle(MN.boneWhite)
-                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.mnPress)
-                .accessibilityIdentifier("cta-add-custom")
             }
             .padding(.top, MN.Space.m)
+            .animation(MMotion.micro, value: isSearching)
 
             Button {
                 confirmingDelete = true
@@ -203,6 +187,106 @@ struct CardDetailView: View {
             name = card?.name ?? ""
             loaded = true
         }
+    }
+
+    /// Everything minus knows, by category. Unchanged from when this was the
+    /// only way to fill a card, just longer.
+    @ViewBuilder
+    private var browse: some View {
+        ForEach(CatalogCategory.allCases, id: \.rawValue) { category in
+            Text(category.rawValue)
+                .mnType(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(MN.fogBlue)
+                .padding(.top, MN.Space.m)
+                .padding(.bottom, MN.Space.xxs)
+            ForEach(EssentialAppCatalog.apps(in: category)) { app in
+                catalogRow(app)
+            }
+        }
+
+        Text("yours")
+            .mnType(.caption)
+            .textCase(.uppercase)
+            .foregroundStyle(MN.fogBlue)
+            .padding(.top, MN.Space.m)
+            .padding(.bottom, MN.Space.xxs)
+        ForEach(customs, id: \.slug) { entry in
+            addedRow(entry)
+        }
+        addByNameLink(label: "+ an app we don't list", id: "cta-add-custom")
+            .padding(.top, MN.Space.xs)
+    }
+
+    /// One flat list, no eyebrows: when you have typed a name you are looking
+    /// for one app, not browsing a shelf.
+    @ViewBuilder
+    private var searchResults: some View {
+        let hasResults = !(catalogResults.isEmpty && customResults.isEmpty)
+        if hasResults {
+            ForEach(customResults, id: \.slug) { addedRow($0) }
+            ForEach(catalogResults) { catalogRow($0) }
+        } else {
+            Text("nothing here by that name.")
+                .mnType(.body)
+                .foregroundStyle(MN.fogBlue)
+                .frame(maxWidth: 320, alignment: .leading)
+                .accessibilityIdentifier("search-empty")
+        }
+        // The store knows apps minus never will, so the way out is always
+        // offered — but it only speaks up when the search came back empty.
+        // Sitting bone-white under a row the user already wanted, it competed
+        // with the answer.
+        addByNameLink(
+            label: hasResults
+                ? "not it? add by name"
+                : "add \u{201c}\(trimmedQuery)\u{201d} by name",
+            id: "cta-search-add",
+            quiet: hasResults
+        )
+        .padding(.top, hasResults ? MN.Space.l : MN.Space.m)
+    }
+
+    private func catalogRow(_ app: CatalogApp) -> some View {
+        let isChosen = card?.orderedSlugs.contains(app.slug) ?? false
+        return OnboardingSelectRow(
+            title: app.displayName.lowercased(),
+            isSelected: isChosen,
+            isDimmed: !isChosen && atCap,
+            accessibilityID: "edit-row-\(app.slug)"
+        ) {
+            toggle(app.slug, isChosen: isChosen)
+        }
+    }
+
+    /// Catalog rows can only be toggled; an app YOU added can also be taken
+    /// back out, because a typo would otherwise sit in this list until the app
+    /// was reinstalled.
+    private func addedRow(_ entry: EssentialApp) -> some View {
+        let isChosen = card?.orderedSlugs.contains(entry.slug) ?? false
+        return AddedAppRow(
+            title: entry.displayName.lowercased(),
+            isSelected: isChosen,
+            isDimmed: !isChosen && atCap,
+            slug: entry.slug,
+            toggle: { toggle(entry.slug, isChosen: isChosen) },
+            remove: { pendingRemoval = entry }
+        )
+    }
+
+    private func addByNameLink(label: String, id: String, quiet: Bool = false) -> some View {
+        Button {
+            router.push(.settingsCustom(cardID: cardID, term: trimmedQuery))
+        } label: {
+            Text(label)
+                .mnType(quiet ? .caption : .body)
+                .foregroundStyle(quiet ? MN.fogBlue : MN.boneWhite)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.mnPress)
+        .accessibilityIdentifier(id)
     }
 
     /// Deleting the registry row is not enough: the slug is copied into every
@@ -313,6 +397,9 @@ struct CustomEntryView: View {
 
     /// nil = the first card (deep-jump tours have no id at parse time).
     let cardID: UUID?
+    /// What was typed into the card editor's search before falling through to
+    /// here. Carried so the same word is never typed twice.
+    var term: String = ""
 
     @State private var name = ""
     @State private var matches: [AppSearch.Match] = []
@@ -320,6 +407,15 @@ struct CustomEntryView: View {
     @State private var searchTask: Task<Void, Never>?
 
     private enum Status: Equatable { case idle, searching, empty, offline }
+
+    init(cardID: UUID?, term: String = "") {
+        self.cardID = cardID
+        self.term = term
+        // Seeded at init rather than onAppear: the carried term has to be in
+        // the field before first paint, and the status line it used to hang
+        // off is an EmptyView while idle, so its onAppear never ran.
+        _name = State(initialValue: term)
+    }
 
     var body: some View {
         SettingsShell(eyebrow: "ADD AN APP", id: "settings-custom", scrolls: true) {
@@ -365,6 +461,11 @@ struct CustomEntryView: View {
             }
             .padding(.top, MN.Space.m)
             .animation(MMotion.micro, value: matches)
+        }
+        .task {
+            // onChange never fires for a value that arrived with the view.
+            guard !name.isEmpty, matches.isEmpty else { return }
+            search(name)
         }
     }
 

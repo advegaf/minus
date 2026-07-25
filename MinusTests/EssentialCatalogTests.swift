@@ -15,17 +15,31 @@ final class EssentialCatalogTests: XCTestCase {
     }
 
     func testCatalogEntriesAreWellFormed() {
-        XCTAssertEqual(EssentialAppCatalog.all.count, 60, "catalog should carry the sixty")
+        XCTAssertGreaterThan(EssentialAppCatalog.all.count, 200, "the catalog should cover a real phone")
         for app in EssentialAppCatalog.all {
-            XCTAssertNotNil(app.url, "\(app.slug) has an unparseable urlString")
-            XCTAssertTrue(app.urlString.hasPrefix(app.scheme), "\(app.slug): urlString should start with its scheme")
-            XCTAssertFalse(app.displayName.isEmpty)
+            XCTAssertFalse(app.displayName.isEmpty, "\(app.slug) has no name")
+            XCTAssertFalse(app.slug.isEmpty)
+            // A scheme is optional now, but a declared one has to parse.
+            if !app.urlString.isEmpty {
+                XCTAssertNotNil(app.url, "\(app.slug) has an unparseable urlString")
+                XCTAssertTrue(app.urlString.hasPrefix(app.scheme), "\(app.slug): urlString should start with its scheme")
+            }
+        }
+    }
+
+    /// Every preserved scheme must belong to a row that still exists, or the
+    /// fallback map is quietly rotting against a regenerated catalog.
+    func testVerifiedSchemesAllPointAtRealRows() {
+        let slugs = Set(EssentialAppCatalog.all.map(\.slug))
+        for slug in EssentialAppCatalog.verifiedSchemes.keys {
+            XCTAssertTrue(slugs.contains(slug), "verified scheme for '\(slug)', which is not in the catalog")
         }
     }
 
     /// Identities verified against the App Store's own records.
     func testDeviceVerifiedIdentities() {
         let expected: [String: String] = [
+            "oura": "com.ouraring.oura",
             "spotify": "com.spotify.client",
             "telegram": "ph.telegra.Telegraph",
             "chatgpt": "com.openai.chat",
@@ -36,11 +50,12 @@ final class EssentialCatalogTests: XCTestCase {
         }
     }
 
-    func testSlugsAndSchemesAreUnique() {
+    /// A duplicate slug collapses the ForEach that renders the picker, and a
+    /// card stores slugs, so two rows sharing one is a real corruption. Schemes
+    /// are no longer required to be unique: most rows no longer have one.
+    func testSlugsAreUnique() {
         let slugs = EssentialAppCatalog.all.map(\.slug)
         XCTAssertEqual(slugs.count, Set(slugs).count, "duplicate slugs")
-        let schemes = EssentialAppCatalog.all.map(\.scheme)
-        XCTAssertEqual(schemes.count, Set(schemes).count, "duplicate schemes")
     }
 
     func testEveryCategoryHasMembers() {
@@ -72,9 +87,31 @@ final class EssentialCatalogTests: XCTestCase {
     /// assertion is non-empty and space-free rather than dotted.
     func testEveryCatalogRowCarriesAnIdentity() {
         for app in EssentialAppCatalog.all {
-            let identity = app.bundleID ?? ""
-            XCTAssertFalse(identity.isEmpty, "\(app.slug) has no bundle identifier")
-            XCTAssertFalse(identity.contains(" "), "\(app.slug): '\(identity)' is not a bundle id")
+            XCTAssertFalse(app.bundleID.isEmpty, "\(app.slug) has no bundle identifier")
+            XCTAssertFalse(app.bundleID.contains(" "), "\(app.slug): '\(app.bundleID)' is not a bundle id")
+        }
+    }
+
+    /// The identities that were resolved to the WRONG app on the first pass and
+    /// had to be pinned by hand. The store answers a name with whatever it
+    /// thinks you meant, and a valid id for the wrong app is invisible at
+    /// runtime, so the corrections are locked here.
+    func testHandCorrectedIdentities() {
+        let expected: [String: String] = [
+            "word": "com.microsoft.Office.Word",      // was Wordscapes, a word game
+            "gemini": "com.google.gemini",            // was Gemini, the crypto exchange
+            "delta": "com.delta.iphone.ver1",         // was Delta, a game emulator
+            "clear": "com.clearme.Clear",             // was Clear, a Brazilian broker
+            "dominos": "com.dominos.iphone",          // was a game about dominoes
+            "max": "com.wbd.stream",                  // was Max Fashion
+            "onesec": "wtf.riedel.one-sec",           // was a different One-Sec
+            "particle": "news.particle.app",          // was Particle, an art app
+            "copilot": "com.microsoft.copilot",       // was CoPilot, the budgeting app
+            "marcus": "com.marcus.ios",
+            "authy": "com.authy",
+        ]
+        for (slug, bundleID) in expected {
+            XCTAssertEqual(EssentialAppCatalog.app(slug: slug)?.bundleID, bundleID, slug)
         }
     }
 }

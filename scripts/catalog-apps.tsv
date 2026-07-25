@@ -1,0 +1,307 @@
+# The catalog source of truth. Columns: name <TAB> category <TAB> pinned bundle id (optional)
+#
+# `name` is the SHORT human name as it reads on a home screen, which is what
+# the launcher renders. It is also the search term. When the App Store's title
+# is longer ("Flighty - Live Flight Tracker"), the store title is used only to
+# confirm the match, never displayed.
+#
+# A pinned id skips the lookup entirely: Apple's own apps (which are not in the
+# store), and builds that belong to the user.
+#
+# Regenerate with: python3 scripts/build_catalog.py
+# Categories: communication apple media social gettingAround money mindBody
+#             tools shopping food travel work games campus
+
+# ---- communication
+Phone	communication	com.apple.mobilephone
+Messages	communication	com.apple.MobileSMS
+FaceTime	communication	com.apple.facetime
+Mail	communication	com.apple.mobilemail
+WhatsApp	communication	net.whatsapp.WhatsApp
+Signal	communication	org.whispersystems.signal
+Telegram	communication	ph.telegra.Telegraph
+Discord	communication	com.hammerandchisel.discord
+Slack	communication	com.tinyspeck.chatlyio
+GroupMe	communication
+Zoom	communication	us.zoom.videomeetings
+Teams	communication	com.microsoft.skype.teams
+Outlook	communication	com.microsoft.Office.Outlook
+Gmail	communication	com.google.Gmail
+Google Voice	communication
+
+# ---- apple basics
+Maps	apple	com.apple.Maps
+Music	apple	com.apple.Music
+Photos	apple	com.apple.mobileslideshow
+Calendar	apple	com.apple.mobilecal
+Notes	apple	com.apple.mobilenotes
+Reminders	apple	com.apple.reminders
+Files	apple	com.apple.DocumentsApp
+Books	apple	com.apple.iBooks
+Podcasts	apple	com.apple.podcasts
+Wallet	apple	com.apple.Passbook
+Health	apple	com.apple.Health
+Weather	apple	com.apple.weather
+Clock	apple	com.apple.mobiletimer
+Calculator	apple	com.apple.calculator
+Camera	apple	com.apple.camera
+Settings	apple	com.apple.Preferences
+Safari	apple	com.apple.mobilesafari
+Shortcuts	apple	com.apple.shortcuts
+Find My	apple	com.apple.findmy
+Fitness	apple	com.apple.Fitness
+Home	apple	com.apple.Home
+Stocks	apple	com.apple.stocks
+Translate	apple	com.apple.Translate
+Voice Memos	apple	com.apple.VoiceMemos
+Compass	apple	com.apple.compass
+Measure	apple	com.apple.measure
+Freeform	apple	com.apple.freeform
+App Store	apple	com.apple.AppStore
+TV	apple	com.apple.tv
+Sports	apple	com.apple.sports
+Remote	apple	com.apple.Remote
+Watch	apple	com.apple.Bridge
+Contacts	apple	com.apple.MobileAddressBook
+News	apple	com.apple.news
+Journal	apple	com.apple.Journal
+Passwords	apple	com.apple.Passwords
+Preview	apple	com.apple.Preview
+Apple Store	apple	com.apple.store.Jolly
+TestFlight	apple	com.apple.TestFlight
+Final Cut Camera	apple	com.apple.FinalCutCamera
+Playgrounds	apple	com.apple.Playgrounds
+Image Playground	apple	com.apple.GenerativePlaygroundApp
+App Store Connect	apple	com.apple.AppStoreConnect
+Apple Developer	apple	com.apple.WWDC
+Feedback Assistant	apple	com.apple.appleseed.FeedbackAssistant
+
+# ---- media
+Spotify	media	com.spotify.client
+YouTube	media	com.google.ios.youtube
+Netflix	media	com.netflix.Netflix
+Disney+	media
+Prime Video	media
+Peacock	media
+Max	media	com.wbd.stream
+Hulu	media
+Paramount+	media
+Twitch	media	tv.twitch
+Audible	media	com.audible.iphone
+Overcast	media	fm.overcast.overcast
+Pocket Casts	media	au.com.shiftyjelly.podcasts
+SoundCloud	media	com.soundcloud.TouchApp
+Shazam	media	com.shazam.Shazam
+Apple Music Classical	media
+ElevenReader	media
+Substack	media
+Kindle	media
+Libby	media
+Letterboxd	media
+Goodreads	media
+
+# ---- social
+Instagram	social	com.burbn.instagram
+X	social	com.atebits.Tweetie2
+Facebook	social	com.facebook.Facebook
+Snapchat	social	com.toyopagroup.picaboo
+TikTok	social	com.zhiliaoapp.musically
+Reddit	social	com.reddit.Reddit
+Pinterest	social	pinterest
+LinkedIn	social	com.linkedin.LinkedIn
+Threads	social	com.burbn.barcelona
+Bluesky	social
+Are.na	social
+Unsplash	social
+Cosmos	social
+Pie	social
+
+# ---- getting around
+Uber	gettingAround	com.ubercab.UberClient
+Lyft	gettingAround	com.zimride.instant
+Waze	gettingAround	com.waze.iphone
+Google Maps	gettingAround	com.google.Maps
+Google Earth	gettingAround
+Flighty	gettingAround
+FocusFlight	gettingAround	net.cementpla.FocusFlights
+Transit	gettingAround
+Citymapper	gettingAround
+ChargePoint	gettingAround
+Tesla	gettingAround
+PalGate	gettingAround
+
+# ---- travel
+Airbnb	travel
+Booking.com	travel
+Expedia	travel
+Delta	travel	com.delta.iphone.ver1
+United Airlines	travel
+American Airlines	travel
+Southwest Airlines	travel
+Marriott Bonvoy	travel
+Hilton Honors	travel
+Hopper	travel
+CLEAR	travel	com.clearme.Clear
+TripIt	travel
+
+# ---- money
+Venmo	money	com.venmo.TouchFree
+PayPal	money	com.yourcompany.PPClient
+Cash App	money	com.squareup.cash
+Robinhood	money	com.robinhood.release.Robinhood
+Coinbase	money	com.vilcsak.bitcoin2
+Chase	money
+Capital One	money
+Wells Fargo	money
+Bank of America	money
+Schwab	money
+Fidelity	money
+Vanguard	money
+Marcus	money	com.marcus.ios
+Amex	money
+Discover	money
+Experian	money
+Credit Karma	money
+Bilt Rewards	money
+Kalshi	money
+Polymarket	money
+Wise	money
+Empower	money
+Monarch Money	money	com.monarchmoney.mobile
+YNAB	money
+Ledger Wallet	money	com.ledger.live
+Helium Wallet	money
+Autopilot	money
+
+# ---- mind & body
+Strava	mindBody	com.strava.stravaride
+Headspace	mindBody	com.getsomeheadspace.headspace
+Calm	mindBody
+Duolingo	mindBody	com.duolingo.DuolingoMobile
+Oura	mindBody
+Google Health	mindBody	com.fitbit.FitbitMobile
+Whoop	mindBody
+Garmin Connect	mindBody
+Hevy	mindBody
+MacroFactor	mindBody
+MyFitnessPal	mindBody
+Peloton	mindBody
+Equinox+	mindBody
+Life Time	mindBody
+Yuka	mindBody
+Dropset	mindBody
+INVNCIBLE	mindBody
+Flo	mindBody
+AllTrails	mindBody
+Nike Run Club	mindBody
+one sec	mindBody	wtf.riedel.one-sec
+Brick	mindBody
+Opal	mindBody
+
+# ---- tools
+Chrome	tools	com.google.chrome.ios
+Notion	tools	notion.id
+Things	tools	com.culturedcode.ThingsiPhone
+Todoist	tools	com.todoist.ios
+Obsidian	tools	md.obsidian
+ChatGPT	tools	com.openai.chat
+Claude	tools	com.anthropic.claude
+Gemini	tools	com.google.gemini
+Perplexity	tools
+Copilot	tools	com.microsoft.copilot
+Raycast	tools
+Granola	tools
+Goodnotes	tools
+Google Drive	tools
+Google Docs	tools
+Google Sheets	tools
+Dropbox	tools
+OneDrive	tools
+Word	tools	com.microsoft.Office.Word
+Excel	tools
+Figma	tools
+Linear	tools
+GitHub	tools
+1Password	tools
+Bitwarden	tools
+Authy	tools	com.authy
+Google Authenticator	tools
+Duo Mobile	tools
+RSA Authenticator	tools	com.rsa.securid.iphone.SecurID
+Microsoft Authenticator	tools
+Govee Home	tools
+Ring	tools
+Bambu Handy	tools
+1.1.1.1	tools
+Particle	tools	news.particle.app
+Aura	tools	com.aura.suite
+SMS Virtual	tools	com.voronoff.SMS-Active
+LazyWeather	tools
+Day One	tools
+One Year	tools	wndn.studio.one-year
+Bear	tools
+Readwise	tools
+Craft	tools
+
+# ---- shopping
+Amazon	shopping	com.amazon.Amazon
+Target	shopping
+Walmart	shopping
+Costco	shopping
+My H-E-B	shopping	com.heb.myheb
+eBay	shopping
+Best Buy	shopping
+Home Depot	shopping
+IKEA	shopping
+Sephora	shopping
+lululemon	shopping
+Nike	shopping
+Louis Vuitton	shopping
+Shop	shopping
+Temu	shopping
+SHEIN	shopping
+Poshmark	shopping
+StockX	shopping
+GOAT	shopping
+
+# ---- food
+DoorDash	food
+Uber Eats	food
+Instacart	food
+Grubhub	food
+Chipotle	food
+Starbucks	food
+Dunkin'	food
+McDonald's	food
+Chick-fil-A	food
+Five Guys	food
+Panera Bread	food
+Domino's	food	com.dominos.iphone
+Whataburger	food
+7-Eleven	food
+QuikTrip	food
+Yelp	food
+OpenTable	food
+Resy	food
+Bites	food
+
+# ---- games
+Chess	games	com.chess.iphone
+Clash of Clans	games
+Clash Royale	games
+Wordle	games
+Monopoly Go	games
+Royal Match	games
+
+# ---- campus & personal
+Canvas	campus
+Gradescope	campus
+Maroon Rides	campus
+Texas A&M	campus
+Rec Sports	campus
+Handshake	campus
+Sunterra	campus
+Wabi	campus
+Vita	campus	com.angelvega.vita
+Pickle	campus	com.angelvega.pickle
+grug	campus	com.ocho.grug

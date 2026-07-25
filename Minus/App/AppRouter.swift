@@ -10,7 +10,7 @@ enum Route: Hashable {
     case settingsIntention
     case settingsEssentials
     case settingsCard(id: UUID?)
-    case settingsCustom(cardID: UUID?)
+    case settingsCustom(cardID: UUID?, term: String = "")
     case settingsBlocked
     case settingsStrictness
     case settingsPermission
@@ -48,7 +48,7 @@ final class AppRouter {
         case "settings-cards": path = [.settings, .settingsEssentials]
         case "settings-card-detail": path = [.settings, .settingsEssentials, .settingsCard(id: nil)]
         // Depth capped at 3 — NavigationStack drops deeper one-shot pushes.
-        case "settings-custom": path = [.settings, .settingsEssentials, .settingsCustom(cardID: nil)]
+        case "settings-custom": path = [.settings, .settingsEssentials, .settingsCustom(cardID: nil, term: "")]
         case "settings-blocked": path = [.settings, .settingsBlocked]
         case "settings-permission": path = [.settings, .settingsPermission]
         case "settings-strictness": path = [.settings, .settingsStrictness]
