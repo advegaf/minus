@@ -2,8 +2,9 @@ import SwiftData
 import SwiftUI
 
 /// Settings root: quiet rows in the selection-row vocabulary, each pushing a
-/// focused subscreen. Reset lives at the bottom as a ghost — destructive
-/// gravity without a drop of red.
+/// focused subscreen. There is no reset: wiping everything from inside the app
+/// was a loaded gun next to the shields, and deleting minus already lifts them
+/// (About says so).
 struct SettingsView: View {
     @Environment(AppDependencies.self) private var deps
     @Environment(AppRouter.self) private var router
@@ -54,28 +55,15 @@ struct SettingsView: View {
                     }
                     .padding(.top, MN.Space.l)
 
-                    GhostCaptionButton(title: "Reset everything", accessibilityID: "cta-reset") {
-                        confirmingReset = true
-                    }
-                    .padding(.top, MN.Space.section)
-                    .padding(.bottom, MN.Space.l)
+                    Spacer(minLength: MN.Space.section)
                 }
                 .padding(.horizontal, MN.Space.m)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .confirmationDialog(
-            "Reset everything? Sessions, schedules, essentials, and your intention all go.",
-            isPresented: $confirmingReset,
-            titleVisibility: .visible
-        ) {
-            Button("Reset", role: .destructive) { resetAll() }
-        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings")
     }
-
-    @State private var confirmingReset = false
 
     private var intentionDetail: String? {
         guard let config, !config.intentionText.isEmpty else { return "not set" }
@@ -130,29 +118,5 @@ struct SettingsView: View {
         }
         .buttonStyle(.mnPress)
         .accessibilityIdentifier(id)
-    }
-
-    private func resetAll() {
-        deps.coordinator.resetAll()
-        for schedule in (try? deps.context.fetch(FetchDescriptor<FocusSchedule>())) ?? [] {
-            deps.context.delete(schedule)
-        }
-        for session in (try? deps.context.fetch(FetchDescriptor<FocusSession>())) ?? [] {
-            deps.context.delete(session)
-        }
-        for app in (try? deps.context.fetch(FetchDescriptor<EssentialApp>())) ?? [] {
-            deps.context.delete(app)
-        }
-        for card in (try? deps.context.fetch(FetchDescriptor<LauncherCard>())) ?? [] {
-            deps.context.delete(card)
-        }
-        for list in (try? deps.context.fetch(FetchDescriptor<BlockList>())) ?? [] {
-            deps.context.delete(list)
-        }
-        for config in configs {
-            deps.context.delete(config)
-        }
-        try? deps.context.save()
-        router.popToRoot()
     }
 }

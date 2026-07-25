@@ -24,6 +24,32 @@ final class LauncherCardTests: XCTestCase {
 
     // MARK: migrateToCards fold
 
+    /// v1.12: cards count the way a person does. The first card has always
+    /// been "one"; the rest now match instead of reading "one, card 2".
+    @MainActor
+    func testCardsAreNamedInWords() {
+        XCTAssertEqual(MinusContainer.cardName(1), "one")
+        XCTAssertEqual(MinusContainer.cardName(2), "two")
+        XCTAssertEqual(MinusContainer.cardName(8), "eight")
+        // Past the cap the helper stays honest rather than inventing a word.
+        XCTAssertEqual(MinusContainer.cardName(9), "card 9")
+        XCTAssertEqual(MinusContainer.cardName(0), "card 0")
+    }
+
+    /// The name the user actually sees comes from addCard, not the helper.
+    @MainActor
+    func testAddCardUsesTheSpelledName() throws {
+        let container = try ModelContainer(
+            for: Schema(versionedSchema: MinusSchemaV2.self),
+            configurations: [ModelConfiguration(isStoredInMemoryOnly: true)]
+        )
+        containers.append(container)
+        let context = ModelContext(container)
+        XCTAssertEqual(MinusContainer.addCard(in: context)?.name, "one")
+        XCTAssertEqual(MinusContainer.addCard(in: context)?.name, "two")
+        XCTAssertEqual(MinusContainer.addCard(in: context)?.name, "three")
+    }
+
     func testFoldTurnsCatalogRowsIntoCardOne() throws {
         let context = freshContext()
         for (index, slug) in ["phone", "maps", "music"].enumerated() {
@@ -157,46 +183,32 @@ final class LauncherCardTests: XCTestCase {
 
     // MARK: v1.9 launch plans
 
-    func testLaunchPlanTriesSchemeThenLinkThenShortcut() {
-        let plan = EssentialLaunchURL.launchPlan(
-            slug: "spotify", urlString: "spotify:", universalLink: "https://open.spotify.com"
-        ).map(\.absoluteString)
-        XCTAssertEqual(plan, [
-            "spotify:",
-            "https://open.spotify.com",
-            "shortcuts://run-shortcut?name=minus-spotify",
-        ])
+    func testLaunchPlanTriesSchemeThenShortcut() {
+        let plan = EssentialLaunchURL.launchPlan(slug: "spotify", urlString: "spotify:")
+            .map(\.absoluteString)
+        XCTAssertEqual(plan, ["spotify:", "shortcuts://run-shortcut?name=minus-spotify"])
     }
 
-    func testLaunchPlanWithoutUniversalLinkStartsAtTheScheme() {
-        let plan = EssentialLaunchURL.launchPlan(
-            slug: "notes", urlString: "mobilenotes:", universalLink: nil
-        ).map(\.absoluteString)
-        XCTAssertEqual(plan, ["mobilenotes:", "shortcuts://run-shortcut?name=minus-notes"])
-    }
+
 
     func testCommAndCustomSlugsOnlyEverUseTheShortcut() {
         for slug in ["phone", "messages", "facetime", "mail"] {
             XCTAssertEqual(
-                EssentialLaunchURL.launchPlan(slug: slug, urlString: "tel:", universalLink: "https://x.com")
-                    .map(\.absoluteString),
+                EssentialLaunchURL.launchPlan(slug: slug, urlString: "tel:").map(\.absoluteString),
                 ["shortcuts://run-shortcut?name=minus-\(slug)"],
                 slug
             )
         }
         XCTAssertEqual(
-            EssentialLaunchURL.launchPlan(slug: "custom-pilates", urlString: "", universalLink: nil)
-                .map(\.absoluteString),
+            EssentialLaunchURL.launchPlan(slug: "custom-pilates", urlString: "").map(\.absoluteString),
             ["shortcuts://run-shortcut?name=minus-pilates"]
         )
     }
 
-    /// Apple's own apps carry no link, so they always bounce through minus.
-    func testAppleAppsBounce() {
+    /// A cell without an identity bounces through minus.
+    func testCellsWithoutIdentityBounce() {
         XCTAssertEqual(
-            EssentialLaunchURL.widgetTarget(
-                slug: "notes", urlString: "mobilenotes:", universalLink: nil, linkVerified: false
-            )?.absoluteString,
+            EssentialLaunchURL.widgetTarget(slug: "notes", urlString: "mobilenotes:")?.absoluteString,
             "minus://open/notes"
         )
     }

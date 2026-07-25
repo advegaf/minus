@@ -134,22 +134,22 @@ struct LauncherWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment == .center ? .top : .topLeading)
     }
 
-    /// Two cell shapes, because a widget's powers depend on the URL.
+    /// Two cell shapes, because a widget's powers depend on what it holds.
     ///
-    /// https target: `Button(intent:)` runs LaunchEssentialIntent in the
-    /// widget process and the SYSTEM opens it, so minus never launches. This
-    /// is the zero-hop path, and universal links are the ONLY thing App
-    /// Intents can open.
+    /// With a bundle id: `Button(intent:)` runs inside the widget process and
+    /// asks LaunchServices to open the app by identity. No scheme, no claimed
+    /// link, no shortcut, and nothing for minus to do, so nothing flashes.
     ///
-    /// Anything else (custom schemes, the Shortcuts route): `Link` bounces
-    /// through minus, which walks the full launch plan behind a black veil.
-    /// v1.8 handed custom schemes to OpenURLIntent, which silently refuses
-    /// them, which is why third-party taps did nothing on device.
+    /// Without one (custom entries): `Link` bounces through minus, which
+    /// walks the full launch plan behind the black veil.
     @ViewBuilder
     private func cell(_ essential: LauncherSnapshot.Essential, spec: Spec) -> some View {
-        let target = essential.target ?? essential.url
-        if target.hasPrefix("https") {
-            Button(intent: LaunchEssentialIntent(slug: essential.slug, urlString: target)) {
+        if let bundleID = essential.bundleID, !bundleID.isEmpty {
+            Button(intent: LaunchEssentialIntent(
+                slug: essential.slug,
+                urlString: essential.target ?? essential.url,
+                bundleID: bundleID
+            )) {
                 label(essential, spec: spec)
             }
             .buttonStyle(.plain)

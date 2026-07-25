@@ -23,5 +23,10 @@
 		<key>EXExtensionPointIdentifier</key>
 		<string>com.apple.deviceactivity.report-extension</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>GeneralSans-Regular.otf</string>
+		<string>GeneralSans-Bold.otf</string>
+	</array>
 </dict>
 </plist>

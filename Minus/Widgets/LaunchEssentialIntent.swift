@@ -34,13 +34,12 @@ enum EssentialLaunchURL {
     /// universal link the app does not claim opens Safari, which is a worse
     /// outcome than nothing. The link is the second chance for apps whose
     /// scheme is wrong or gone, and the user's Shortcut is the last.
-    static func launchPlan(slug: String, urlString: String, universalLink: String?) -> [URL] {
+    static func launchPlan(slug: String, urlString: String) -> [URL] {
         if shortcutSlugs.contains(slug) || slug.hasPrefix(customPrefix) {
             return [shortcutURL(name: shortcutName(for: slug))].compactMap { $0 }
         }
         var plan: [URL] = []
         if let url = URL(string: urlString) { plan.append(url) }
-        if let universalLink, let url = URL(string: universalLink) { plan.append(url) }
         if let shortcut = shortcutURL(name: shortcutName(for: slug)) { plan.append(shortcut) }
         return plan
     }
@@ -48,18 +47,14 @@ enum EssentialLaunchURL {
     /// The single URL a widget cell should carry. App Intents can only open
     /// https, so a cell goes zero-hop ONLY with a device-verified link.
     /// Everything else returns the bounce URL, and minus walks the full plan.
-    static func widgetTarget(
-        slug: String,
-        urlString: String,
-        universalLink: String?,
-        linkVerified: Bool
-    ) -> URL? {
-        if linkVerified, let universalLink, let url = URL(string: universalLink) { return url }
-        return URL(string: "minus://open/\(slug)")
+    /// Cells launch by identity when they have one; otherwise they bounce
+    /// through minus, which walks the URL plan.
+    static func widgetTarget(slug: String, urlString: String) -> URL? {
+        URL(string: "minus://open/\(slug)")
     }
 
-    static func resolve(slug: String, urlString: String, universalLink: String? = nil) -> URL? {
-        launchPlan(slug: slug, urlString: urlString, universalLink: universalLink).first
+    static func resolve(slug: String, urlString: String) -> URL? {
+        launchPlan(slug: slug, urlString: urlString).first
     }
 
     private static func shortcutURL(name: String) -> URL? {
@@ -69,10 +64,15 @@ enum EssentialLaunchURL {
     }
 }
 
-/// The zero-hop launch: runs inside the widget process via Button(intent:),
-/// and returning OpenURLIntent makes the SYSTEM open the target, so minus
-/// never comes to the foreground. Only ever handed https targets, because
-/// App Intents cannot open custom schemes.
+/// The zero-hop launch: runs inside the widget process via Button(intent:).
+///
+/// Two ways out, tried in that order:
+/// 1. The bundle id, straight to LaunchServices. Proven to work from the app
+///    process on this device; whether an extension is allowed the same call
+///    is the open question this carries.
+/// 2. Returning OpenURLIntent, which asks the SYSTEM to open a URL. Only
+///    https gets through, since App Intents refuse custom schemes, so
+///    everything else is a bounce URL that lands in minus.
 struct LaunchEssentialIntent: AppIntent {
     static let title: LocalizedStringResource = "Open essential"
     static let isDiscoverable = false
@@ -83,19 +83,28 @@ struct LaunchEssentialIntent: AppIntent {
     @Parameter(title: "URL")
     var urlString: String
 
+    @Parameter(title: "Bundle")
+    var bundleID: String
+
     init() {}
 
-    init(slug: String, urlString: String) {
+    init(slug: String, urlString: String, bundleID: String = "") {
         self.slug = slug
         self.urlString = urlString
+        self.bundleID = bundleID
     }
 
-    func perform() async throws -> some IntentResult & OpensIntent {
-        // urlString is already the resolved target the cell decided on; the
-        // bounce URL is the honest fallback if it somehow fails to parse.
-        let url = URL(string: urlString)
-            ?? URL(string: "minus://open/\(slug)")
-            ?? URL(string: "minus://focus")!
-        return .result(opensIntent: OpenURLIntent(url))
+    /// Identity only. Returning no intent is deliberate: handing back an
+    /// OpenURLIntent would drag minus up over the app that just opened, which
+    /// is the exact flash being removed. Cells without a bundle id never use
+    /// this intent, they use a Link that bounces (see MinusWidgetViews).
+    ///
+    /// The private call is proven from the app process on this device
+    /// (Telegram, killed, came back as a fresh pid). Whether an app EXTENSION
+    /// is granted the same privilege is what a real widget tap now answers:
+    /// the app opens, or the tap does nothing.
+    func perform() async throws -> some IntentResult {
+        if !bundleID.isEmpty { PrivateAppLauncher.open(bundleID: bundleID) }
+        return .result()
     }
 }

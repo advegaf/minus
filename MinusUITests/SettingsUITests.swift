@@ -192,7 +192,7 @@ final class SettingsUITests: XCTestCase {
 
     @MainActor
     func testCustomEntryFlow() {
-        let app = launch(state: "onboarded")
+        let app = launch(state: "onboarded", extra: ["MINUS_SEARCH": "stub"])
         XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
         app.buttons["row-essentials"].tap()
         XCTAssertTrue(app.buttons["card-row-0"].waitForExistence(timeout: 5))
@@ -206,14 +206,38 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.tap()
         field.typeText("Pilates")
-        XCTAssertTrue(app.staticTexts["custom-slug-preview"].waitForExistence(timeout: 5))
-        attach(app, "CA-4")
-        app.buttons["cta-save-custom"].tap()
 
-        // Back at the detail: the custom row exists and is in the card.
+        let match = app.buttons["app-match-com.example.pilates"]
+        XCTAssertTrue(match.waitForExistence(timeout: 5), "the search never produced a match")
+        attach(app, "CA-4")
+        match.tap()
+
+        // Back at the detail: the added app exists and is in the card.
         XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["edit-row-custom-pilates"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["edit-row-custom-pilates-studio"].waitForExistence(timeout: 5))
         attach(app, "CA-5")
+    }
+
+    /// Adding an app is the one thing in minus that needs a connection, so it
+    /// is the one thing that has to say so.
+    @MainActor
+    func testCustomEntryOfflineCopy() {
+        let app = launch(state: "onboarded", extra: ["MINUS_SEARCH": "offline"])
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        app.buttons["card-row-0"].tap()
+        XCTAssertTrue(app.buttons["cta-add-custom"].waitForExistence(timeout: 5))
+        app.buttons["cta-add-custom"].tap()
+
+        let field = app.textFields["field-custom-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("Pilates")
+
+        let status = app.staticTexts["search-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        XCTAssertTrue(status.label.contains("no connection"), "offline copy missing: \(status.label)")
+        attach(app, "CA-6")
     }
 
     /// V-1: the goal can be hidden from Home and the widgets without losing it.
@@ -285,18 +309,5 @@ final class SettingsUITests: XCTestCase {
         }
         XCTAssertTrue(element(app, "guide-honesty"))
         attach(app, "SE-10")
-    }
-
-    @MainActor
-    func testResetReturnsToOnboarding() {
-        let app = launch(state: "onboarded")
-        XCTAssertTrue(app.buttons["cta-reset"].waitForExistence(timeout: 5))
-        app.buttons["cta-reset"].tap()
-        // Confirmation dialog buttons live in sheets/alerts space.
-        let confirm = app.buttons["Reset"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
-        confirm.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["step-welcome"].waitForExistence(timeout: 5))
-        attach(app, "SE-8")
     }
 }

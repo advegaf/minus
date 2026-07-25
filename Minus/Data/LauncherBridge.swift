@@ -29,24 +29,18 @@ enum LauncherBridge {
     ) -> LauncherSnapshot {
         func resolve(_ slug: String) -> LauncherSnapshot.Essential? {
             if let app = EssentialAppCatalog.app(slug: slug) {
-                let target = EssentialLaunchURL.widgetTarget(
-                    slug: slug,
-                    urlString: app.urlString,
-                    universalLink: app.universalLink,
-                    linkVerified: app.linkVerified
-                )
+                let target = EssentialLaunchURL.widgetTarget(slug: slug, urlString: app.urlString)
                 return LauncherSnapshot.Essential(
                     slug: slug,
                     name: app.displayName,
                     url: app.urlString,
                     target: target?.absoluteString,
-                    installed: nil
+                    installed: nil,
+                    bundleID: app.bundleID
                 )
             }
             if let name = customEntries[slug] {
-                let target = EssentialLaunchURL.widgetTarget(
-                    slug: slug, urlString: "", universalLink: nil, linkVerified: false
-                )
+                let target = EssentialLaunchURL.widgetTarget(slug: slug, urlString: "")
                 return LauncherSnapshot.Essential(
                     slug: slug, name: name, url: "", target: target?.absoluteString, installed: nil
                 )

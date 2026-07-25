@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "1.10.0"
-    CURRENT_PROJECT_VERSION: "7"
+    MARKETING_VERSION: "1.12.0"
+    CURRENT_PROJECT_VERSION: "9"
     # DEVELOPMENT_TEAM is supplied per-developer via Config/Secrets.xcconfig
     # (see Config/Secrets.example.xcconfig) so no team ID lives in the repo.
     CODE_SIGN_STYLE: Automatic
@@ -26,6 +26,8 @@ targets:
         excludes:
           # Finder resource-fork stubs ("Icon\r") codesign refuses inside bundles.
           - "**/Icon?"
+      - path: Support/LaunchScreen.storyboard
+        buildPhase: resources
     dependencies:
       - target: MinusMonitor
         embed: true
@@ -66,8 +68,9 @@ targets:
         UIAppFonts:
           - GeneralSans-Regular.otf
           - GeneralSans-Bold.otf
-        UILaunchScreen:
-          UIColorName: LaunchBackground
+        # The wordmark, centred on obsidian. See Support/LaunchScreen.storyboard
+        # for why this is a storyboard and not the UILaunchScreen dictionary.
+        UILaunchStoryboardName: LaunchScreen
         # Widget trampoline: minus://open/{slug} and minus://focus.
         CFBundleURLTypes:
           - CFBundleURLName: $(MINUS_BUNDLE_ID)
@@ -163,6 +166,7 @@ targets:
       - path: Minus/Data/LauncherSnapshot.swift
       - path: Minus/Widgets/MinusWidgetViews.swift
       - path: Minus/Widgets/LaunchEssentialIntent.swift
+      - path: Minus/Data/PrivateAppLauncher.swift
       - path: Minus/Widgets/LauncherConfigIntent.swift
       - path: Minus/Widgets/CardEntity.swift
       - path: Minus/DesignSystem/Tokens.swift

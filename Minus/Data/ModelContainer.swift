@@ -66,13 +66,22 @@ enum MinusContainer {
         let existing = cards(in: context)
         guard existing.count < cardCap else { return nil }
         let card = LauncherCard(
-            name: "card \(existing.count + 1)",
+            name: Self.cardName(existing.count + 1),
             orderedSlugs: [],
             sortOrder: (existing.map(\.sortOrder).max() ?? -1) + 1
         )
         context.insert(card)
         try? context.save()
         return card
+    }
+
+    /// Cards are named the way you'd count them: one, two, three. The first
+    /// card has always been "one", so the rest match rather than reading
+    /// "one, card 2, card 3".
+    static func cardName(_ position: Int) -> String {
+        let spelled = ["one", "two", "three", "four", "five", "six", "seven", "eight"]
+        guard position >= 1, position <= spelled.count else { return "card \(position)" }
+        return spelled[position - 1]
     }
 
     /// All launcher cards, launcher order. Card 1 is Home's card.

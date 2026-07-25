@@ -8,6 +8,11 @@ struct FieldShell: View {
     @Binding var text: String
     /// Accessibility identifier applied to the underlying text field.
     var accessibilityID: String
+    /// Opt-in for screens whose only purpose is typing: the keyboard is
+    /// already up when the screen arrives, so nothing costs a tap that
+    /// shouldn't. Off by default, because a field sharing a screen with
+    /// presets or rows should not steal them.
+    var autofocus: Bool = false
 
     @FocusState private var focused: Bool
 
@@ -33,6 +38,13 @@ struct FieldShell: View {
                 .fill(focused ? MN.boneWhite : MN.ashBorder)
                 .frame(height: MN.hairline)
                 .animation(MMotion.micro, value: focused)
+        }
+        .task {
+            guard autofocus else { return }
+            // One runloop turn after the push settles, or the keyboard races
+            // the navigation transition and neither lands cleanly.
+            try? await Task.sleep(for: .milliseconds(350))
+            focused = true
         }
     }
 }

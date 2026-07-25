@@ -41,6 +41,14 @@ struct MinusApp: App {
                         consumeEssentialLink()
                     }
                 }
+                // Publish once per launch, not only on a phase CHANGE. A
+                // first launch (or one whose scene never transitions, e.g.
+                // opened while the phone is locked) otherwise leaves the app
+                // group with no snapshot at all, and the widget has nothing
+                // to render but its setup invitation.
+                .task {
+                    LauncherBridge.publish(context: deps.context, coordinator: deps.coordinator)
+                }
         }
     }
 

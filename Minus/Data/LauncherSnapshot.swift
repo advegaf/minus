@@ -21,6 +21,10 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
         /// Vestigial since v1.8: always nil. Kept so a stale file written by
         /// an older build still decodes.
         var installed: Bool?
+        /// v1.11: the app's identity. A widget cell holding one asks
+        /// LaunchServices to open it directly, so nothing bounces through
+        /// minus. nil for custom entries and pre-1.11 files.
+        var bundleID: String?
 
         var id: String { slug }
     }
@@ -84,7 +88,7 @@ struct LauncherSnapshot: Codable, Equatable, Sendable {
         guard let url = Self.fileURL() else { return }
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        try? (try? encoder.encode(self))?.write(to: url, options: .atomic)
+        try? encoder.encode(self).write(to: url, options: .atomic)
     }
 
     static func read() -> LauncherSnapshot? {

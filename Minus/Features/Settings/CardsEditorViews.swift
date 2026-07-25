@@ -66,6 +66,7 @@ struct CardsListView: View {
 
     private func addCard() {
         guard let card = MinusContainer.addCard(in: deps.context) else { return }
+        deps.publishLauncher()
         router.push(.settingsCard(id: card.id))
     }
 }
@@ -197,6 +198,7 @@ struct CardDetailView: View {
             card.orderedSlugs.append(slug)
         }
         try? deps.context.save()
+        deps.publishLauncher()
     }
 
     private func deleteCard() {
@@ -209,6 +211,7 @@ struct CardDetailView: View {
             deps.context.insert(LauncherCard(name: "one", orderedSlugs: [], sortOrder: 0))
         }
         try? deps.context.save()
+        deps.publishLauncher()
         router.pop()
     }
 }
@@ -225,67 +228,129 @@ struct CustomEntryView: View {
     let cardID: UUID?
 
     @State private var name = ""
+    @State private var matches: [AppSearch.Match] = []
+    @State private var status: Status = .idle
+    @State private var searchTask: Task<Void, Never>?
 
-    private var slugPreview: String {
-        CustomSlug.make(name: name, existing: Set(registry.map(\.slug)))
-    }
-
-    private var canSave: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
+    private enum Status: Equatable { case idle, searching, empty, offline }
 
     var body: some View {
-        SettingsShell(eyebrow: "CUSTOM APP", id: "settings-custom", scrolls: true) {
+        SettingsShell(eyebrow: "ADD AN APP", id: "settings-custom", scrolls: true) {
             Text("Any app at all.")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            Text("name it, then make a one-action shortcut with the matching name: open app → the app itself. that's how minus reaches apps without public schemes.")
+            Text("type its name. minus asks the app store for its identity once, then opens it directly from then on.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
                 .padding(.top, MN.Space.s)
 
-            FieldShell(placeholder: "app name", text: $name, accessibilityID: "field-custom-name")
+            FieldShell(placeholder: "app name", text: $name, accessibilityID: "field-custom-name", autofocus: true)
                 .padding(.top, MN.Space.l)
+                .onChange(of: name) { _, value in search(value) }
 
-            if canSave {
-                Text("shortcut to make: minus-\(CustomSlug.bare(slugPreview))")
-                    .mnType(.caption)
-                    .foregroundStyle(MN.fogBlue)
-                    .padding(.top, MN.Space.xs)
-                    .accessibilityIdentifier("custom-slug-preview")
-                    .transition(.opacity)
+            statusLine.padding(.top, MN.Space.xs)
+
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(matches) { match in
+                    Button { add(match) } label: {
+                        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+                            Text(match.name.lowercased())
+                                .mnType(.bodyLg)
+                                .foregroundStyle(MN.boneWhite)
+                                .lineLimit(1)
+                            Text(match.seller.lowercased())
+                                .mnType(.caption)
+                                .foregroundStyle(MN.fogBlue)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.mnPress)
+                    .padding(.vertical, MN.Space.xxs)
+                    .accessibilityIdentifier("app-match-\(match.bundleID)")
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(MN.ashBorder).frame(height: MN.hairline)
+                    }
+                }
             }
-
-            Text("the full walkthrough lives in settings → make it a dumb phone.")
-                .mnType(.caption)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.l)
-
-            OutlinedCTA(title: "SAVE", prominent: true, action: save)
-                .disabled(!canSave)
-                .opacity(canSave ? 1 : 0.35)
-                .animation(MMotion.micro, value: canSave)
-                .padding(.top, MN.Space.l)
-                .accessibilityIdentifier("cta-save-custom")
+            .padding(.top, MN.Space.m)
+            .animation(MMotion.micro, value: matches)
         }
-        .animation(MMotion.micro, value: canSave)
     }
 
-    private func save() {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        let slug = CustomSlug.make(name: trimmed, existing: Set(registry.map(\.slug)))
+    @ViewBuilder
+    private var statusLine: some View {
+        switch status {
+        case .idle:
+            EmptyView()
+        case .searching:
+            caption("looking\u{2026}")
+        case .empty:
+            caption("nothing by that name. try the app's exact title.")
+        case .offline:
+            caption("no connection. adding an app needs one, once; opening never does.")
+        }
+    }
+
+    private func caption(_ text: String) -> some View {
+        Text(text)
+            .mnType(.caption)
+            .foregroundStyle(MN.fogBlue)
+            .frame(maxWidth: 320, alignment: .leading)
+            .accessibilityIdentifier("search-status")
+    }
+
+    /// One query per typed word, not one per keystroke.
+    private func search(_ term: String) {
+        searchTask?.cancel()
+        let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else {
+            matches = []
+            status = .idle
+            return
+        }
+        status = .searching
+        searchTask = Task {
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            do {
+                let found = try await AppSearch.matches(for: trimmed)
+                guard !Task.isCancelled else { return }
+                matches = found
+                status = .idle
+            } catch AppSearch.Failure.offline {
+                guard !Task.isCancelled else { return }
+                matches = []
+                status = .offline
+            } catch {
+                guard !Task.isCancelled else { return }
+                matches = []
+                status = .empty
+            }
+        }
+    }
+
+    private func add(_ match: AppSearch.Match) {
+        let slug = CustomSlug.make(name: match.name, existing: Set(registry.map(\.slug)))
         let nextOrder = (registry.map(\.sortOrder).max() ?? -1) + 1
         deps.context.insert(
-            EssentialApp(slug: slug, displayName: trimmed, urlScheme: "", sortOrder: nextOrder)
+            EssentialApp(
+                slug: slug,
+                displayName: match.name,
+                urlScheme: "",
+                sortOrder: nextOrder,
+                bundleID: match.bundleID
+            )
         )
         let target = cardID.flatMap { id in cards.first { $0.id == id } } ?? cards.first
         if let target, target.orderedSlugs.count < EssentialAppCatalog.homeCap {
             target.orderedSlugs.append(slug)
         }
         try? deps.context.save()
+        deps.publishLauncher()
         router.pop()
     }
 }

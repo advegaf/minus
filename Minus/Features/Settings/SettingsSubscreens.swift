@@ -379,7 +379,7 @@ struct PermissionSettingsView: View {
 
 struct AboutView: View {
     #if DEBUG
-    @State private var probeResult: String?
+    @State private var identityLauncherOn = PrivateAppLauncher.isEnabled
     #endif
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
@@ -398,16 +398,14 @@ struct AboutView: View {
                 .padding(.top, MN.Space.s)
                 .accessibilityIdentifier("about-version")
 
-            Text("a phone that asks less of you. blocking runs on apple screen time. deleting the app always lifts every shield.")
+            Text("a phone that asks less of you. blocking runs on apple screen time. deleting the app always lifts every shield, and is the only way to start over.")
                 .mnType(.body)
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
                 .padding(.top, MN.Space.l)
 
             #if DEBUG
-            launchProbe
-            linkLab
-            schemeLab
+            identityLauncherSwitch
             Text("MONITOR LOG")
                 .mnType(.caption)
                 .textCase(.uppercase)
@@ -434,127 +432,36 @@ struct AboutView: View {
     }
 
     #if DEBUG
-    /// The private-API spike: can minus launch by bundle id and read what is
-    /// installed? Tapping runs it and prints what iOS actually did.
-    private var launchProbe: some View {
+    /// The identity launcher is a private API. A future iOS could start
+    /// refusing it, or hanging differently: this turns it off without a
+    /// rebuild, and minus falls back to schemes, links and shortcuts.
+    private var identityLauncherSwitch: some View {
         VStack(alignment: .leading, spacing: MN.Space.xxs) {
-            Text("LAUNCH PROBE")
+            Text("IDENTITY LAUNCHER")
                 .mnType(.caption)
                 .textCase(.uppercase)
                 .foregroundStyle(MN.fogBlue)
                 .padding(.top, MN.Space.section)
-            Button {
-                probeResult = PrivateLaunchProbe.run().summary
-            } label: {
-                Text("run private launchservices probe")
-                    .mnType(.body)
-                    .foregroundStyle(MN.boneWhite)
-                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                    .contentShape(Rectangle())
+            OnboardingSelectRow(
+                title: "on \u{00B7} open apps by bundle id",
+                isSelected: identityLauncherOn,
+                accessibilityID: "identity-launcher-on"
+            ) {
+                identityLauncherOn = true
+                PrivateAppLauncher.isEnabled = true
             }
-            .buttonStyle(.mnPress)
-            .accessibilityIdentifier("cta-launch-probe")
-
-            if let probeResult {
-                Text(probeResult)
-                    .mnType(.caption)
-                    .foregroundStyle(MN.boneWhite)
-                    .frame(maxWidth: 320, alignment: .leading)
-                    .accessibilityIdentifier("launch-probe-result")
+            OnboardingSelectRow(
+                title: "off \u{00B7} schemes, links, shortcuts only",
+                isSelected: !identityLauncherOn,
+                accessibilityID: "identity-launcher-off"
+            ) {
+                identityLauncherOn = false
+                PrivateAppLauncher.isEnabled = false
             }
         }
         .padding(.bottom, MN.Space.l)
     }
 
-    /// v1.9 link lab: universal links are the only thing a home-screen widget
-    /// can open, but which https address an app actually claims is per-app
-    /// guesswork. Tap each row on device and note whether it lands in the app
-    /// or in Safari; the winners get promoted in EssentialAppCatalog.
-    private static let linkCandidates: [(label: String, url: String)] = {
-        var rows: [(label: String, url: String)] = []
-        for app in EssentialAppCatalog.all {
-            guard let link = app.universalLink else { continue }
-            rows.append(("\(app.slug) \u{00B7} \(link)", link))
-            for alt in app.altLinks {
-                rows.append(("\(app.slug) \u{00B7} \(alt)", alt))
-            }
-        }
-        return rows
-    }()
-
-    private var linkLab: some View {
-        VStack(alignment: .leading, spacing: MN.Space.xxs) {
-            Text("LINK LAB")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.section)
-            Text("tap each: did the app open, or safari?")
-                .mnType(.caption)
-                .foregroundStyle(MN.fogBlue)
-            ForEach(Array(Self.linkCandidates.enumerated()), id: \.offset) { index, candidate in
-                Button {
-                    if let url = URL(string: candidate.url) {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
-                    Text(candidate.label)
-                        .mnType(.body)
-                        .foregroundStyle(MN.boneWhite)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.mnPress)
-                .accessibilityIdentifier("link-\(index)")
-            }
-        }
-        .padding(.bottom, MN.Space.l)
-    }
-
-    /// T3 — landing truth on device, v1.6: GENERATED from the catalog. Every
-    /// non-high-confidence row plus its alt candidates gets a tappable line;
-    /// the user reports where each lands (app main vs nothing), and winners
-    /// get promoted to high confidence in EssentialAppCatalog.
-    private static let schemeCandidates: [(label: String, url: String)] = {
-        var rows: [(label: String, url: String)] = []
-        for app in EssentialAppCatalog.all where app.confidence != .high || !app.altCandidates.isEmpty {
-            rows.append(("\(app.slug) \u{00B7} \(app.urlString)", app.urlString))
-            for alt in app.altCandidates {
-                rows.append(("\(app.slug) \u{00B7} \(alt)", alt))
-            }
-        }
-        return rows
-    }()
-
-    private var schemeLab: some View {
-        VStack(alignment: .leading, spacing: MN.Space.xxs) {
-            Text("SCHEME LAB")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.section)
-            Text("tap each, note where it lands.")
-                .mnType(.caption)
-                .foregroundStyle(MN.fogBlue)
-            ForEach(Array(Self.schemeCandidates.enumerated()), id: \.offset) { index, candidate in
-                Button {
-                    if let url = URL(string: candidate.url) {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
-                    Text(candidate.label)
-                        .mnType(.body)
-                        .foregroundStyle(MN.boneWhite)
-                        .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.mnPress)
-                .accessibilityIdentifier("scheme-\(index)")
-            }
-        }
-        .padding(.bottom, MN.Space.l)
-    }
     #endif
 }
 

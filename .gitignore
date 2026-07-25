@@ -1,6 +1,6 @@
 # Build artifacts
 build/
-build-device/
+build-*/
 DerivedData/
 *.xcuserstate
 shots/

@@ -63,12 +63,17 @@ final class EssentialApp {
     var urlScheme: String = ""
     var sortOrder: Int = 0
     var isEnabled: Bool = true
+    /// v1.12: the app's identity, resolved from the App Store when the entry
+    /// was added. This is what makes an added app launch like a catalog one
+    /// rather than depending on a Shortcut the user has to build.
+    var bundleID: String?
 
-    init(slug: String, displayName: String, urlScheme: String, sortOrder: Int) {
+    init(slug: String, displayName: String, urlScheme: String, sortOrder: Int, bundleID: String? = nil) {
         self.slug = slug
         self.displayName = displayName
         self.urlScheme = urlScheme
         self.sortOrder = sortOrder
+        self.bundleID = bundleID
     }
 }
 
