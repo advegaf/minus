@@ -67,6 +67,9 @@ final class EssentialApp {
     /// was added. This is what makes an added app launch like a catalog one
     /// rather than depending on a Shortcut the user has to build.
     var bundleID: String?
+    /// v1.16: the user typed this name themselves. Nothing automatic may
+    /// overwrite such a row, or a rename would be undone by the next launch.
+    var nameIsCustom: Bool = false
 
     init(slug: String, displayName: String, urlScheme: String, sortOrder: Int, bundleID: String? = nil) {
         self.slug = slug

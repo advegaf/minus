@@ -1,6 +1,6 @@
 # minus — deferred scope
 
-## What still stands between here and a release (as of 1.14.0)
+## What still stands between here and a release (as of 1.16.0)
 
 Ranked by what actually blocks, not by effort.
 
@@ -39,7 +39,12 @@ Ranked by what actually blocks, not by effort.
 
 Worth improving, in order of what a user would feel:
 
-- **Added apps cannot be renamed**, only removed and re-added.
+- **A launch-time sweep that re-probes already-added names** is deliberately
+  not built: it would mean N private LaunchServices calls during startup,
+  which is the exact shape that caused the watchdog kills, for a benefit that
+  is unproven until PrivateAppName is measured on hardware. Existing rows are
+  covered by renaming. Revisit once the device pass says whether the lookup
+  returns anything at all.
 - **The launcher has no reordering.** Card membership is toggle-only, so the
   order is the catalog's, not yours. At 268 rows this is felt more than it was
   at 60.

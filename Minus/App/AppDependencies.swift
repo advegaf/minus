@@ -105,6 +105,8 @@ final class AppDependencies {
         let rows = (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? []
         var changed = false
         for row in rows {
+            // A name the user typed is theirs; the heuristic never touches it.
+            guard !row.nameIsCustom else { continue }
             let short = AppName.short(row.displayName)
             guard short != row.displayName else { continue }
             row.displayName = short

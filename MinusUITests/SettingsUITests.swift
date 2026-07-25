@@ -323,6 +323,49 @@ final class SettingsUITests: XCTestCase {
         attach(app, "CA-7")
     }
 
+    /// v1.16: the App Store cannot tell minus what an icon says. "MacroFactor
+    /// Workouts - Tracker" is the whole of what it knows about the app whose
+    /// home screen label is "Workouts", so the last word is the user's.
+    @MainActor
+    func testAddedAppCanBeRenamed() {
+        let app = launch(state: "cards")
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        app.buttons["card-row-0"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
+
+        let nameButton = app.buttons["rename-row-custom-pilates"]
+        XCTAssertTrue(nameButton.waitForExistence(timeout: 5))
+        attach(app, "CA-9")
+        nameButton.tap()
+
+        let field = app.textFields["field-rename-custom-pilates"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "tapping the name should open an editor in place")
+        attach(app, "CA-9-editing")
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 12))
+        field.typeText("Reformer")
+        field.typeText("\n")
+
+        let renamed = app.buttons["rename-row-custom-pilates"]
+        XCTAssertTrue(renamed.waitForExistence(timeout: 5))
+        // The button's a11y label is "rename {name}", so assert on the name.
+        XCTAssertTrue(renamed.label.contains("reformer"), renamed.label)
+        XCTAssertFalse(renamed.label.contains("pilates"), "the old name survived: \(renamed.label)")
+
+        // And it reaches the launcher, where the name is actually read.
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["card-tab-weekend"].waitForExistence(timeout: 5))
+        app.buttons["card-tab-weekend"].tap()
+        let row = app.buttons["row-app-custom-pilates"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertEqual(row.label, "reformer", "the rename should reach the launcher")
+        attach(app, "CA-9-home")
+    }
+
     /// Adding an app is the one thing in minus that needs a connection, so it
     /// is the one thing that has to say so.
     @MainActor

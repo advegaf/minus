@@ -91,6 +91,9 @@ struct CardDetailView: View {
     /// The added app awaiting a removal confirmation. Removal deletes the
     /// registry row itself, so it needs the same gate the card does.
     @State private var pendingRemoval: EssentialApp?
+    /// The added app whose name is being edited in place. One at a time.
+    @State private var renaming: EssentialApp?
+    @State private var renameText = ""
 
     private var card: LauncherCard? {
         cardID.flatMap { id in cards.first { $0.id == id } } ?? (cardID == nil ? cards.first : nil)
@@ -269,9 +272,30 @@ struct CardDetailView: View {
             isSelected: isChosen,
             isDimmed: !isChosen && atCap,
             slug: entry.slug,
+            isRenaming: renaming?.slug == entry.slug,
+            renameText: $renameText,
             toggle: { toggle(entry.slug, isChosen: isChosen) },
+            beginRename: {
+                renameText = entry.displayName
+                renaming = entry
+            },
+            commitRename: { commitRename() },
             remove: { pendingRemoval = entry }
         )
+    }
+
+    /// The store's title is a guess at the icon's name; this is the user
+    /// saying what it actually is. Marked custom so nothing automatic
+    /// overwrites it on a later launch.
+    private func commitRename() {
+        defer { renaming = nil }
+        guard let entry = renaming else { return }
+        let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != entry.displayName else { return }
+        entry.displayName = trimmed
+        entry.nameIsCustom = true
+        try? deps.context.save()
+        deps.publishLauncher()
     }
 
     private func addByNameLink(label: String, id: String, quiet: Bool = false) -> some View {
@@ -341,34 +365,69 @@ private struct AddedAppRow: View {
     let isSelected: Bool
     let isDimmed: Bool
     let slug: String
+    let isRenaming: Bool
+    @Binding var renameText: String
     let toggle: () -> Void
+    let beginRename: () -> Void
+    let commitRename: () -> Void
     let remove: () -> Void
+
+    @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: MN.Space.xs) {
-            Button(action: toggle) {
-                HStack(spacing: MN.Space.xs) {
-                    Text("\u{2212}")
-                        .mnType(.bodyLg)
-                        .foregroundStyle(MN.boneWhite)
-                        .opacity(isSelected ? 1 : 0)
-                        .frame(width: MN.Space.m, alignment: .leading)
+            Text("\u{2212}")
+                .mnType(.bodyLg)
+                .foregroundStyle(MN.boneWhite)
+                .opacity(isSelected ? 1 : 0)
+                .frame(width: MN.Space.m, alignment: .leading)
 
+            if isRenaming {
+                // The store's title is a guess at what the icon says. This is
+                // where the user corrects it, in place, without leaving the
+                // list they are already looking at.
+                TextField("", text: $renameText)
+                    .mnType(.bodyLg)
+                    .foregroundStyle(MN.boneWhite)
+                    .tint(MN.boneWhite)
+                    .textInputAutocapitalization(.never)
+                    .submitLabel(.done)
+                    .focused($focused)
+                    .onSubmit(commitRename)
+                    .onChange(of: focused) { _, hasFocus in
+                        // Committing on blur too: tapping away is a save, not
+                        // a discard, which is what a list of names expects.
+                        if !hasFocus { commitRename() }
+                    }
+                    .task { focused = true }
+                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                    .accessibilityIdentifier("field-rename-\(slug)")
+            } else {
+                // The name renames; the space beside it toggles. Two targets,
+                // both a full row tall, so neither can be hit by accident.
+                Button(action: beginRename) {
                     Text(title)
                         .mnType(.bodyLg)
                         .foregroundStyle(isSelected ? MN.boneWhite : MN.fogBlue)
                         .lineLimit(1)
-
-                    Spacer(minLength: 0)
+                        .frame(minHeight: MN.minHit, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
-                .contentShape(Rectangle())
+                .buttonStyle(.mnPress)
+                .accessibilityIdentifier("rename-row-\(slug)")
+                .accessibilityLabel("rename \(title)")
+
+                Button(action: toggle) {
+                    Color.clear
+                        .frame(maxWidth: .infinity, minHeight: MN.minHit)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.mnPress)
+                .disabled(isDimmed)
+                .accessibilityIdentifier("edit-row-\(slug)")
+                .accessibilityLabel(title)
+                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
             }
-            .buttonStyle(.mnPress)
-            .disabled(isDimmed)
-            .opacity(isDimmed ? 0.35 : 1)
-            .accessibilityIdentifier("edit-row-\(slug)")
-            .accessibilityAddTraits(isSelected ? [.isSelected] : [])
 
             Button(action: remove) {
                 Text("remove")
@@ -381,11 +440,20 @@ private struct AddedAppRow: View {
             .accessibilityIdentifier("remove-row-\(slug)")
             .accessibilityLabel("remove \(title)")
         }
+        .opacity(isDimmed && !isRenaming ? 0.35 : 1)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(MN.ashBorder).frame(height: MN.hairline)
+            // Bone while editing, ash otherwise: the same signal every other
+            // field in the app gives when it has focus (see FieldShell), so
+            // an editable row reads as a field rather than as a row that
+            // happens to have a cursor in it.
+            Rectangle()
+                .fill(isRenaming ? MN.boneWhite : MN.ashBorder)
+                .frame(height: MN.hairline)
+                .animation(MMotion.micro, value: isRenaming)
         }
         .animation(MMotion.micro, value: isSelected)
         .animation(MMotion.micro, value: isDimmed)
+        .animation(MMotion.micro, value: isRenaming)
     }
 }
 
@@ -437,7 +505,7 @@ struct CustomEntryView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(matches) { match in
-                    Button { add(match) } label: {
+                    Button { Task { await add(match) } } label: {
                         VStack(alignment: .leading, spacing: MN.Space.xxs) {
                             Text(match.name.lowercased())
                                 .mnType(.bodyLg)
@@ -521,11 +589,18 @@ struct CustomEntryView: View {
         }
     }
 
-    private func add(_ match: AppSearch.Match) {
+    private func add(_ match: AppSearch.Match) async {
         // The row list above shows the full store title, because that is what
         // tells two similarly-named apps apart at the moment of choosing. What
         // gets STORED is the name the home screen uses.
-        let name = AppName.short(match.name)
+        //
+        // The device knows that name exactly and the App Store does not, so it
+        // is asked first: "MacroFactor Workouts - Tracker" is all the store
+        // has for the app whose icon reads "Workouts". If the lookup is
+        // refused or the app is not installed, the shortened store title is
+        // the honest second best, and the row can be renamed by hand.
+        let name = await PrivateAppName.displayName(bundleID: match.bundleID)
+            ?? AppName.short(match.name)
         let slug = CustomSlug.make(name: name, existing: Set(registry.map(\.slug)))
         let nextOrder = (registry.map(\.sortOrder).max() ?? -1) + 1
         deps.context.insert(

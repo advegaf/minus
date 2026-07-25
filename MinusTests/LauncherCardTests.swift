@@ -159,6 +159,24 @@ final class LauncherCardTests: XCTestCase {
 
 
 
+    // MARK: v1.16 — a name the user chose is theirs
+
+    /// The bootstrap shortening pass runs on every launch. Without this guard
+    /// it would undo a rename the next time the app opened.
+    func testShorteningLeavesUserChosenNamesAlone() throws {
+        let context = freshContext()
+        let renamed = EssentialApp(slug: "custom-workouts", displayName: "Workouts - Tracker", urlScheme: "", sortOrder: 0)
+        renamed.nameIsCustom = true
+        context.insert(renamed)
+        let untouched = EssentialApp(slug: "custom-hevy", displayName: "Hevy - Workout Tracker", urlScheme: "", sortOrder: 1)
+        context.insert(untouched)
+
+        AppDependencies.shortenStoredAppNames(context: context)
+
+        XCTAssertEqual(renamed.displayName, "Workouts - Tracker", "a renamed row must survive the pass")
+        XCTAssertEqual(untouched.displayName, "Hevy", "an un-renamed row still shortens")
+    }
+
     // MARK: v1.13 — the identity survives every hop
 
     /// The v1.12 defect, locked. An app added by name resolved its identity

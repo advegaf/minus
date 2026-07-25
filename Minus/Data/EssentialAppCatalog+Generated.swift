@@ -174,12 +174,13 @@ extension EssentialAppCatalog {
         CatalogApp(slug: "garminconnect", displayName: "Garmin Connect", category: .mindBody, bundleID: "com.garmin.connect.mobile"),
         CatalogApp(slug: "hevy", displayName: "Hevy", category: .mindBody, bundleID: "com.hevyapp.hevy"),
         CatalogApp(slug: "macrofactor", displayName: "MacroFactor", category: .mindBody, bundleID: "com.sbs.diet"),
+        CatalogApp(slug: "workouts", displayName: "Workouts", category: .mindBody, bundleID: "com.sbs.train"),
         CatalogApp(slug: "myfitnesspal", displayName: "MyFitnessPal", category: .mindBody, bundleID: "com.myfitnesspal.mfp"),
         CatalogApp(slug: "peloton", displayName: "Peloton", category: .mindBody, bundleID: "com.Peloton.PelotonApp"),
-        CatalogApp(slug: "equinox", displayName: "Equinox+", category: .mindBody, bundleID: "com.equinoxfitness.Equinox"),
     ]
 
     static let generated4: [CatalogApp] = [
+        CatalogApp(slug: "equinox", displayName: "Equinox+", category: .mindBody, bundleID: "com.equinoxfitness.Equinox"),
         CatalogApp(slug: "lifetime", displayName: "Life Time", category: .mindBody, bundleID: "com.lifetimefitness.interests.ltfitness"),
         CatalogApp(slug: "yuka", displayName: "Yuka", category: .mindBody, bundleID: "yuca.scanner"),
         CatalogApp(slug: "dropset", displayName: "Dropset", category: .mindBody, bundleID: "com.hoopsworkouts.app"),
@@ -219,10 +220,10 @@ extension EssentialAppCatalog {
         CatalogApp(slug: "googleauthenticator", displayName: "Google Authenticator", category: .tools, bundleID: "com.google.Authenticator"),
         CatalogApp(slug: "duomobile", displayName: "Duo Mobile", category: .tools, bundleID: "com.duosecurity.DuoMobile"),
         CatalogApp(slug: "rsaauthenticator", displayName: "RSA Authenticator", category: .tools, bundleID: "com.rsa.securid.iphone.SecurID"),
-        CatalogApp(slug: "microsoftauthenticator", displayName: "Microsoft Authenticator", category: .tools, bundleID: "com.microsoft.azureauthenticator"),
     ]
 
     static let generated5: [CatalogApp] = [
+        CatalogApp(slug: "microsoftauthenticator", displayName: "Microsoft Authenticator", category: .tools, bundleID: "com.microsoft.azureauthenticator"),
         CatalogApp(slug: "goveehome", displayName: "Govee Home", category: .tools, bundleID: "com.ihoment.GoVeeSensor"),
         CatalogApp(slug: "ring", displayName: "Ring", category: .tools, bundleID: "com.ring"),
         CatalogApp(slug: "bambuhandy", displayName: "Bambu Handy", category: .tools, bundleID: "bbl.intl.bambulab.com"),
@@ -262,10 +263,10 @@ extension EssentialAppCatalog {
         CatalogApp(slug: "chipotle", displayName: "Chipotle", category: .food, bundleID: "com.chipotle.Chipotle"),
         CatalogApp(slug: "starbucks", displayName: "Starbucks", category: .food, bundleID: "com.starbucks.mystarbucks"),
         CatalogApp(slug: "dunkin", displayName: "Dunkin'", category: .food, bundleID: "com.dunkinbrands.otgo"),
-        CatalogApp(slug: "mcdonalds", displayName: "McDonald's", category: .food, bundleID: "com.mcdonalds.gma"),
     ]
 
     static let generated6: [CatalogApp] = [
+        CatalogApp(slug: "mcdonalds", displayName: "McDonald's", category: .food, bundleID: "com.mcdonalds.gma"),
         CatalogApp(slug: "chickfila", displayName: "Chick-fil-A", category: .food, bundleID: "com.engauge.Chick-fil-A"),
         CatalogApp(slug: "fiveguys", displayName: "Five Guys", category: .food, bundleID: "com.fiveguys.mobile"),
         CatalogApp(slug: "panerabread", displayName: "Panera Bread", category: .food, bundleID: "com.panerabread.mobile.minneapolis"),

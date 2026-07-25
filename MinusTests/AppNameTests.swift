@@ -44,6 +44,22 @@ final class AppNameTests: XCTestCase {
         }
     }
 
+    /// The ceiling of this approach, pinned so it is not rediscovered.
+    ///
+    /// The home screen shows "Workouts" for com.sbs.train. The App Store's
+    /// record says "MacroFactor Workouts - Tracker" in trackName,
+    /// trackCensoredName AND the seller field: the word "Workouts" alone
+    /// appears nowhere in it. Shortening does the most that data allows and
+    /// stops there. The real name comes from PrivateAppName (the device) or
+    /// from the user renaming the row.
+    func testStoreTitlesCannotYieldAnIconOnlyName() {
+        XCTAssertEqual(
+            AppName.short("MacroFactor Workouts - Tracker"),
+            "MacroFactor Workouts",
+            "the tagline goes, but no rule over this string can produce \"Workouts\""
+        )
+    }
+
     /// A title that is nothing but punctuation keeps whatever it had, rather
     /// than becoming a nameless row.
     func testDegenerateTitlesKeepTheirOriginal() {

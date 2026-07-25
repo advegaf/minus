@@ -20,8 +20,6 @@ import Foundation
 /// personal build; MUST be removed before any App Store or TestFlight
 /// submission, where it is grounds for rejection.
 enum PrivateAppLauncher {
-    /// Set false to route around the private path without a rebuild.
-
     /// True when the private path is reachable at all. Cheap and cached.
     nonisolated static let isAvailable: Bool = {
         guard let workspaceClass = NSClassFromString("LSApplicationWorkspace") as? NSObject.Type else {
