@@ -44,7 +44,7 @@ FRAMES = [
      "Your home screen,\nminus everything else.",
      "one widget. the apps you meant.\nnothing you didn’t."),
     ("shot-home.png",
-     "A clock, a goal,\nand a short list.",
+     "Nothing to check.\nOnly things to do.",
      "no badges. no feed.\nno reason to stay."),
     ("shot-focus.png",
      "Focus that\nactually holds.",
