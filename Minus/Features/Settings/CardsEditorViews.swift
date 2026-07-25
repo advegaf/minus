@@ -403,30 +403,40 @@ private struct AddedAppRow: View {
                     .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
                     .accessibilityIdentifier("field-rename-\(slug)")
             } else {
-                // The name renames; the space beside it toggles. Two targets,
-                // both a full row tall, so neither can be hit by accident.
-                Button(action: beginRename) {
-                    Text(title)
-                        .mnType(.bodyLg)
-                        .foregroundStyle(isSelected ? MN.boneWhite : MN.fogBlue)
-                        .lineLimit(1)
-                        .frame(minHeight: MN.minHit, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.mnPress)
-                .accessibilityIdentifier("rename-row-\(slug)")
-                .accessibilityLabel("rename \(title)")
-
+                // The name toggles, as every other row in this list does.
+                // v1.16 made the name open the editor instead, which fought
+                // the thing the row is mostly for: the obvious tap on a name
+                // is "put this on the card", and it did something else.
                 Button(action: toggle) {
-                    Color.clear
-                        .frame(maxWidth: .infinity, minHeight: MN.minHit)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 0) {
+                        Text(title)
+                            .mnType(.bodyLg)
+                            .foregroundStyle(isSelected ? MN.boneWhite : MN.fogBlue)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.mnPress)
                 .disabled(isDimmed)
                 .accessibilityIdentifier("edit-row-\(slug)")
                 .accessibilityLabel(title)
                 .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+
+                // Renaming is its own word. A pencil would have been the first
+                // icon in the app; "rename" says what it does and looks like
+                // everything else here.
+                Button(action: beginRename) {
+                    Text("rename")
+                        .mnType(.caption)
+                        .foregroundStyle(MN.fogBlue)
+                        .frame(minWidth: MN.minHit, minHeight: MN.minHit, alignment: .trailing)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.mnPress)
+                .accessibilityIdentifier("rename-row-\(slug)")
+                .accessibilityLabel("rename \(title)")
             }
 
             Button(action: remove) {
@@ -437,6 +447,7 @@ private struct AddedAppRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.mnPress)
+            .padding(.leading, MN.Space.xs)
             .accessibilityIdentifier("remove-row-\(slug)")
             .accessibilityLabel("remove \(title)")
         }

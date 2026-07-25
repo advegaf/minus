@@ -334,10 +334,24 @@ final class SettingsUITests: XCTestCase {
         app.buttons["card-row-0"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
 
-        let nameButton = app.buttons["rename-row-custom-pilates"]
+        // v1.17: the NAME toggles, as every other row does. Renaming used to
+        // live on the name and fought the row's main job; this asserts the
+        // conflict is gone before testing the button that replaced it.
+        let nameButton = app.buttons["edit-row-custom-pilates"]
         XCTAssertTrue(nameButton.waitForExistence(timeout: 5))
-        attach(app, "CA-9")
         nameButton.tap()
+        // Tapping scrolls the row into view, so this is where the row is
+        // actually visible for the evidence shot.
+        attach(app, "CA-9")
+        XCTAssertFalse(
+            app.textFields["field-rename-custom-pilates"].exists,
+            "tapping the name must add the app, not open the editor"
+        )
+        nameButton.tap()  // back off the card, leaving state as it was
+
+        let renameButton = app.buttons["rename-row-custom-pilates"]
+        XCTAssertTrue(renameButton.exists, "rename should be its own control")
+        renameButton.tap()
 
         let field = app.textFields["field-rename-custom-pilates"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), "tapping the name should open an editor in place")
@@ -346,11 +360,9 @@ final class SettingsUITests: XCTestCase {
         field.typeText("Reformer")
         field.typeText("\n")
 
-        let renamed = app.buttons["rename-row-custom-pilates"]
+        let renamed = app.buttons["edit-row-custom-pilates"]
         XCTAssertTrue(renamed.waitForExistence(timeout: 5))
-        // The button's a11y label is "rename {name}", so assert on the name.
-        XCTAssertTrue(renamed.label.contains("reformer"), renamed.label)
-        XCTAssertFalse(renamed.label.contains("pilates"), "the old name survived: \(renamed.label)")
+        XCTAssertEqual(renamed.label, "reformer")
 
         // And it reaches the launcher, where the name is actually read.
         app.buttons["nav-back"].firstMatch.tap()
