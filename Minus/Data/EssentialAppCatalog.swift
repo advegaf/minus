@@ -16,6 +16,13 @@ import Foundation
 /// only as the fallback for a device that refuses the identity route, and any
 /// app NOT in this list is added by name through AppSearch, which resolves
 /// its identity from the App Store.
+///
+/// All sixty identities below were written from memory and then CHECKED, one
+/// by one, against the App Store's own records through that same endpoint:
+/// 60/60 correct. The one surprise was Pinterest, whose identifier really is
+/// the bare word "pinterest" with no reverse-DNS at all — a unit test had to
+/// be loosened rather than the data corrected. Re-run the check any time the
+/// list changes; it is a single pass over `displayName`.
 struct CatalogApp: Identifiable, Hashable, Sendable {
     var slug: String
     var displayName: String

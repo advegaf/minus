@@ -1,6 +1,45 @@
 # minus — deferred scope
 
-v2 candidates, in rough priority order:
+## What still stands between 1.12 and a release (as of 1.12.0)
+
+Ranked by what actually blocks, not by effort.
+
+1. **The identity launcher is a private API.** `LSApplicationWorkspace
+   .openApplicationWithBundleID:` is what makes any-app launching work at all,
+   and it is an automatic App Store rejection. This build is personal, by
+   decision, so it ships as is — but "release" here means *onto your phone*,
+   not into the store. Distributing publicly means deleting the identity route
+   and living with schemes plus Shortcuts, which is a materially worse app.
+   `PrivateAppLauncher.isEnabled` (DEBUG row in About) is the switch.
+2. **The widget's identity launch is still unproven.** The app process
+   launches by identity on hardware (verified: Telegram killed at pid 3665,
+   relaunched at 3754). Whether an app EXTENSION gets the same privilege has
+   never been tested, because it needs one human tap on a home-screen widget
+   cell. If it is refused, those cells fall back to the Link bounce through
+   minus, which still lands every app — one visible blink instead of none.
+3. **Family Controls distribution entitlement** — required before TestFlight
+   or the App Store, whatever happens with (1). File it when shipping becomes
+   real.
+4. **iOS 27 simulator stalls any test that types.** A beta-runtime keyboard
+   problem, not an app one; the 26.4 simulator covers those paths and the full
+   suite is green there. Recorded rather than papered over.
+5. **Two CSV rows sit at Fixed–retest** (L-4 link verification, and the
+   pre-1.10 launch rows) pending a device walk. Seven more are Needs device by
+   nature: shields, schedules and the report extension cannot run on a
+   simulator.
+
+Worth improving, in order of what a user would feel:
+
+- **Added apps cannot be renamed or removed from the registry**, only dropped
+  from a card. A mistyped add is permanent until reinstall.
+- **No search history or recents** on the add screen: adding three apps means
+  three round trips through the same typing.
+- **The launcher has no reordering.** Card membership is toggle-only, so the
+  order is the catalog's, not yours.
+- **iCloud sync, Lock Screen widgets, a per-card default for new widgets** —
+  real features, none of them blocking.
+
+## v2 candidates, in rough priority order:
 
 1. **Home-screen widget** (deferred from v1 by decision D7) — small/medium WidgetKit
    widget: intention line + current focus state in the obsidian/bone language. Needs an
