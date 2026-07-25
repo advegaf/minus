@@ -1,4 +1,5 @@
 import Foundation
+import FamilyControls
 import SwiftData
 import SwiftUI
 import UIKit
@@ -21,6 +22,35 @@ final class AppDependencies {
 
     /// Push the current cards to the widgets. Card edits used to wait for the
     /// next scene-phase change, so a widget could show yesterday's launcher.
+    /// Commit a Screen Time selection to the default blocklist.
+    ///
+    /// Shared by the blocked-apps editor and the focus empty state, because
+    /// the semantics are not obvious and two copies would drift: an EMPTY
+    /// selection means no blocklist at all, and the schedule registry cannot
+    /// carry nil, so every enabled schedule has to be unregistered and turned
+    /// off truthfully rather than left pointing at nothing. A non-empty one
+    /// must refresh the registry, or shields fire with stale tokens.
+    func commitBlockSelection(_ selection: FamilyActivitySelection) {
+        let blockList = MinusContainer.defaultBlockList(in: context)
+        let isEmpty = selection.applicationTokens.isEmpty
+            && selection.categoryTokens.isEmpty
+            && selection.webDomainTokens.isEmpty
+        if isEmpty {
+            blockList.selectionData = nil
+            for schedule in (try? context.fetch(
+                FetchDescriptor<FocusSchedule>(predicate: #Predicate { $0.isEnabled })
+            )) ?? [] {
+                coordinator.unregister(schedule: schedule)
+                schedule.isEnabled = false
+            }
+        } else {
+            blockList.selectionData = LiveScreenTimeService.encodeSelection(selection)
+            coordinator.refreshSchedules(blockList: blockList)
+        }
+        blockList.updatedAt = ClockProvider.now()
+        try? context.save()
+    }
+
     func publishLauncher() {
         LauncherBridge.publish(context: context, coordinator: coordinator)
     }
@@ -51,6 +81,7 @@ final class AppDependencies {
             }
         }
         Self.migrateToCards(context: container.mainContext)
+        Self.shortenStoredAppNames(context: container.mainContext)
 
         service = ScreenTimeServiceFactory.make()
         coordinator = SessionCoordinator(service: service, context: container.mainContext)
@@ -62,6 +93,25 @@ final class AppDependencies {
             LauncherBridge.publish(context: mainContext, coordinator: coordinator)
         }
         coordinator.reconcile()
+    }
+
+    /// v1.15: apps added before this build stored the App Store's marketing
+    /// title, so the launcher read "MacroFactor - Macro Tracker" where the home
+    /// screen reads "MacroFactor". Rewrite them to the short name once.
+    /// Idempotent: AppName.short of an already-short name is itself, so a row
+    /// that needs nothing is never touched and the pass never dirties the
+    /// context on later launches.
+    static func shortenStoredAppNames(context: ModelContext) {
+        let rows = (try? context.fetch(FetchDescriptor<EssentialApp>())) ?? []
+        var changed = false
+        for row in rows {
+            let short = AppName.short(row.displayName)
+            guard short != row.displayName else { continue }
+            row.displayName = short
+            changed = true
+        }
+        guard changed else { return }
+        try? context.save()
     }
 
     /// v1.6 fold: pre-cards installs carry catalog EssentialApp rows; exactly

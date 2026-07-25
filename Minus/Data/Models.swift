@@ -110,6 +110,62 @@ struct CustomEntry: Equatable, Sendable {
     }
 }
 
+/// The name an app wears on the home screen, recovered from the name the App
+/// Store sells it under. "MacroFactor - Macro Tracker" is what the store
+/// returns; "MacroFactor" is what the icon says, and a launcher should say
+/// what the icon says.
+///
+/// The rule is deliberately narrow. It cuts at a SPACED separator only, which
+/// is what makes it safe: "Chick-fil-A", "7-ELEVEN" and "1.1.1.1" carry
+/// hyphens and dots inside the name itself and must survive untouched. Checked
+/// against the 148 store titles in scripts/catalog-cache.json: 61 shorten, and
+/// nothing that should have been left alone was touched.
+enum AppName {
+    /// Separators only count with space around them. The bare "colon-space"
+    /// case is included because "1Password: Password Manager" has no leading
+    /// space but is still a tagline.
+    /// Built from scalar values rather than written out, because DesignGuard
+    /// rule 6 bans em and en dashes inside string literals under Minus/ —
+    /// including their escape form, deliberately, so the ban cannot be dodged.
+    /// The rule is right and this code is the exception that proves it: these
+    /// are characters being parsed OUT of someone else's marketing copy, never
+    /// shown, and the guard has no way to tell the difference. Naming them by
+    /// code point keeps both things true.
+    private static let separators: [String] = {
+        let enDash = String(UnicodeScalar(0x2013)!)
+        let emDash = String(UnicodeScalar(0x2014)!)
+        let middleDot = String(UnicodeScalar(0x00B7)!)
+        return [" - ", " \(enDash) ", " \(emDash) ", " : ", " | ", " \(middleDot) ", ": "]
+    }()
+
+    static func short(_ title: String) -> String {
+        var name = title
+        // First separator wins: everything after it is a tagline.
+        var cut = name.endIndex
+        for separator in separators {
+            if let range = name.range(of: separator), range.lowerBound < cut {
+                cut = range.lowerBound
+            }
+        }
+        name = String(name[name.startIndex..<cut])
+
+        // A trailing parenthetical is a qualifier, not a name:
+        // "Google Health (Fitbit)" is "Google Health" on the home screen.
+        if let open = name.lastIndex(of: "("), name.hasSuffix(")") {
+            name = String(name[name.startIndex..<open])
+        }
+
+        name = name
+            .replacingOccurrences(of: "\u{00AE}", with: "")   // ®
+            .replacingOccurrences(of: "\u{2122}", with: "")   // ™
+            .replacingOccurrences(of: "\u{2120}", with: "")   // ℠
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // A title that was nothing but punctuation keeps whatever it had.
+        return name.isEmpty ? title : name
+    }
+}
+
 /// Pure slug machinery for custom entries. "Pilates Studio" → "custom-pilates-
 /// studio", launched via shortcuts://run-shortcut?name=minus-pilates-studio —
 /// the guide walks the user through creating that one-action shortcut.

@@ -522,12 +522,16 @@ struct CustomEntryView: View {
     }
 
     private func add(_ match: AppSearch.Match) {
-        let slug = CustomSlug.make(name: match.name, existing: Set(registry.map(\.slug)))
+        // The row list above shows the full store title, because that is what
+        // tells two similarly-named apps apart at the moment of choosing. What
+        // gets STORED is the name the home screen uses.
+        let name = AppName.short(match.name)
+        let slug = CustomSlug.make(name: name, existing: Set(registry.map(\.slug)))
         let nextOrder = (registry.map(\.sortOrder).max() ?? -1) + 1
         deps.context.insert(
             EssentialApp(
                 slug: slug,
-                displayName: match.name,
+                displayName: name,
                 urlScheme: "",
                 sortOrder: nextOrder,
                 bundleID: match.bundleID

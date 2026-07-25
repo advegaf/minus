@@ -267,8 +267,23 @@ final class SettingsUITests: XCTestCase {
 
         // Back at the detail: the added app exists and is in the card.
         XCTAssertTrue(app.descendants(matching: .any)["settings-card-detail"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["edit-row-custom-pilates-studio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["edit-row-custom-pilates-studio"].waitForExistence(timeout: 5),
+                      "the stored name should be the short one, so the slug is too")
         attach(app, "CA-5")
+
+        // And on Home the launcher row reads like a home-screen label, not
+        // like a store listing. v1.15: it used to render the full marketing
+        // title and wrap onto a second line.
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings-cards"].waitForExistence(timeout: 5))
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+        app.buttons["nav-back"].firstMatch.tap()
+
+        let launcherRow = app.buttons["row-app-custom-pilates-studio"]
+        XCTAssertTrue(launcherRow.waitForExistence(timeout: 5))
+        XCTAssertEqual(launcherRow.label, "pilates studio", "the launcher should read like the home screen")
+        attach(app, "CA-5-home")
     }
 
     /// A typo used to be permanent: added apps could leave a card but never
@@ -293,6 +308,11 @@ final class SettingsUITests: XCTestCase {
         // Back on the card: the added app is there, and so is its way out.
         let row = app.buttons["edit-row-custom-pilates-studio"]
         XCTAssertTrue(row.waitForExistence(timeout: 5))
+        // The row's label is composite (selection marker + name), so assert on
+        // what matters: the name is there and the store's tagline is not.
+        XCTAssertTrue(row.label.contains("pilates studio"), row.label)
+        XCTAssertFalse(row.label.lowercased().contains("reformer"),
+                       "the store's tagline was stored: \(row.label)")
         let remove = app.buttons["remove-row-custom-pilates-studio"]
         XCTAssertTrue(remove.exists, "an added app has no way out")
         attach(app, "CA-7-before")

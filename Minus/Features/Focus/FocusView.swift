@@ -1,3 +1,4 @@
+import FamilyControls
 import SwiftData
 import SwiftUI
 
@@ -13,6 +14,12 @@ struct FocusView: View {
     @State private var customActive = false
     @State private var customText = ""
     @State private var startError: String?
+    /// Picking blocked apps from here, rather than sending the user to
+    /// Settings to find the same picker. Always a fresh flag-true selection:
+    /// includeEntireCategory is init-only, and a decoded flag-false one
+    /// silently reverts the B1 count fix.
+    @State private var liveSelection = FamilyActivitySelection(includeEntireCategory: true)
+    @State private var pickerPresented = false
 
     private static let presets = [15, 30, 60, 120]
 
@@ -61,6 +68,17 @@ struct FocusView: View {
                         .transition(.opacity)
                 }
             }
+        }
+        // Attached here, not inside `content`: the picker is a remote view
+        // service, and an anchor that comes and goes with a branch renders it
+        // blank (the v1.1 lesson, same as BlockListEditView).
+        .familyActivityPicker(isPresented: $pickerPresented, selection: $liveSelection)
+        .onChange(of: pickerPresented) { _, presented in
+            guard !presented, !deps.service.isMock else { return }
+            deps.commitBlockSelection(liveSelection)
+            // hasSelection flips, so `content` re-renders as the duration
+            // picker on its own. No push, no back-tracking: the user lands
+            // exactly where they were trying to get.
         }
     }
 
@@ -208,8 +226,16 @@ struct FocusView: View {
                 .padding(.top, MN.Space.s)
             Spacer()
             OutlinedCTA(title: "Choose apps", prominent: true) {
-                router.push(.settings)
+                // The simulator has no Screen Time picker, so the mock build
+                // keeps navigating — but to the blocked-apps screen, not the
+                // settings root it used to dump the user on.
+                if deps.service.isMock {
+                    router.push(.settingsBlocked)
+                } else {
+                    pickerPresented = true
+                }
             }
+            .accessibilityIdentifier("cta-choose-blocked")
             .padding(.bottom, MN.Space.m)
         }
         .padding(.horizontal, MN.Space.m)

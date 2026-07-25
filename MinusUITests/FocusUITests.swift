@@ -95,6 +95,26 @@ final class FocusUITests: XCTestCase {
         attach(app, "FO-9")
     }
 
+    /// v1.15: "Choose apps" used to push the settings ROOT, so wanting to
+    /// start a session with nothing blocked meant hunting for the blocked-apps
+    /// row and then tapping Re-pick before any picker appeared. On device the
+    /// button now opens the Screen Time picker in place; under the mock, which
+    /// has no such picker, it must at least land on the right screen.
+    @MainActor
+    func testChooseAppsGoesStraightToBlockedApps() {
+        let app = launch(state: "noblock")
+        let cta = app.buttons["cta-choose-blocked"]
+        XCTAssertTrue(cta.waitForExistence(timeout: 5))
+        cta.tap()
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)["settings-blocked"].waitForExistence(timeout: 5),
+            "choosing apps should land on blocked apps, not the settings root"
+        )
+        XCTAssertFalse(app.buttons["row-strictness"].exists, "this is the settings root, not the picker")
+        attach(app, "FO-9-choose")
+    }
+
     @MainActor
     func testDeniedState() {
         let app = launch(state: "denied")

@@ -157,7 +157,7 @@ struct BlockListEditView: View {
         .familyActivityPicker(isPresented: $pickerPresented, selection: $liveSelection)
         .onChange(of: pickerPresented) { _, presented in
             guard !presented, !deps.service.isMock else { return }
-            persistLiveSelection()
+            deps.commitBlockSelection(liveSelection)
         }
         .onAppear(perform: seedLiveSelection)
     }
@@ -209,28 +209,6 @@ struct BlockListEditView: View {
         fresh.categoryTokens = saved.categoryTokens
         fresh.webDomainTokens = saved.webDomainTokens
         liveSelection = fresh
-    }
-
-    private func persistLiveSelection() {
-        let isEmpty = liveSelection.applicationTokens.isEmpty
-            && liveSelection.categoryTokens.isEmpty
-            && liveSelection.webDomainTokens.isEmpty
-        if isEmpty {
-            // Honest ON-7 semantics: nothing picked = no blocklist. The registry
-            // can't carry nil, so enabled schedules turn off truthfully.
-            blockList.selectionData = nil
-            for schedule in (try? deps.context.fetch(
-                FetchDescriptor<FocusSchedule>(predicate: #Predicate { $0.isEnabled })
-            )) ?? [] {
-                deps.coordinator.unregister(schedule: schedule)
-                schedule.isEnabled = false
-            }
-        } else {
-            blockList.selectionData = LiveScreenTimeService.encodeSelection(liveSelection)
-            deps.coordinator.refreshSchedules(blockList: blockList)
-        }
-        blockList.updatedAt = ClockProvider.now()
-        try? deps.context.save()
     }
 
     private var staleRecovery: some View {

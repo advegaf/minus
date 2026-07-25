@@ -313,6 +313,10 @@ struct EssentialAppList: View {
                     Text(row.name.lowercased())
                         .mnType(.bodyLg)
                         .foregroundStyle(MN.boneWhite)
+                        // One line, as the widget already does. A name too long
+                        // for the width clips; it never reflows the monument.
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)

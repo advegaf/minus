@@ -39,7 +39,7 @@ enum AppSearch {
         switch ProcessInfo.processInfo.environment["MINUS_SEARCH"] {
         case "stub":
             return [
-                Match(name: "Pilates Studio", seller: "Studio Software", bundleID: "com.example.pilates"),
+                Match(name: "Pilates Studio - Reformer & Mat Classes", seller: "Studio Software", bundleID: "com.example.pilates"),
                 Match(name: "Pilates Daily", seller: "Daily Apps", bundleID: "com.example.pilatesdaily"),
             ]
         case "offline":
