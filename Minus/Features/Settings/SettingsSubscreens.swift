@@ -378,9 +378,6 @@ struct PermissionSettingsView: View {
 // MARK: - About
 
 struct AboutView: View {
-    #if DEBUG
-    @State private var identityLauncherOn = PrivateAppLauncher.isEnabled
-    #endif
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
@@ -403,66 +400,8 @@ struct AboutView: View {
                 .foregroundStyle(MN.fogBlue)
                 .frame(maxWidth: 320, alignment: .leading)
                 .padding(.top, MN.Space.l)
-
-            #if DEBUG
-            identityLauncherSwitch
-            Text("MONITOR LOG")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.section)
-            let log = SharedState.monitorLog
-            if log.isEmpty {
-                Text("empty. the extension hasn't fired yet.")
-                    .mnType(.caption)
-                    .foregroundStyle(MN.fogBlue)
-                    .padding(.top, MN.Space.xs)
-            } else {
-                VStack(alignment: .leading, spacing: MN.Space.xxs) {
-                    ForEach(Array(log.suffix(30).enumerated()), id: \.offset) { _, line in
-                        Text(line)
-                            .mnType(.caption)
-                            .foregroundStyle(MN.boneWhite)
-                    }
-                }
-                .padding(.top, MN.Space.xs)
-            }
-            #endif
         }
     }
-
-    #if DEBUG
-    /// The identity launcher is a private API. A future iOS could start
-    /// refusing it, or hanging differently: this turns it off without a
-    /// rebuild, and minus falls back to schemes, links and shortcuts.
-    private var identityLauncherSwitch: some View {
-        VStack(alignment: .leading, spacing: MN.Space.xxs) {
-            Text("IDENTITY LAUNCHER")
-                .mnType(.caption)
-                .textCase(.uppercase)
-                .foregroundStyle(MN.fogBlue)
-                .padding(.top, MN.Space.section)
-            OnboardingSelectRow(
-                title: "on \u{00B7} open apps by bundle id",
-                isSelected: identityLauncherOn,
-                accessibilityID: "identity-launcher-on"
-            ) {
-                identityLauncherOn = true
-                PrivateAppLauncher.isEnabled = true
-            }
-            OnboardingSelectRow(
-                title: "off \u{00B7} schemes, links, shortcuts only",
-                isSelected: !identityLauncherOn,
-                accessibilityID: "identity-launcher-off"
-            ) {
-                identityLauncherOn = false
-                PrivateAppLauncher.isEnabled = false
-            }
-        }
-        .padding(.bottom, MN.Space.l)
-    }
-
-    #endif
 }
 
 // MARK: - Shared shell

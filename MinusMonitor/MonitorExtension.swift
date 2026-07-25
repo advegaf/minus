@@ -15,11 +15,9 @@ final class MonitorExtension: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         let name = activity.rawValue
-        SharedState.appendMonitorLog("didStart \(name) \(Date().ISO8601Format())")
 
         guard let interval = SharedState.scheduleRegistry[name] else { return }
         guard let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: interval.selectionData) else {
-            SharedState.appendMonitorLog("decode-failed \(name)")
             return
         }
         let store = ManagedSettingsStore(named: .init(name))
@@ -36,6 +34,5 @@ final class MonitorExtension: DeviceActivityMonitor {
         let name = activity.rawValue
         ManagedSettingsStore(named: .init(name)).clearAllSettings()
         SharedState.appendPendingEvent(MonitorEvent(kind: .intervalEnded, activityName: name, date: Date()))
-        SharedState.appendMonitorLog("didEnd \(name) \(Date().ISO8601Format())")
     }
 }

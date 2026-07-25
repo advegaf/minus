@@ -40,23 +40,11 @@ final class SharedStateTests: XCTestCase {
         XCTAssertTrue(SharedState.drainPendingEvents().isEmpty)
     }
 
-    func testMonitorLogRingBufferCapsAt200() {
-        for i in 0..<230 {
-            SharedState.appendMonitorLog("line \(i)")
-        }
-        let log = SharedState.monitorLog
-        XCTAssertEqual(log.count, 200)
-        XCTAssertEqual(log.first, "line 30")
-        XCTAssertEqual(log.last, "line 229")
-    }
-
     func testResetClearsEverything() {
         SharedState.activeSessions = [
             ActivitySnapshot(activityName: "x", sessionID: UUID(), startedAt: .now, plannedEndAt: .now)
         ]
-        SharedState.appendMonitorLog("line")
         SharedState.reset()
         XCTAssertTrue(SharedState.activeSessions.isEmpty)
-        XCTAssertTrue(SharedState.monitorLog.isEmpty)
     }
 }

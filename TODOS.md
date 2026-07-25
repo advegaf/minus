@@ -1,6 +1,6 @@
 # minus — deferred scope
 
-## What still stands between here and a release (as of 1.13.0)
+## What still stands between here and a release (as of 1.14.0)
 
 Ranked by what actually blocks, not by effort.
 
@@ -10,7 +10,12 @@ Ranked by what actually blocks, not by effort.
    decision, so it ships as is — but "release" here means *onto your phone*,
    not into the store. Distributing publicly means deleting the identity route
    and living with schemes plus Shortcuts, which is a materially worse app.
-   `PrivateAppLauncher.isEnabled` (DEBUG row in About) is the switch.
+   As of 1.14 the route is unconditional: the DEBUG row that could switch it
+   off was removed along with the rest of the developer panels in About, so
+   disabling it now means editing `PrivateAppLauncher.open` and rebuilding.
+   That is a smaller loss than it sounds — the URL plan still runs behind
+   every identity launch, so a call that starts being refused degrades to
+   schemes and shortcuts rather than to a dead launcher.
 2. **The widget's identity launch is still unproven.** The app process
    launches by identity on hardware (verified: Telegram killed at pid 3665,
    relaunched at 3754). Whether an app EXTENSION gets the same privilege has

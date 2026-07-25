@@ -47,7 +47,6 @@ enum SharedState {
         static let activeSessions = "minus.activeSessions"
         static let scheduleRegistry = "minus.scheduleRegistry"
         static let pendingEvents = "minus.pendingEvents"
-        static let monitorLog = "minus.monitorLog"
     }
 
     /// The app-group id comes from Info.plist (`MinusAppGroup`, present in both
@@ -102,22 +101,9 @@ enum SharedState {
         return events
     }
 
-    // MARK: Monitor log (DEBUG diagnostics, surfaced in Settings → About)
-
-    static func appendMonitorLog(_ line: String) {
-        var log = defaults.stringArray(forKey: Key.monitorLog) ?? []
-        log.append(line)
-        if log.count > 200 { log.removeFirst(log.count - 200) }
-        defaults.set(log, forKey: Key.monitorLog)
-    }
-
-    static var monitorLog: [String] {
-        defaults.stringArray(forKey: Key.monitorLog) ?? []
-    }
-
     /// Full wipe (Settings → reset).
     static func reset() {
-        for key in [Key.activeSessions, Key.scheduleRegistry, Key.pendingEvents, Key.monitorLog] {
+        for key in [Key.activeSessions, Key.scheduleRegistry, Key.pendingEvents] {
             defaults.removeObject(forKey: key)
         }
     }

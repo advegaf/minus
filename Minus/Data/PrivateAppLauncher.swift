@@ -21,7 +21,6 @@ import Foundation
 /// submission, where it is grounds for rejection.
 enum PrivateAppLauncher {
     /// Set false to route around the private path without a rebuild.
-    nonisolated(unsafe) static var isEnabled = true
 
     /// True when the private path is reachable at all. Cheap and cached.
     nonisolated static let isAvailable: Bool = {
@@ -36,7 +35,7 @@ enum PrivateAppLauncher {
     /// app came forward: that answer does not exist (see rule 1).
     @discardableResult
     nonisolated static func open(bundleID: String) -> Bool {
-        guard isEnabled, isAvailable, !bundleID.isEmpty else { return false }
+        guard isAvailable, !bundleID.isEmpty else { return false }
         DispatchQueue.global(qos: .userInitiated).async {
             guard let workspaceClass = NSClassFromString("LSApplicationWorkspace") as? NSObject.Type,
                   let workspace = workspaceClass

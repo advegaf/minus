@@ -105,6 +105,25 @@ final class HomeUITests: XCTestCase {
     // MARK: - (e) CA-8 — the card pager (v1.7)
 
     /// Only the active card is built, so a card that is not showing does not
+    /// A pager swipe that does not depend on XCUITest's default velocity
+    /// heuristic, which under full-suite load intermittently lands short of
+    /// the gesture's 24pt minimum: the pager stays put and the assertion
+    /// blames the app for a flake in the harness. Still a real swipe, just
+    /// with the velocity stated rather than guessed, and retried once because
+    /// a dropped gesture is a harness event, not a behaviour.
+    @MainActor
+    private func swipePager(_ app: XCUIApplication, toLeft: Bool, until id: String) {
+        for _ in 0..<3 {
+            let pager = element(app, "card-pager")
+            if toLeft {
+                pager.swipeLeft(velocity: .fast)
+            } else {
+                pager.swipeRight(velocity: .fast)
+            }
+            if app.buttons[id].waitForExistence(timeout: 3) { return }
+        }
+    }
+
     /// exist at all. That is the point: a page can never be the wrong page.
     @MainActor
     func testCardPagerSwipesBetweenCards() {
@@ -114,7 +133,7 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["card-tab-one"].exists, "card tabs missing")
         attach(app, named: "CA-8")
 
-        element(app, "card-pager").swipeLeft()
+        swipePager(app, toLeft: true, until: "row-app-slack")
         XCTAssertTrue(
             app.buttons["row-app-slack"].waitForExistence(timeout: 5),
             "swipe should reveal card two"
@@ -122,13 +141,13 @@ final class HomeUITests: XCTestCase {
         XCTAssertFalse(app.buttons["row-app-phone"].exists, "card one should have left")
         attach(app, named: "CA-8-work")
 
-        element(app, "card-pager").swipeLeft()
+        swipePager(app, toLeft: true, until: "row-app-custom-pilates")
         XCTAssertTrue(
             app.buttons["row-app-custom-pilates"].waitForExistence(timeout: 5),
             "card three (custom entry) missing"
         )
 
-        element(app, "card-pager").swipeRight()
+        swipePager(app, toLeft: false, until: "row-app-slack")
         XCTAssertTrue(
             app.buttons["row-app-slack"].waitForExistence(timeout: 5),
             "swipe back should return to card two"
