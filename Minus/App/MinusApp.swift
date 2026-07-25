@@ -59,8 +59,17 @@ struct MinusApp: App {
     /// (.focus is consumed by AppRootView, which owns the router.)
     private func consumeEssentialLink() {
         guard case .openEssential(let slug) = deps.pendingDeepLink else { return }
+        // The bounce carries a slug and nothing else, so the identity for an
+        // added app has to be looked up here. Without it the widget path lands
+        // on the Shortcuts route exactly as Home used to.
+        let customs = Dictionary(
+            MinusContainer.customEntries(in: deps.context)
+                .map { ($0.slug, CustomEntry(name: $0.displayName, bundleID: $0.bundleID)) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let identity = EssentialLauncher.bundleID(for: slug, customs: customs)
         Task {
-            await EssentialLauncher.open(slug: slug)
+            await EssentialLauncher.open(slug: slug, bundleID: identity)
             deps.pendingDeepLink = nil
         }
     }

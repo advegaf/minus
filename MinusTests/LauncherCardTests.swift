@@ -140,7 +140,7 @@ final class LauncherCardTests: XCTestCase {
             cards: [
                 LauncherBridge.CardInput(id: cardID, name: "one", orderedSlugs: ["phone", "custom-yoga", "ghost-slug"])
             ],
-            customEntries: ["custom-yoga": "Yoga"],
+            customEntries: ["custom-yoga": CustomEntry(name: "Yoga")],
             intention: "less.",
             activeSnapshot: nil,
             schedules: [],
@@ -159,6 +159,48 @@ final class LauncherCardTests: XCTestCase {
 
 
 
+    // MARK: v1.13 — the identity survives every hop
+
+    /// The v1.12 defect, locked. An app added by name resolved its identity
+    /// from the App Store, stored it, and then every launch path dropped it:
+    /// the row fell to shortcuts://run-shortcut?name=minus-oura and the user
+    /// saw "could not open shortcut". Nothing asserted the identity reached
+    /// the tap, so a full green suite shipped it.
+    func testAddedAppKeepsItsIdentityIntoTheRow() {
+        let card = LauncherCard(name: "one", orderedSlugs: ["custom-oura", "spotify"], sortOrder: 0)
+        let rows = EssentialAppList.rows(
+            for: card,
+            customs: ["custom-oura": CustomEntry(name: "Oura", bundleID: "com.ouraring.oura")]
+        )
+        XCTAssertEqual(rows.map(\.bundleID), ["com.ouraring.oura", "com.spotify.client"])
+    }
+
+    /// The resolver Home and the trampoline both call.
+    func testBundleIDResolvesForCatalogAndAddedApps() {
+        let customs = ["custom-oura": CustomEntry(name: "Oura", bundleID: "com.ouraring.oura")]
+        XCTAssertEqual(EssentialLauncher.bundleID(for: "custom-oura", customs: customs), "com.ouraring.oura")
+        XCTAssertEqual(EssentialLauncher.bundleID(for: "spotify", customs: customs), "com.spotify.client")
+        XCTAssertNil(EssentialLauncher.bundleID(for: "ghost-slug", customs: customs))
+        // An entry with no identity is honest about it rather than inventing one.
+        XCTAssertNil(
+            EssentialLauncher.bundleID(for: "custom-x", customs: ["custom-x": CustomEntry(name: "X")])
+        )
+    }
+
+    /// The widget renders straight off the snapshot, so an identity lost here
+    /// is an identity the widget can never recover.
+    func testSnapshotCarriesAddedAppIdentity() {
+        let snapshot = LauncherBridge.snapshot(
+            cards: [LauncherBridge.CardInput(id: UUID(), name: "one", orderedSlugs: ["custom-oura"])],
+            customEntries: ["custom-oura": CustomEntry(name: "Oura", bundleID: "com.ouraring.oura")],
+            intention: "",
+            activeSnapshot: nil,
+            schedules: [],
+            now: Date(timeIntervalSince1970: 1_000)
+        )
+        XCTAssertEqual(snapshot.resolvedCards[0].essentials.first?.bundleID, "com.ouraring.oura")
+    }
+
     // MARK: v1.7 — goal visibility + per-card row resolution
 
     func testIntentionIsShownByDefault() {
@@ -175,7 +217,7 @@ final class LauncherCardTests: XCTestCase {
             orderedSlugs: ["slack", "custom-pilates", "ghost-slug"],
             sortOrder: 1
         )
-        let rows = EssentialAppList.rows(for: card, customs: ["custom-pilates": "Pilates"])
+        let rows = EssentialAppList.rows(for: card, customs: ["custom-pilates": CustomEntry(name: "Pilates")])
         XCTAssertEqual(rows.map(\.slug), ["slack", "custom-pilates"], "unknown slugs drop out")
         XCTAssertEqual(rows[0].name, "Slack")
         XCTAssertEqual(rows[1].name, "Pilates")

@@ -96,6 +96,20 @@ final class LauncherCard {
     }
 }
 
+/// A registry row, flattened for the pure resolvers. Before v1.13 these were
+/// passed as [slug: displayName], which had nowhere to put an identity — so
+/// the identity an added app resolved from the App Store was silently dropped
+/// at every boundary, and the app fell back to a Shortcut the user never made.
+struct CustomEntry: Equatable, Sendable {
+    var name: String
+    var bundleID: String?
+
+    init(name: String, bundleID: String? = nil) {
+        self.name = name
+        self.bundleID = bundleID
+    }
+}
+
 /// Pure slug machinery for custom entries. "Pilates Studio" → "custom-pilates-
 /// studio", launched via shortcuts://run-shortcut?name=minus-pilates-studio —
 /// the guide walks the user through creating that one-action shortcut.

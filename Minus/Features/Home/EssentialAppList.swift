@@ -33,6 +33,9 @@ struct EssentialAppList: View {
     struct Row: Identifiable {
         var slug: String
         var name: String
+        /// Carried all the way to the tap. A row that knows its identity opens
+        /// by identity; one that does not falls to the URL plan.
+        var bundleID: String?
 
         var id: String { slug }
     }
@@ -40,25 +43,26 @@ struct EssentialAppList: View {
     /// Pure resolution for one card: catalog rows carry their compiled-in
     /// name and scheme, "custom-" slugs resolve from the registry, unknown
     /// slugs drop out silently.
-    static func rows(for card: LauncherCard, customs: [String: String]) -> [Row] {
+    static func rows(for card: LauncherCard, customs: [String: CustomEntry]) -> [Row] {
         var seen = Set<String>()
         return card.orderedSlugs.compactMap { slug in
             // A pre-1.6 store could fold duplicate rows into one card, and a
             // duplicate id collapses the ForEach that renders them.
             guard seen.insert(slug).inserted else { return nil }
             if let app = EssentialAppCatalog.app(slug: slug) {
-                return Row(slug: slug, name: app.displayName)
+                return Row(slug: slug, name: app.displayName, bundleID: app.bundleID)
             }
-            if let name = customs[slug] {
-                return Row(slug: slug, name: name)
+            if let entry = customs[slug] {
+                return Row(slug: slug, name: entry.name, bundleID: entry.bundleID)
             }
             return nil
         }
     }
 
-    private var customs: [String: String] {
+    private var customs: [String: CustomEntry] {
         Dictionary(
-            registry.filter { CustomSlug.isCustom($0.slug) }.map { ($0.slug, $0.displayName) },
+            registry.filter { CustomSlug.isCustom($0.slug) }
+                .map { ($0.slug, CustomEntry(name: $0.displayName, bundleID: $0.bundleID)) },
             uniquingKeysWith: { first, _ in first }
         )
     }
@@ -258,7 +262,7 @@ struct EssentialAppList: View {
 
     private func launch(_ row: Row) {
         Task {
-            let opened = await EssentialLauncher.open(slug: row.slug)
+            let opened = await EssentialLauncher.open(slug: row.slug, bundleID: row.bundleID)
             withAnimation(MMotion.micro) { failedSlug = opened ? nil : row.slug }
         }
     }

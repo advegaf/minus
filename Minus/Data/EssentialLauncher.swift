@@ -20,8 +20,12 @@ enum EssentialLauncher {
 
     /// The identity for a slug: the catalog's, or the one an added app
     /// resolved from the App Store.
-    static func bundleID(for slug: String, customs: [String: String]) -> String? {
-        EssentialAppCatalog.app(slug: slug)?.bundleID ?? customs[slug]
+    ///
+    /// v1.13: this existed since 1.12 with NO callers, which is exactly why
+    /// added apps fell through to the Shortcuts route and reported "could not
+    /// open shortcut minus-oura". Every launch path now goes through it.
+    static func bundleID(for slug: String, customs: [String: CustomEntry]) -> String? {
+        EssentialAppCatalog.app(slug: slug)?.bundleID ?? customs[slug]?.bundleID
     }
 
     /// Returns whether anything actually opened.

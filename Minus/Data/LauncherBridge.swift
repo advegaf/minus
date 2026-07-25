@@ -21,7 +21,7 @@ enum LauncherBridge {
     /// app exists before offering to open it (see EssentialLauncher).
     static func snapshot(
         cards: [CardInput],
-        customEntries: [String: String],
+        customEntries: [String: CustomEntry],
         intention: String,
         activeSnapshot: ActivitySnapshot?,
         schedules: [FocusSchedule],
@@ -39,10 +39,17 @@ enum LauncherBridge {
                     bundleID: app.bundleID
                 )
             }
-            if let name = customEntries[slug] {
+            if let entry = customEntries[slug] {
                 let target = EssentialLaunchURL.widgetTarget(slug: slug, urlString: "")
+                // The identity has to survive this hop too: the widget renders
+                // straight off the snapshot and has no other source for it.
                 return LauncherSnapshot.Essential(
-                    slug: slug, name: name, url: "", target: target?.absoluteString, installed: nil
+                    slug: slug,
+                    name: entry.name,
+                    url: "",
+                    target: target?.absoluteString,
+                    installed: nil,
+                    bundleID: entry.bundleID
                 )
             }
             return nil
@@ -91,7 +98,8 @@ enum LauncherBridge {
             CardInput(id: $0.id, name: $0.name, orderedSlugs: $0.orderedSlugs)
         }
         let customs = Dictionary(
-            MinusContainer.customEntries(in: context).map { ($0.slug, $0.displayName) },
+            MinusContainer.customEntries(in: context)
+                .map { ($0.slug, CustomEntry(name: $0.displayName, bundleID: $0.bundleID)) },
             uniquingKeysWith: { first, _ in first }
         )
         // v1.7: a hidden goal publishes as "" — the widget footer's existing
