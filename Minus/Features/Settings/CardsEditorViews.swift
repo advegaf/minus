@@ -85,6 +85,9 @@ struct CardDetailView: View {
     @State private var name = ""
     @State private var loaded = false
     @State private var confirmingDelete = false
+    /// The added app awaiting a removal confirmation. Removal deletes the
+    /// registry row itself, so it needs the same gate the card does.
+    @State private var pendingRemoval: EssentialApp?
 
     private var card: LauncherCard? {
         cardID.flatMap { id in cards.first { $0.id == id } } ?? (cardID == nil ? cards.first : nil)
@@ -135,14 +138,17 @@ struct CardDetailView: View {
                     .padding(.bottom, MN.Space.xxs)
                 ForEach(customs, id: \.slug) { entry in
                     let isChosen = card?.orderedSlugs.contains(entry.slug) ?? false
-                    OnboardingSelectRow(
+                    // Catalog rows can only be toggled; an app YOU added can
+                    // also be taken back out, because a typo would otherwise
+                    // sit in this list until the app was reinstalled.
+                    AddedAppRow(
                         title: entry.displayName.lowercased(),
                         isSelected: isChosen,
                         isDimmed: !isChosen && atCap,
-                        accessibilityID: "edit-row-\(entry.slug)"
-                    ) {
-                        toggle(entry.slug, isChosen: isChosen)
-                    }
+                        slug: entry.slug,
+                        toggle: { toggle(entry.slug, isChosen: isChosen) },
+                        remove: { pendingRemoval = entry }
+                    )
                 }
                 Button {
                     router.push(.settingsCustom(cardID: cardID))
@@ -182,11 +188,36 @@ struct CardDetailView: View {
         } message: {
             Text("widgets showing it fall back to your first card.")
         }
+        .confirmationDialog(
+            "Remove \(pendingRemoval?.displayName.lowercased() ?? "this app")?",
+            isPresented: Binding(get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) { removeAddedApp() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("it leaves every card. you can add it again by name.")
+        }
         .onAppear {
             guard !loaded else { return }
             name = card?.name ?? ""
             loaded = true
         }
+    }
+
+    /// Deleting the registry row is not enough: the slug is copied into every
+    /// card that carries it, and a card holding a slug nothing resolves would
+    /// render a ghost row.
+    private func removeAddedApp() {
+        guard let entry = pendingRemoval else { return }
+        let slug = entry.slug
+        for card in cards {
+            card.orderedSlugs.removeAll { $0 == slug }
+        }
+        deps.context.delete(entry)
+        try? deps.context.save()
+        deps.publishLauncher()
+        pendingRemoval = nil
     }
 
     private func toggle(_ slug: String, isChosen: Bool) {
@@ -217,6 +248,62 @@ struct CardDetailView: View {
 }
 
 // MARK: - Custom entry
+
+/// An added app's row: the selection vocabulary on the left, and a quiet fog
+/// "remove" on the right. Two buttons rather than one, so the destructive half
+/// can never be hit by aiming at the name.
+private struct AddedAppRow: View {
+    let title: String
+    let isSelected: Bool
+    let isDimmed: Bool
+    let slug: String
+    let toggle: () -> Void
+    let remove: () -> Void
+
+    var body: some View {
+        HStack(spacing: MN.Space.xs) {
+            Button(action: toggle) {
+                HStack(spacing: MN.Space.xs) {
+                    Text("\u{2212}")
+                        .mnType(.bodyLg)
+                        .foregroundStyle(MN.boneWhite)
+                        .opacity(isSelected ? 1 : 0)
+                        .frame(width: MN.Space.m, alignment: .leading)
+
+                    Text(title)
+                        .mnType(.bodyLg)
+                        .foregroundStyle(isSelected ? MN.boneWhite : MN.fogBlue)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.mnPress)
+            .disabled(isDimmed)
+            .opacity(isDimmed ? 0.35 : 1)
+            .accessibilityIdentifier("edit-row-\(slug)")
+            .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+
+            Button(action: remove) {
+                Text("remove")
+                    .mnType(.caption)
+                    .foregroundStyle(MN.fogBlue)
+                    .frame(minWidth: MN.minHit, minHeight: MN.minHit, alignment: .trailing)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.mnPress)
+            .accessibilityIdentifier("remove-row-\(slug)")
+            .accessibilityLabel("remove \(title)")
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(MN.ashBorder).frame(height: MN.hairline)
+        }
+        .animation(MMotion.micro, value: isSelected)
+        .animation(MMotion.micro, value: isDimmed)
+    }
+}
 
 struct CustomEntryView: View {
     @Environment(AppDependencies.self) private var deps

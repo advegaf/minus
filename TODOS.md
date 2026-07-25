@@ -30,8 +30,8 @@ Ranked by what actually blocks, not by effort.
 
 Worth improving, in order of what a user would feel:
 
-- **Added apps cannot be renamed or removed from the registry**, only dropped
-  from a card. A mistyped add is permanent until reinstall.
+- **Added apps cannot be renamed**, only removed and re-added. Removal landed
+  in 1.12; renaming did not.
 - **No search history or recents** on the add screen: adding three apps means
   three round trips through the same typing.
 - **The launcher has no reordering.** Card membership is toggle-only, so the

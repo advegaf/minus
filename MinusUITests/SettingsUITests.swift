@@ -218,6 +218,38 @@ final class SettingsUITests: XCTestCase {
         attach(app, "CA-5")
     }
 
+    /// A typo used to be permanent: added apps could leave a card but never
+    /// the registry.
+    @MainActor
+    func testAddedAppCanBeRemoved() {
+        let app = launch(state: "onboarded", extra: ["MINUS_SEARCH": "stub"])
+        XCTAssertTrue(app.buttons["row-essentials"].waitForExistence(timeout: 5))
+        app.buttons["row-essentials"].tap()
+        app.buttons["card-row-0"].tap()
+        XCTAssertTrue(app.buttons["cta-add-custom"].waitForExistence(timeout: 5))
+        app.buttons["cta-add-custom"].tap()
+
+        let field = app.textFields["field-custom-name"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("Pilates")
+        let match = app.buttons["app-match-com.example.pilates"]
+        XCTAssertTrue(match.waitForExistence(timeout: 5))
+        match.tap()
+
+        // Back on the card: the added app is there, and so is its way out.
+        let row = app.buttons["edit-row-custom-pilates-studio"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        let remove = app.buttons["remove-row-custom-pilates-studio"]
+        XCTAssertTrue(remove.exists, "an added app has no way out")
+        attach(app, "CA-7-before")
+        remove.tap()
+        app.buttons["Remove"].tap()
+
+        XCTAssertFalse(row.waitForExistence(timeout: 3), "the added app survived removal")
+        attach(app, "CA-7")
+    }
+
     /// Adding an app is the one thing in minus that needs a connection, so it
     /// is the one thing that has to say so.
     @MainActor
