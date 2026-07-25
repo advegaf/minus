@@ -2,9 +2,10 @@
 """App Store screenshots, composed in the app's own language.
 
 Each frame is the obsidian canvas the app itself is: a bone General Sans
-headline, a fog subline, and the real screenshot below it. No device bezels,
-no gradients, no drop shadows, no floating phones at jaunty angles. The
-product is restraint; the store page should be the first proof of it.
+headline, a fog subline, and the real screenshot below it, seated in Apple's
+own iPhone 17 Pro Max bezel (Design Resources, Deep Blue). No gradients, no
+drop shadows, no floating phones at jaunty angles. The product is restraint;
+the store page should be the first proof of it.
 
 Source screenshots are captured from the iOS 27 iPhone 17 Pro Max simulator at
 1320x2868, which is the App Store's 6.9" size, so the inset is a straight
@@ -24,11 +25,17 @@ ASH = (64, 63, 63)
 
 MARGIN = 96
 HEAD_TOP = 150
-SHOT_W = 940                # leaves the type room to breathe
-CORNER = 118                # the device's own screen radius, scaled
+DEVICE_W = 980              # framed device width; leaves the type room to breathe
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 REGULAR = os.path.join(ROOT, "Minus/Resources/Fonts/GeneralSans-Regular.otf")
+
+# Apple's iPhone 17 Pro Max bezel (1470x3000). Its transparent screen window
+# sits at (75, 66) and is exactly 1320x2868, so a raw simulator screenshot
+# drops in 1:1 with no scaling before the whole device is downsized.
+BEZEL = os.path.join(ROOT, "QA/appstore/bezel/iphone-17-pro-max-deep-blue.png")
+BEZEL_SCREEN_XY = (75, 66)
+BEZEL_SCREEN_SIZE = (1320, 2868)
 
 # (source file, headline, subline). Headlines carry the app's voice: one
 # sentence, sentence case, a full stop. Sublines stay lowercase and factual.
@@ -74,26 +81,25 @@ def compose(src_path, headline, subline, out_path):
     y = draw_block(draw, subline, sub_font, FOG, MARGIN, y + 30,
                    leading=62, tracking=0.4)
 
-    shot = Image.open(src_path).convert("RGB")
-    ratio = SHOT_W / shot.width
-    shot = shot.resize((SHOT_W, int(shot.height * ratio)), Image.LANCZOS)
+    # Seat the raw screenshot in the bezel at native size, then downsize the
+    # whole device once. The bezel's anti-aliased edge does the separating
+    # that the old hairline used to; the island and screen corners are the
+    # bezel's own.
+    shot = Image.open(src_path).convert("RGBA")
+    if shot.size != BEZEL_SCREEN_SIZE:
+        raise SystemExit(f"{src_path}: {shot.size}, expected {BEZEL_SCREEN_SIZE}")
+    bezel = Image.open(BEZEL).convert("RGBA")
+    device = Image.new("RGBA", bezel.size, (0, 0, 0, 0))
+    device.paste(shot, BEZEL_SCREEN_XY)
+    device = Image.alpha_composite(device, bezel)
 
-    # Rounded corners, so the inset reads as a screen rather than a pasted
-    # rectangle. Drawn as a mask; the canvas shows through.
-    mask = Image.new("L", shot.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, shot.width - 1, shot.height - 1],
-                                           radius=CORNER, fill=255)
-    x = (W - SHOT_W) // 2
+    ratio = DEVICE_W / device.width
+    device = device.resize((DEVICE_W, int(device.height * ratio)), Image.LANCZOS)
+    x = (W - DEVICE_W) // 2
     top = int(y + 90)
-    canvas.paste(shot, (x, top), mask)
-
-    # A single hairline at 10% bone: enough to separate a black screenshot
-    # from a black canvas, invisible enough not to become a border.
-    edge = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
-    ImageDraw.Draw(edge).rounded_rectangle(
-        [x, top, x + shot.width - 1, top + shot.height - 1],
-        radius=CORNER, outline=BONE + (26,), width=2)
-    canvas = Image.alpha_composite(canvas.convert("RGBA"), edge).convert("RGB")
+    canvas = canvas.convert("RGBA")
+    canvas.alpha_composite(device, (x, top))
+    canvas = canvas.convert("RGB")
 
     canvas.save(out_path)
     return out_path
