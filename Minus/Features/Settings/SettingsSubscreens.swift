@@ -378,6 +378,9 @@ struct PermissionSettingsView: View {
 // MARK: - About
 
 struct AboutView: View {
+    #if DEBUG
+    @State private var probeResult: String?
+    #endif
     private var version: String {
         let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
@@ -402,6 +405,7 @@ struct AboutView: View {
                 .padding(.top, MN.Space.l)
 
             #if DEBUG
+            launchProbe
             linkLab
             schemeLab
             Text("MONITOR LOG")
@@ -430,6 +434,38 @@ struct AboutView: View {
     }
 
     #if DEBUG
+    /// The private-API spike: can minus launch by bundle id and read what is
+    /// installed? Tapping runs it and prints what iOS actually did.
+    private var launchProbe: some View {
+        VStack(alignment: .leading, spacing: MN.Space.xxs) {
+            Text("LAUNCH PROBE")
+                .mnType(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(MN.fogBlue)
+                .padding(.top, MN.Space.section)
+            Button {
+                probeResult = PrivateLaunchProbe.run().summary
+            } label: {
+                Text("run private launchservices probe")
+                    .mnType(.body)
+                    .foregroundStyle(MN.boneWhite)
+                    .frame(maxWidth: .infinity, minHeight: MN.minHit, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.mnPress)
+            .accessibilityIdentifier("cta-launch-probe")
+
+            if let probeResult {
+                Text(probeResult)
+                    .mnType(.caption)
+                    .foregroundStyle(MN.boneWhite)
+                    .frame(maxWidth: 320, alignment: .leading)
+                    .accessibilityIdentifier("launch-probe-result")
+            }
+        }
+        .padding(.bottom, MN.Space.l)
+    }
+
     /// v1.9 link lab: universal links are the only thing a home-screen widget
     /// can open, but which https address an app actually claims is per-app
     /// guesswork. Tap each row on device and note whether it lands in the app

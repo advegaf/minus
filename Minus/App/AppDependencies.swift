@@ -46,6 +46,17 @@ final class AppDependencies {
         }
         Self.migrateToCards(context: container.mainContext)
 
+        #if DEBUG
+        // MINUS_PROBE=1 runs the private-LaunchServices spike at launch and
+        // prints the verdict, so it can be driven headlessly from a Mac.
+        if ProcessInfo.processInfo.environment["MINUS_PROBE"] == "1" {
+            let result = PrivateLaunchProbe.run()
+            print("MINUS_PROBE_BEGIN")
+            print(result.summary)
+            print("MINUS_PROBE_END")
+        }
+        #endif
+
         service = ScreenTimeServiceFactory.make()
         coordinator = SessionCoordinator(service: service, context: container.mainContext)
         // Widgets track every coordinator mutation through the bridge.
