@@ -19,12 +19,16 @@ struct DesignGallery: View {
         MTypeface.resolve(configs.first { $0.id == UserConfig.wellKnownID }?.typefaceRaw)
     }
 
+    /// Every token is a pair, so the sheet names both halves. Printing only
+    /// the dark hex made the swatch and its label disagree the moment the
+    /// phone went light, which is exactly the drift this sheet exists to
+    /// catch.
     private let swatches: [(name: String, hex: String, color: Color)] = [
-        ("Obsidian", "#101010", MN.obsidian),
-        ("Graphite Veil", "#495764", MN.graphiteVeil),
-        ("Bone White", "#FFFDF9", MN.boneWhite),
-        ("Fog Blue", "#6F879C", MN.fogBlue),
-        ("Ash Border", "#403F3F", MN.ashBorder),
+        ("Obsidian", "dark #101010 · light #F7F4EE", MN.obsidian),
+        ("Graphite Veil", "dark #495764 · light #EDE9E1", MN.graphiteVeil),
+        ("Bone White", "dark #FFFDF9 · light #101010", MN.boneWhite),
+        ("Fog Blue", "dark #6F879C · light #55697B", MN.fogBlue),
+        ("Ash Border", "dark #403F3F · light #CFCAC1", MN.ashBorder),
     ]
 
     private let typeRows: [(label: String, token: MNType, sample: String)] = [
