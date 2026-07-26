@@ -37,6 +37,11 @@ BEZEL = os.path.join(ROOT, "QA/appstore/bezel/iphone-17-pro-max-deep-blue.png")
 BEZEL_SCREEN_XY = (75, 66)
 BEZEL_SCREEN_SIZE = (1320, 2868)
 
+# The screen's exact silhouette (rounded corners), flood-filled once from the
+# bezel's alpha. Without it the raw's square corners poke past the device's
+# own rounded corner, where the bezel is transparent, and leak onto the canvas.
+SCREEN_MASK = os.path.join(ROOT, "QA/appstore/bezel/screen-mask.png")
+
 # (source file, headline, subline). Headlines carry the app's voice: one
 # sentence, sentence case, a full stop. Sublines stay lowercase and factual.
 FRAMES = [
@@ -89,8 +94,11 @@ def compose(src_path, headline, subline, out_path):
     if shot.size != BEZEL_SCREEN_SIZE:
         raise SystemExit(f"{src_path}: {shot.size}, expected {BEZEL_SCREEN_SIZE}")
     bezel = Image.open(BEZEL).convert("RGBA")
+    x0, y0 = BEZEL_SCREEN_XY
+    window = Image.open(SCREEN_MASK).convert("L").crop(
+        (x0, y0, x0 + shot.width, y0 + shot.height))
     device = Image.new("RGBA", bezel.size, (0, 0, 0, 0))
-    device.paste(shot, BEZEL_SCREEN_XY)
+    device.paste(shot, BEZEL_SCREEN_XY, window)
     device = Image.alpha_composite(device, bezel)
 
     ratio = DEVICE_W / device.width
