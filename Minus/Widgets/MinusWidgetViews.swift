@@ -23,9 +23,11 @@ struct GlassAwareBackground: ViewModifier {
     func body(content: Content) -> some View {
         content.containerBackground(for: .widget) {
             if renderingMode == .fullColor {
-                // True black, not obsidian: on a pure-black wallpaper the
-                // container edge vanishes entirely (v1.5 premium ask).
-                Color.black
+                // True black in the dark, not obsidian: on a pure-black
+                // wallpaper the container edge vanishes entirely (v1.5
+                // premium ask). In light the same trick wants paper, so a
+                // widget on a light home screen is not a slab.
+                MN.widgetGround
             } else {
                 Color.clear
             }

@@ -30,6 +30,11 @@ enum MN {
     /// deliberately near-invisible in both appearances.
     static let ashBorder = Color(mnDark: 0x403F3F, mnLight: 0xCFCAC1)
 
+    /// The widget's full-color container. True black rather than the canvas
+    /// so the edge disappears on a black wallpaper, and its paper twin so the
+    /// same disappearing act works on a light one.
+    static let widgetGround = Color(mnDark: 0x000000, mnLight: 0xF7F4EE)
+
     /// The void itself, never paper. For the one surface that must stay dark
     /// in both appearances: the prism's plinth, whose additive fringes only
     /// exist against darkness.

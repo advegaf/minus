@@ -48,6 +48,17 @@ struct PrismArtifact: View {
             }
         }
         .frame(width: size, height: size)
+        .padding(size * 0.12)
+        // The plinth. Every fringe here is additive: the clones sum toward
+        // white and the specular is bone, so the artifact only exists against
+        // darkness. On paper it would render as black blobs with no catch of
+        // light at all. Giving it its own well keeps the physics intact and
+        // makes the prism a window into the void wherever the page sits.
+        // Invisible against the canvas in dark mode, so one path serves both.
+        .background(
+            RoundedRectangle(cornerRadius: MN.Radius.card, style: .continuous)
+                .fill(MN.obsidianAlways)
+        )
         .accessibilityElement()
         .accessibilityLabel("Minus prism")
     }

@@ -150,7 +150,6 @@ struct ScheduleEditorView: View {
             )
             .labelsHidden()
             .tint(MN.boneWhite)
-            .colorScheme(.dark)
             .accessibilityIdentifier(id)
         }
         .frame(minHeight: MN.minHit)
