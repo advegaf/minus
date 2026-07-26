@@ -19,7 +19,11 @@ Icon?
 # Secrets — never commit your signing team
 Config/Secrets.xcconfig
 
-# Fonts — ITF Free Font License permits app embedding but not public
-# redistribution; run scripts/fetch_fonts.sh after clone.
-Minus/Resources/Fonts/*.otf
-Minus/Resources/Fonts/*.ttf
+# Fonts ship with the source while this repo is PRIVATE. The ITF Free Font
+# License permits app embedding but not public redistribution, so if this repo
+# ever goes public, restore these two lines and fall back to fetch_fonts.sh:
+#   Minus/Resources/Fonts/*.otf
+#   Minus/Resources/Fonts/*.ttf
+
+# Export options carry the signing team; the example plist is the shared one.
+Support/ExportOptions.plist

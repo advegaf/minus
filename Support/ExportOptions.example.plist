@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copy to ExportOptions.plist and fill in teamID with your own Apple
+     developer team. The real file is gitignored so no team ID lives here. -->
 <plist version="1.0">
 <dict>
 	<key>method</key>
@@ -7,7 +9,7 @@
 	<key>destination</key>
 	<string>upload</string>
 	<key>teamID</key>
-	<string>DV483F72N3</string>
+	<string></string>
 	<key>signingStyle</key>
 	<string>automatic</string>
 	<key>manageAppVersionAndBuildNumber</key>
