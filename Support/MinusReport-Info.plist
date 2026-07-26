@@ -23,10 +23,20 @@
 		<key>EXExtensionPointIdentifier</key>
 		<string>com.apple.deviceactivityui.report-extension</string>
 	</dict>
+	<key>MinusAppGroup</key>
+	<string>group.$(MINUS_BUNDLE_ID)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>GeneralSans-Regular.otf</string>
 		<string>GeneralSans-Bold.otf</string>
+		<string>Satoshi-Regular.otf</string>
+		<string>Satoshi-Bold.otf</string>
+		<string>Switzer-Regular.otf</string>
+		<string>Switzer-Bold.otf</string>
+		<string>CabinetGrotesk-Regular.otf</string>
+		<string>CabinetGrotesk-Bold.otf</string>
+		<string>Chillax-Regular.otf</string>
+		<string>Chillax-Bold.otf</string>
 	</array>
 </dict>
 </plist>
