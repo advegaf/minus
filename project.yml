@@ -149,8 +149,11 @@ targets:
         UIAppFonts:
           - GeneralSans-Regular.otf
           - GeneralSans-Bold.otf
+        # The report extension point is spelled deviceactivityUI. The shorter
+        # name reads right and builds fine, but the extension never binds and
+        # App Store Connect rejects the upload (ITMS-90349).
         EXAppExtensionAttributes:
-          EXExtensionPointIdentifier: com.apple.deviceactivity.report-extension
+          EXExtensionPointIdentifier: com.apple.deviceactivityui.report-extension
 
   MinusWidget:
     type: app-extension
