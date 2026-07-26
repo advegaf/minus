@@ -7,7 +7,14 @@ import SwiftUI
 /// extension on hardware. The simulator says so instead of pretending.
 struct AwarenessView: View {
     @Environment(AppDependencies.self) private var deps
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query private var sessions: [FocusSession]
+
+    /// First paint only, in the vocabulary every other screen already speaks.
+    /// One-way, because the @Query can resolve late and swap the stats and
+    /// zero branches under a re-render, and an entrance that replays reads
+    /// as a glitch.
+    @State private var appeared = false
 
     private var slices: [SessionSlice] {
         sessions.map {
@@ -36,13 +43,20 @@ struct AwarenessView: View {
                         stats
                     } else {
                         zeroState
+                            .entering(0, appeared: appeared, reduceMotion: reduceMotion)
                     }
 
+                    // Last in the stagger: the honest line fades in with the
+                    // stats, and the extension's panel crossfades over it a
+                    // second later instead of blinking into a settled screen.
                     ReportSection()
                         .padding(.top, MN.Space.section)
                         .padding(.bottom, MN.Space.l)
+                        .entering(3, appeared: appeared, reduceMotion: reduceMotion)
                 }
                 .padding(.horizontal, MN.Space.m)
+                .onAppear { appeared = true }
+                .task { appeared = true }
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -56,17 +70,20 @@ struct AwarenessView: View {
             stat(
                 label: "focused today",
                 value: StatsService.shortDuration(StatsService.focusSeconds(on: now, sessions: slices, now: now)),
-                id: "stat-today"
+                id: "stat-today",
+                index: 0
             )
             stat(
                 label: "this week",
                 value: StatsService.shortDuration(StatsService.weekSeconds(ending: now, sessions: slices, now: now)),
-                id: "stat-week"
+                id: "stat-week",
+                index: 1
             )
             stat(
                 label: "streak",
                 value: streakText,
-                id: "stat-streak"
+                id: "stat-streak",
+                index: 2
             )
         }
         .padding(.top, MN.Space.l)
@@ -77,7 +94,7 @@ struct AwarenessView: View {
         return days == 1 ? "1 day" : "\(days) days"
     }
 
-    private func stat(label: String, value: String, id: String) -> some View {
+    private func stat(label: String, value: String, id: String, index: Int) -> some View {
         VStack(alignment: .leading, spacing: MN.Space.xxs) {
             Text(label)
                 .mnType(.caption)
@@ -89,6 +106,7 @@ struct AwarenessView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(id)
+        .entering(index, appeared: appeared, reduceMotion: reduceMotion)
     }
 
     private var zeroState: some View {
@@ -103,6 +121,34 @@ struct AwarenessView: View {
         }
         .padding(.top, MN.Space.l)
         .accessibilityIdentifier("awareness-zero")
+    }
+}
+
+/// The launcher's entrance, borrowed verbatim: 6pt rise on MMotion.micro,
+/// one staggerStep per block. Reduce motion collapses it to no offset and no
+/// delay, the same trade every other screen makes.
+private struct Entering: ViewModifier {
+    let index: Int
+    let appeared: Bool
+    let reduceMotion: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity((appeared || reduceMotion) ? 1 : 0)
+            .offset(y: (appeared || reduceMotion) ? 0 : 6)
+            .animation(
+                MMotion.settle(
+                    MMotion.micro.delay(Double(index) * MMotion.staggerStep),
+                    reduceMotion: reduceMotion
+                ),
+                value: appeared
+            )
+    }
+}
+
+private extension View {
+    func entering(_ index: Int, appeared: Bool, reduceMotion: Bool) -> some View {
+        modifier(Entering(index: index, appeared: appeared, reduceMotion: reduceMotion))
     }
 }
 

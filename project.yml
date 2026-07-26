@@ -127,6 +127,10 @@ targets:
       # be the app's typeface and colors (same share the widget makes).
       - path: Minus/DesignSystem/Tokens.swift
       - path: Minus/DesignSystem/Typography.swift
+      # Motion too, so the report's entrance uses the app's own springs. A
+      # local curve here would be invisible to DesignGuard, which only scans
+      # Minus/ — exactly the fork the motion rules exist to prevent.
+      - path: Minus/DesignSystem/Motion.swift
       - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
         buildPhase: resources
       - path: Minus/Resources/Fonts/GeneralSans-Bold.otf

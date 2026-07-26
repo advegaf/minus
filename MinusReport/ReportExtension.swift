@@ -58,6 +58,14 @@ struct DailyOverviewScene: DeviceActivityReportScene {
 struct DailyOverviewView: View {
     let summary: DailySummary
 
+    /// The host reserves this panel's height before the extension has
+    /// anything to draw, and the panel's own obsidian is opaque, so landing
+    /// at full opacity hard-cuts over the honest line underneath. Fading the
+    /// root IS the crossfade: the line shows through the ramp and dissolves
+    /// as the numbers arrive. One-way, so a re-render never replays it.
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     nonisolated init(summary: DailySummary) {
         self.summary = summary
     }
@@ -76,6 +84,12 @@ struct DailyOverviewView: View {
                 stat("PICKUPS", "\(summary.pickups)")
             }
             .padding(.vertical, MN.Space.xs)
+        }
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(MMotion.settle(MMotion.micro, reduceMotion: reduceMotion)) {
+                appeared = true
+            }
         }
     }
 
