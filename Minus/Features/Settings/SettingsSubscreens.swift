@@ -266,20 +266,47 @@ struct StrictnessView: View {
         configs.first { $0.id == UserConfig.wellKnownID }?.strictness ?? .normal
     }
 
+    /// A running session freezes the level. Loosening it mid-focus walked
+    /// straight past the gate it exists to hold: pick strict, start, then
+    /// pick normal, and END SESSION is back after all.
+    private var isLocked: Bool { deps.coordinator.activeSnapshot != nil }
+
     var body: some View {
         SettingsShell(eyebrow: "STRICTNESS", id: "settings-strictness") {
             Text("How hard is quitting?")
                 .mnType(.headingLg)
                 .foregroundStyle(MN.boneWhite)
 
-            VStack(spacing: 0) {
-                option(.normal, note: "end a session with one tap")
-                option(.friction, note: "hold for two seconds to end")
-                option(.strict, note: "no exit until the session completes")
+            if isLocked {
+                locked
+                    .padding(.top, MN.Space.m)
+            } else {
+                VStack(spacing: 0) {
+                    option(.normal, note: "end a session with one tap")
+                    option(.friction, note: "hold for two seconds to end")
+                    option(.strict, note: "no exit until the session completes")
+                }
+                .padding(.top, MN.Space.m)
             }
-            .padding(.top, MN.Space.m)
 
             Spacer()
+        }
+    }
+
+    /// The level reads as plain text, not a row: nothing here should look
+    /// like it takes a tap.
+    private var locked: some View {
+        VStack(alignment: .leading, spacing: MN.Space.s) {
+            Text(current.rawValue)
+                .mnType(.bodyLg)
+                .foregroundStyle(MN.boneWhite)
+                .accessibilityIdentifier("strictness-current")
+
+            Text("a session is running. strictness stays put until it ends, or the gate would be one tap away from nothing.")
+                .mnType(.caption)
+                .foregroundStyle(MN.fogBlue)
+                .frame(maxWidth: 320, alignment: .leading)
+                .accessibilityIdentifier("strictness-locked")
         }
     }
 

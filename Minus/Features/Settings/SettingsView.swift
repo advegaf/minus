@@ -40,7 +40,7 @@ struct SettingsView: View {
                         row("blocked apps", detail: blockedDetail, id: "row-blocked") {
                             router.push(.settingsBlocked)
                         }
-                        row("strictness", detail: config?.strictness.rawValue, id: "row-strictness") {
+                        row("strictness", detail: strictnessDetail, id: "row-strictness") {
                             router.push(.settingsStrictness)
                         }
                         row("screen time", detail: permissionCaption, id: "row-permission") {
@@ -82,6 +82,13 @@ struct SettingsView: View {
     private var blockedDetail: String? {
         if deps.coordinator.activeSnapshot != nil { return "locked while focused" }
         return blockedDetailText
+    }
+
+    /// Frozen for the same reason the blocklist is, and the row says so
+    /// before the user makes the trip.
+    private var strictnessDetail: String? {
+        if deps.coordinator.activeSnapshot != nil { return "locked while focused" }
+        return config?.strictness.rawValue
     }
 
     private var blockedDetailText: String? {

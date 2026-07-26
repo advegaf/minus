@@ -80,25 +80,38 @@ final class SettingsUITests: XCTestCase {
         attach(app, "SE-1-preset")
     }
 
+    /// The level a session runs under is the one it started with. Loosening
+    /// it mid-focus reopened the exit the gate holds shut, the same bypass
+    /// SE-14 closed for the blocklist.
     @MainActor
-    func testStrictnessChangeAffectsActiveSession() {
-        let app = launch(state: "active")
+    func testStrictnessIsLockedDuringASession() {
+        let app = launch(state: "active", extra: ["MINUS_STRICTNESS": "strict"])
+        XCTAssertTrue(app.buttons["row-strictness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["locked while focused"].exists, "the row should say so first")
+        app.buttons["row-strictness"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["settings-strictness"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "strictness-locked"), "missing the honest lock line")
+        XCTAssertTrue(element(app, "strictness-current"), "the level should still be readable")
+        for level in ["normal", "friction", "strict"] {
+            XCTAssertFalse(app.buttons["strictness-\(level)"].exists, "\(level) must not be pickable")
+        }
+        attach(app, "SE-15")
+    }
+
+    /// The unlocked path stays exactly as it was: pick a level, it sticks.
+    @MainActor
+    func testStrictnessIsPickableWhenIdle() {
+        let app = launch(state: "onboarded")
         XCTAssertTrue(app.buttons["row-strictness"].waitForExistence(timeout: 5))
         app.buttons["row-strictness"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings-strictness"].waitForExistence(timeout: 5))
-        app.buttons["strictness-strict"].tap()
-        attach(app, "SE-5-pick")
+        XCTAssertFalse(element(app, "strictness-locked"), "nothing is running, nothing should be locked")
 
-        // Back to settings, back to home, into the active session.
+        app.buttons["strictness-strict"].tap()
         app.buttons["nav-back"].firstMatch.tap()
         XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
-        app.buttons["nav-back"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["nav-focus"].waitForExistence(timeout: 5))
-        app.buttons["nav-focus"].tap()
-
-        XCTAssertTrue(app.descendants(matching: .any)["active-session"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["cta-end"].exists)
-        XCTAssertTrue(app.staticTexts["strict-note"].exists)
+        XCTAssertTrue(app.staticTexts["strict"].exists, "the row should read back the pick")
         attach(app, "SE-5")
     }
 
