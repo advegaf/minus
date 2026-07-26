@@ -27,7 +27,7 @@ final class SettingsUITests: XCTestCase {
     func testRootRowsAndAbout() {
         let app = launch(state: "onboarded")
         XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
-        for id in ["row-intention", "row-essentials", "row-blocked", "row-strictness", "row-permission", "row-about"] {
+        for id in ["row-intention", "row-typeface", "row-essentials", "row-blocked", "row-strictness", "row-permission", "row-about"] {
             XCTAssertTrue(app.buttons[id].exists, "missing \(id)")
         }
         attach(app, "SE-root")
@@ -97,6 +97,28 @@ final class SettingsUITests: XCTestCase {
             XCTAssertFalse(app.buttons["strictness-\(level)"].exists, "\(level) must not be pickable")
         }
         attach(app, "SE-15")
+    }
+
+    /// minus is one typeface at a time, but which one is the user's call.
+    @MainActor
+    func testTypefaceIsPickableAndReadsBack() {
+        let app = launch(state: "onboarded")
+        XCTAssertTrue(app.buttons["row-typeface"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["general sans"].exists, "the default should read back")
+        app.buttons["row-typeface"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["settings-typeface"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, "typeface-specimen"), "the clock specimen should be there")
+        for face in ["generalSans", "satoshi", "switzer", "cabinetGrotesk", "chillax"] {
+            XCTAssertTrue(app.buttons["typeface-\(face)"].exists, "missing \(face)")
+        }
+        attach(app, "TY-1")
+
+        app.buttons["typeface-satoshi"].tap()
+        app.buttons["nav-back"].firstMatch.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["satoshi"].exists, "the row should read back the pick")
+        attach(app, "TY-2")
     }
 
     /// The unlocked path stays exactly as it was: pick a level, it sticks.

@@ -91,9 +91,14 @@ enum LauncherBridge {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-UITestMode") {
             LauncherSnapshot.delete()
+            MTypeface.publish(nil)
             return
         }
         #endif
+        // The widget and the report cannot read SwiftData, so the chosen face
+        // rides the app group. Published here because this is already the one
+        // place every mutation funnels through.
+        MTypeface.publish(MinusContainer.userConfig(in: context).typeface)
         let cards = MinusContainer.cards(in: context).map {
             CardInput(id: $0.id, name: $0.name, orderedSlugs: $0.orderedSlugs)
         }

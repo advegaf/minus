@@ -68,6 +68,14 @@ targets:
         UIAppFonts:
           - GeneralSans-Regular.otf
           - GeneralSans-Bold.otf
+          - Satoshi-Regular.otf
+          - Satoshi-Bold.otf
+          - Switzer-Regular.otf
+          - Switzer-Bold.otf
+          - CabinetGrotesk-Regular.otf
+          - CabinetGrotesk-Bold.otf
+          - Chillax-Regular.otf
+          - Chillax-Bold.otf
         # The wordmark, centred on obsidian. See Support/LaunchScreen.storyboard
         # for why this is a storyboard and not the UILaunchScreen dictionary.
         UILaunchStoryboardName: LaunchScreen
@@ -127,13 +135,37 @@ targets:
       # be the app's typeface and colors (same share the widget makes).
       - path: Minus/DesignSystem/Tokens.swift
       - path: Minus/DesignSystem/Typography.swift
+      # The typeface contract: the report reads the user's pick from the app
+      # group, since an extension cannot reach SwiftData.
+      - path: Minus/DesignSystem/Typeface.swift
       # Motion too, so the report's entrance uses the app's own springs. A
       # local curve here would be invisible to DesignGuard, which only scans
       # Minus/ — exactly the fork the motion rules exist to prevent.
       - path: Minus/DesignSystem/Motion.swift
+      # Every approved face, as a directory so adding a family needs no
+      # project.yml edit. XcodeGen groups it, so the .otf files land at the
+      # bundle root where UIAppFonts filenames expect them.
+      # Named one by one, never as a directory: copying the folder drags
+      # its Finder metadata into the bundle and codesign refuses it.
       - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
         buildPhase: resources
       - path: Minus/Resources/Fonts/GeneralSans-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Satoshi-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Satoshi-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Switzer-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Switzer-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/CabinetGrotesk-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/CabinetGrotesk-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Chillax-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Chillax-Bold.otf
         buildPhase: resources
     configFiles:
       Debug: Config/Secrets.xcconfig
@@ -148,11 +180,22 @@ targets:
       path: Support/MinusReport-Info.plist
       properties:
         CFBundleDisplayName: minus
+        # The report renders in the user's chosen typeface, which rides the
+        # app group because an extension cannot read SwiftData.
+        MinusAppGroup: group.$(MINUS_BUNDLE_ID)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UIAppFonts:
           - GeneralSans-Regular.otf
           - GeneralSans-Bold.otf
+          - Satoshi-Regular.otf
+          - Satoshi-Bold.otf
+          - Switzer-Regular.otf
+          - Switzer-Bold.otf
+          - CabinetGrotesk-Regular.otf
+          - CabinetGrotesk-Bold.otf
+          - Chillax-Regular.otf
+          - Chillax-Bold.otf
         # The report extension point is spelled deviceactivityUI. The shorter
         # name reads right and builds fine, but the extension never binds and
         # App Store Connect rejects the upload (ITMS-90349).
@@ -178,9 +221,31 @@ targets:
       - path: Minus/Widgets/CardEntity.swift
       - path: Minus/DesignSystem/Tokens.swift
       - path: Minus/DesignSystem/Typography.swift
+      - path: Minus/DesignSystem/Typeface.swift
+      # Every approved face, as a directory so adding a family needs no
+      # project.yml edit. XcodeGen groups it, so the .otf files land at the
+      # bundle root where UIAppFonts filenames expect them.
+      # Named one by one, never as a directory: copying the folder drags
+      # its Finder metadata into the bundle and codesign refuses it.
       - path: Minus/Resources/Fonts/GeneralSans-Regular.otf
         buildPhase: resources
       - path: Minus/Resources/Fonts/GeneralSans-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Satoshi-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Satoshi-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Switzer-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Switzer-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/CabinetGrotesk-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/CabinetGrotesk-Bold.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Chillax-Regular.otf
+        buildPhase: resources
+      - path: Minus/Resources/Fonts/Chillax-Bold.otf
         buildPhase: resources
     configFiles:
       Debug: Config/Secrets.xcconfig
@@ -201,6 +266,14 @@ targets:
         UIAppFonts:
           - GeneralSans-Regular.otf
           - GeneralSans-Bold.otf
+          - Satoshi-Regular.otf
+          - Satoshi-Bold.otf
+          - Switzer-Regular.otf
+          - Switzer-Bold.otf
+          - CabinetGrotesk-Regular.otf
+          - CabinetGrotesk-Bold.otf
+          - Chillax-Regular.otf
+          - Chillax-Bold.otf
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
 

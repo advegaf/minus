@@ -13,6 +13,9 @@ struct EssentialAppList: View {
     @Environment(AppDependencies.self) private var deps
     @Environment(AppRouter.self) private var router
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Read directly because the empty line concatenates two Texts, which
+    /// cannot go through the .mnType modifier.
+    @Environment(\.mnTypeface) private var face
 
     @Query(sort: \LauncherCard.sortOrder, order: .forward)
     private var cards: [LauncherCard]
@@ -292,7 +295,7 @@ struct EssentialAppList: View {
                 + Text("essentials")
                     .foregroundColor(MN.boneWhite)
             )
-            .font(MNType.body.font)
+            .font(MNType.body.font(face))
             .tracking(MNType.body.tracking)
             .frame(maxWidth: 300, minHeight: MN.minHit, alignment: .leading)
             .contentShape(Rectangle())

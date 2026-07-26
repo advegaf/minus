@@ -38,7 +38,9 @@ The simulator can never shield apps. Every `Needs device` row in
 
 | # | Story | Do | Expect |
 |---|---|---|---|
-| 12 | W-1/W-3 | Long-press home screen → add minus's large launcher + small focus widgets | Obsidian ground, General Sans, essentials as text cells |
+| 12 | W-1/W-3 | Long-press home screen → add minus's large launcher + small focus widgets | Obsidian ground, the chosen typeface, essentials as text cells |
+| 13 | TY-2 | Settings → typeface → pick a face, background the app, check the widgets | Widgets and the Screen Time report both redraw in the chosen face. Force-quit the app and re-add a widget: it still reads the face from the app group |
+| 14 | AW-9 | Awareness, cold | The stats rise in a stagger; the screen-time panel CROSSFADES over "no numbers yet today." rather than hard-cutting (allow 1-3 s). With Reduce Motion on, both degrade to a plain 0.2 s ease |
 | 13 | W-2 | Tap a launcher cell with minus force-quit (cold), then again warm | Both times: minus flashes, target app lands foreground |
 | 14 | W-4 | Start a 15-min session, force-quit minus, watch the small widget at the end time | Widget flips from "FOCUSED until…" to idle on its own |
 | 15 | ON-6/SE-3/SE-9 | Settings → blocked apps → re-pick: select one full category | Summary counts member apps ("N apps · 1 category"); with a schedule mid-window, About → monitor log confirms the re-shield |

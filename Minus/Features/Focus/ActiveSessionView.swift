@@ -57,7 +57,7 @@ struct ActiveSessionView: View {
     }
 
     private var countdown: some View {
-        FixedDigits(text: remainingText, token: .displaySm, slot: DigitMetrics.displaySmSlot)
+        FixedDigits(text: remainingText, token: .displaySm)
             .accessibilityIdentifier("session-countdown")
     }
 

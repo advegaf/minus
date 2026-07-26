@@ -61,7 +61,7 @@ struct FocusStateLine: View {
                 Text("focused · ")
                     .mnType(.caption)
                     .foregroundStyle(MN.boneWhite)
-                FixedDigits(text: mmss, token: .caption, slot: DigitMetrics.captionSlot)
+                FixedDigits(text: mmss, token: .caption)
                 Text(" left")
                     .mnType(.caption)
                     .foregroundStyle(MN.boneWhite)

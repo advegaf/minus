@@ -34,6 +34,9 @@ struct SettingsView: View {
                         row("intention", detail: intentionDetail, id: "row-intention") {
                             router.push(.settingsIntention)
                         }
+                        row("typeface", detail: config?.typeface.displayName, id: "row-typeface") {
+                            router.push(.settingsTypeface)
+                        }
                         row("cards", detail: cardsDetail, id: "row-essentials") {
                             router.push(.settingsEssentials)
                         }

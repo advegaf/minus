@@ -13,6 +13,7 @@ enum Route: Hashable {
     case settingsCustom(cardID: UUID?, term: String = "")
     case settingsBlocked
     case settingsStrictness
+    case settingsTypeface
     case settingsPermission
     case settingsAbout
     case settingsGuide
@@ -52,6 +53,7 @@ final class AppRouter {
         case "settings-blocked": path = [.settings, .settingsBlocked]
         case "settings-permission": path = [.settings, .settingsPermission]
         case "settings-strictness": path = [.settings, .settingsStrictness]
+        case "settings-typeface": path = [.settings, .settingsTypeface]
         case "settings-about": path = [.settings, .settingsAbout]
         case "settings-guide": path = [.settings, .settingsGuide]
         default: break

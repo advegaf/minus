@@ -176,6 +176,64 @@ final class DesignGuardTests: XCTestCase {
         ))
     }
 
+    // MARK: - Rule 8 — the typeface allowlist
+
+    /// The approved faces, by PostScript name. A font name that is not on
+    /// this list has no business anywhere under Minus/: `.custom` silently
+    /// falls back to the SYSTEM font when a name misses, so a typo or an
+    /// unapproved import breaks the whole design language with no crash and
+    /// no warning. Kept here rather than read from MTypeface so the guard
+    /// stays independent of the code it guards.
+    private static let approvedFontNames: Set<String> = [
+        "GeneralSans-Regular", "GeneralSans-Bold",
+        "Satoshi-Regular", "Satoshi-Bold",
+        "Switzer-Regular", "Switzer-Bold",
+        "CabinetGrotesk-Regular", "CabinetGrotesk-Bold",
+        "Chillax-Regular", "Chillax-Bold",
+    ]
+
+    func testFontNamesAreLimitedToTheApprovedList() {
+        let pattern = "\\b[A-Za-z][A-Za-z0-9]*-(Regular|Bold|Medium|Light|SemiBold|Semibold|Italic|Black|Thin|Variable)\\b"
+        let regex = try? NSRegularExpression(pattern: pattern)
+        var violations: [Violation] = []
+
+        for url in Self.swiftFiles().sorted(by: { $0.path < $1.path }) {
+            guard let contents = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            var lines: [Int] = []
+            for (index, line) in contents.components(separatedBy: .newlines).enumerated() {
+                let literals = Self.stringLiteralText(in: line)
+                let range = NSRange(literals.startIndex..., in: literals)
+                regex?.enumerateMatches(in: literals, range: range) { match, _, _ in
+                    guard let match, let r = Range(match.range, in: literals) else { return }
+                    let name = String(literals[r])
+                    if !Self.approvedFontNames.contains(name) { lines.append(index + 1) }
+                }
+            }
+            if !lines.isEmpty { violations.append(Violation(path: url.path, lines: lines)) }
+        }
+
+        guard !violations.isEmpty else { return }
+        XCTFail(Self.report(
+            rule: "Rule 8 (typeface allowlist): only the approved faces may be named under Minus/. Add the .otf, list it in every target's UIAppFonts, add a case to MTypeface, and add its PostScript names here.",
+            violations: violations
+        ))
+    }
+
+    /// Font construction belongs to the design system. Elsewhere it is a way
+    /// to smuggle a face past the allowlist and past `.mnType`.
+    func testFontConstructionIsContainedToDesignSystemDirectory() {
+        let found = Self.findViolations(
+            in: Self.swiftFiles(),
+            patterns: [".custom(", "CTFontCreateWithName"],
+            isExempt: { $0.path.hasPrefix(Self.designSystemRootPrefix) }
+        )
+        guard !found.isEmpty else { return }
+        XCTFail(Self.report(
+            rule: "Rule 8b (font construction containment): `.custom(` and CTFontCreateWithName may appear only under Minus/DesignSystem/ — everything else goes through .mnType.",
+            violations: found
+        ))
+    }
+
     // MARK: - Shared helpers
 
     /// Recursively collects every `*.swift` file under `Minus/`, skipping

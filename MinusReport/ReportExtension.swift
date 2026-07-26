@@ -85,6 +85,8 @@ struct DailyOverviewView: View {
             }
             .padding(.vertical, MN.Space.xs)
         }
+        // The extension has no SwiftData; the face rides the app group.
+        .environment(\.mnTypeface, MTypeface.published)
         .opacity(appeared ? 1 : 0)
         .onAppear {
             withAnimation(MMotion.settle(MMotion.micro, reduceMotion: reduceMotion)) {

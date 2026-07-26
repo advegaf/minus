@@ -1,13 +1,10 @@
 import CoreText
 import SwiftUI
 
-/// General Sans, two weights, fixed sizes (no Dynamic Type — the sculptural
-/// stacked compositions depend on exact metrics). Token names are abstract so
-/// swapping in PP Neue Montreal later is a two-line change here.
-enum MFont {
-    static let regular = "GeneralSans-Regular"
-    static let bold = "GeneralSans-Bold"
-}
+/// Two weights, fixed sizes (no Dynamic Type — the sculptural stacked
+/// compositions depend on exact metrics). Which typeface carries them is the
+/// user's choice: see MTypeface, which owns every PostScript name, and
+/// `\.mnTypeface` in the environment, which every token below reads.
 
 /// The remapped Vivid+Co scale. Ratios preserved from the web spec
 /// (display:body ≈ 7×), sizes tuned for a 393pt-wide canvas.
@@ -37,8 +34,14 @@ enum MNType {
         }
     }
 
-    var fontName: String {
-        (self == .heading || self == .bodyStrong) ? MFont.bold : MFont.regular
+    /// Bold is reserved for .heading and .bodyStrong; everything else is the
+    /// face's regular weight.
+    var isBold: Bool {
+        self == .heading || self == .bodyStrong
+    }
+
+    func fontName(_ face: MTypeface) -> String {
+        isBold ? face.bold : face.regular
     }
 
     /// Tracking in points (em fraction × size).
@@ -61,29 +64,43 @@ enum MNType {
         }
     }
 
-    var font: Font {
-        .custom(fontName, fixedSize: size)
+    func font(_ face: MTypeface) -> Font {
+        .custom(fontName(face), fixedSize: size)
     }
 
     /// The font's natural line height from CoreText metrics — used to compute
-    /// the spacing corrections that produce exact target leading.
-    var naturalLineHeight: CGFloat {
-        let ct = CTFontCreateWithName(fontName as CFString, size, nil)
+    /// the spacing corrections that produce exact target leading. Differs per
+    /// face, which is why nothing here is cached across a typeface change.
+    func naturalLineHeight(_ face: MTypeface) -> CGFloat {
+        let ct = CTFontCreateWithName(fontName(face) as CFString, size, nil)
         return CTFontGetAscent(ct) + CTFontGetDescent(ct) + CTFontGetLeading(ct)
     }
 }
 
-extension View {
-    /// Applies font + tracking + line spacing for a type token. Line spacing
-    /// adjusts SwiftUI's extra inter-line gap toward the target leading; for
-    /// the 1.0-leading display sizes use `DisplayStack` (negative spacing)
-    /// instead, since lineSpacing cannot go below the natural height.
-    func mnType(_ token: MNType) -> some View {
-        let extra = max(0, token.size * token.leading - token.naturalLineHeight)
-        return self
-            .font(token.font)
+/// Applies font + tracking + line spacing for a type token, in whichever
+/// typeface the environment carries. A modifier rather than a plain View
+/// extension so the ~130 call sites need no change and a typeface pick
+/// invalidates exactly the text that has to redraw.
+private struct MNTypeModifier: ViewModifier {
+    let token: MNType
+    @Environment(\.mnTypeface) private var face
+
+    func body(content: Content) -> some View {
+        let extra = max(0, token.size * token.leading - token.naturalLineHeight(face))
+        content
+            .font(token.font(face))
             .tracking(token.tracking)
             .lineSpacing(extra)
+    }
+}
+
+extension View {
+    /// Line spacing adjusts SwiftUI's extra inter-line gap toward the target
+    /// leading; for the 1.0-leading display sizes use `DisplayStack`
+    /// (negative spacing) instead, since lineSpacing cannot go below the
+    /// natural height.
+    func mnType(_ token: MNType) -> some View {
+        modifier(MNTypeModifier(token: token))
     }
 }
 
@@ -94,12 +111,13 @@ struct DisplayStack: View {
     var lines: [String]
     var token: MNType = .display
     var alignment: HorizontalAlignment = .leading
+    @Environment(\.mnTypeface) private var face
 
     var body: some View {
-        VStack(alignment: alignment, spacing: token.size * token.leading - token.naturalLineHeight) {
+        VStack(alignment: alignment, spacing: token.size * token.leading - token.naturalLineHeight(face)) {
             ForEach(lines, id: \.self) { line in
                 Text(line)
-                    .font(token.font)
+                    .font(token.font(face))
                     .tracking(token.tracking)
             }
         }

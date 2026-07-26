@@ -55,12 +55,22 @@ Five targets, one trust invariant: **shields always come down.**
 
 ## Design system
 
-`Minus/DesignSystem/` — Vivid+Co, dark-only. One typeface (General Sans 400; 700 only
-at 28pt), fixed sizes (no Dynamic Type), hierarchy from scale. Zero shadows. Prism RGB
+`Minus/DesignSystem/` — Vivid+Co, dark-only. One typeface at a time (400; 700 only at
+28pt), fixed sizes (no Dynamic Type), hierarchy from scale. Zero shadows. Prism RGB
 lives `fileprivate` in `PrismArtifact.swift`. `DesignGuardTests` scans the source and
 fails the build-loop on: any `.shadow(`, prism hexes outside `Prism/`, `.font(.system`,
-raw `Color(` constructors outside the design system. Time displays render per-digit in
-fixed-width slots (General Sans has no `tnum`).
+raw `Color(` constructors outside the design system, and any font name off the approved
+allowlist.
+
+Which typeface is the user's choice, from five approved faces. `Typeface.swift` is a
+third contract file (alongside `SharedState.swift` and `LauncherSnapshot.swift`),
+compiled into the app, the widget, and the report: it owns every PostScript name and
+mirrors the pick into the app group, since neither extension can read SwiftData.
+`.mnType` is a modifier reading `\.mnTypeface` from the environment, so a pick
+re-renders text and nothing else. Time displays render per-digit in fixed-width slots
+(none of the faces have `tnum`), and `DigitMetrics` measures those slots **per face** —
+a slot measured against one face and drawn in another is how a 96pt monument ends up
+mis-tracked.
 
 ## Determinism harness (DEBUG)
 

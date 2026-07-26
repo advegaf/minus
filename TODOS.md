@@ -71,10 +71,15 @@ Worth improving, in order of what a user would feel:
    needs paired intervals across two weekdays.
 4. **Intention history** — `UserConfig` holds a single current intention; a log of past
    intentions with dates could feed a reflective view.
-5. **PP Neue Montreal** — buy the app license and swap the two font names in
-   `Typography.swift` (`MFont.regular/bold`) + `fetch_fonts.sh` + `UIAppFonts`.
-6. **Family Controls distribution entitlement** — required before TestFlight/App Store;
-   file the request with Apple when shipping becomes real.
+5. **PP Neue Montreal** — buy the app license, then add a case to `MTypeface`, the
+   `.otf` files, a line per target's `UIAppFonts`, an entry in `fetch_fonts.sh`, and its
+   PostScript names to the DesignGuard rule-8 allowlist. It becomes a sixth choice in
+   the picker rather than a replacement.
+6. ~~**Family Controls distribution entitlement**~~ — granted 2026-07-25; builds 15 and
+   16 uploaded.
+7. **`Support/ExportOptions.plist` team ID in history** — the file is untracked now and
+   the example ships blank, but the real team ID remains in commits before c6da7ee. Only
+   a blocker if this repo ever goes public; scrub with `git filter-repo` first if so.
 
 ## Reading the phone's installed apps (investigated, blocked)
 

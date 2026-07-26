@@ -38,6 +38,9 @@ final class UserConfig {
     /// renders (Home line + widget footers).
     var showsIntention: Bool = true
     var strictnessRaw: String = Strictness.normal.rawValue
+    /// v1.18: the typeface the whole app renders in. Additive and defaulted,
+    /// so it migrates implicitly — no new schema stage (see ModelContainer).
+    var typefaceRaw: String = MTypeface.fallback.rawValue
     var onboardedAt: Date?
     var createdAt: Date = Date.now
 
@@ -48,6 +51,13 @@ final class UserConfig {
     var strictness: Strictness {
         get { Strictness(rawValue: strictnessRaw) ?? .normal }
         set { strictnessRaw = newValue.rawValue }
+    }
+
+    /// Resolves through MTypeface, so a face that is no longer bundled reads
+    /// back as the fallback rather than silently becoming the system font.
+    var typeface: MTypeface {
+        get { MTypeface.resolve(typefaceRaw) }
+        set { typefaceRaw = newValue.rawValue }
     }
 }
 

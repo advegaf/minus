@@ -65,6 +65,13 @@ enum DemoSeed {
         // MINUS_GOAL=hidden drives the v1.7 goal-visibility state (V-1).
         config.showsIntention = ProcessInfo.processInfo.environment["MINUS_GOAL"] != "hidden"
 
+        // MINUS_TYPEFACE=<raw case> stages a face, so every screen can be
+        // walked in all five without tapping through the picker.
+        if let raw = ProcessInfo.processInfo.environment["MINUS_TYPEFACE"],
+           let face = MTypeface(rawValue: raw) {
+            config.typeface = face
+        }
+
         // v1.6: the launcher is card "one"; EssentialApp is customs-only.
         context.insert(
             LauncherCard(

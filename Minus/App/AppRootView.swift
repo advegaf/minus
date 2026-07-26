@@ -16,6 +16,13 @@ struct AppRootView: View {
         configs.first { $0.id == UserConfig.wellKnownID }?.onboardedAt != nil
     }
 
+    /// The whole app's typeface, injected once at the root. The @Query
+    /// invalidates this view when the pick is saved, so every `.mnType` below
+    /// redraws in the new face while navigation and scroll state survive.
+    private var typeface: MTypeface {
+        MTypeface.resolve(configs.first { $0.id == UserConfig.wellKnownID }?.typefaceRaw)
+    }
+
     var body: some View {
         ZStack {
             MN.obsidian.ignoresSafeArea()
@@ -39,6 +46,7 @@ struct AppRootView: View {
                     .transition(.opacity)
             }
         }
+        .environment(\.mnTypeface, typeface)
         .animation(settled ? MMotion.signature : nil, value: isOnboarded)
         .onChange(of: deps.pendingDeepLink) { _, _ in
             consumeFocusLink()
@@ -95,6 +103,8 @@ struct AppRootView: View {
             BlockListEditView()
         case .settingsStrictness:
             StrictnessView()
+        case .settingsTypeface:
+            TypefaceView()
         case .settingsPermission:
             PermissionSettingsView()
         case .settingsAbout:
