@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 #if DEBUG
@@ -9,6 +10,14 @@ import SwiftUI
 struct DesignGallery: View {
     @State private var fieldEmpty = ""
     @State private var fieldFilled = "Morning ritual"
+    /// The gallery is a ROOT (MinusApp swaps it in for AppRootView), so it
+    /// injects the chosen typeface itself. Without this the proof sheet would
+    /// always show the fallback face and quietly lie about a face change.
+    @Query private var configs: [UserConfig]
+
+    private var typeface: MTypeface {
+        MTypeface.resolve(configs.first { $0.id == UserConfig.wellKnownID }?.typefaceRaw)
+    }
 
     private let swatches: [(name: String, hex: String, color: Color)] = [
         ("Obsidian", "#101010", MN.obsidian),
@@ -54,6 +63,7 @@ struct DesignGallery: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(MN.obsidian.ignoresSafeArea())
+            .environment(\.mnTypeface, typeface)
             .accessibilityIdentifier("design-gallery")
             .onAppear {
                 if let anchor = ProcessInfo.processInfo.environment["MINUS_GALLERY_SCROLL"] {

@@ -17,6 +17,10 @@ struct MinusWidgetBundle: WidgetBundle {
 struct LauncherEntry: TimelineEntry, Sendable {
     var date: Date
     var snapshot: LauncherSnapshot?
+    /// Carried on the entry rather than read inside the view, so an archived
+    /// render stays deterministic and the in-app gallery (which renders these
+    /// same views) never reaches for the app group.
+    var typeface: MTypeface = .fallback
 }
 
 // MARK: - Launcher
@@ -29,6 +33,8 @@ struct ConfiguredLauncherEntry: TimelineEntry, Sendable {
     var cardID: UUID?
     var textSize: LauncherTextSize
     var alignment: LauncherCellAlignment
+    /// The user's typeface, read from the app group at timeline time.
+    var typeface: MTypeface = .fallback
 
     static func from(_ configuration: LauncherConfigIntent, snapshot: LauncherSnapshot?) -> Self {
         ConfiguredLauncherEntry(
@@ -36,14 +42,22 @@ struct ConfiguredLauncherEntry: TimelineEntry, Sendable {
             snapshot: snapshot,
             cardID: configuration.card?.id,
             textSize: configuration.textSize,
-            alignment: configuration.alignment
+            alignment: configuration.alignment,
+            typeface: MTypeface.published
         )
     }
 }
 
 struct LauncherProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> ConfiguredLauncherEntry {
-        ConfiguredLauncherEntry(date: .now, snapshot: .fixture, cardID: nil, textSize: .medium, alignment: .leading)
+        ConfiguredLauncherEntry(
+            date: .now,
+            snapshot: .fixture,
+            cardID: nil,
+            textSize: .medium,
+            alignment: .leading,
+            typeface: MTypeface.published
+        )
     }
 
     func snapshot(for configuration: LauncherConfigIntent, in context: Context) async -> ConfiguredLauncherEntry {
@@ -65,6 +79,7 @@ struct LauncherWidget: Widget {
             provider: LauncherProvider()
         ) { entry in
             LauncherFamilyView(entry: entry)
+                .environment(\.mnTypeface, entry.typeface)
                 .modifier(GlassAwareBackground())
         }
         .configurationDisplayName("launcher")
@@ -117,20 +132,21 @@ private struct LauncherFamilyView: View {
 
 struct FocusProvider: TimelineProvider {
     func placeholder(in context: Context) -> LauncherEntry {
-        LauncherEntry(date: .now, snapshot: .fixture)
+        LauncherEntry(date: .now, snapshot: .fixture, typeface: MTypeface.published)
     }
 
     func getSnapshot(in context: Context, completion: @escaping @Sendable (LauncherEntry) -> Void) {
-        completion(LauncherEntry(date: .now, snapshot: LauncherSnapshot.read() ?? .fixture))
+        completion(LauncherEntry(date: .now, snapshot: LauncherSnapshot.read() ?? .fixture, typeface: MTypeface.published))
     }
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<LauncherEntry>) -> Void) {
         let snapshot = LauncherSnapshot.read()
-        var entries = [LauncherEntry(date: .now, snapshot: snapshot)]
+        let face = MTypeface.published
+        var entries = [LauncherEntry(date: .now, snapshot: snapshot, typeface: face)]
         // Self-flip: re-render the same snapshot the moment a session ends, so
         // the widget shows next/idle on time with no extension write (W-4).
         if let until = snapshot?.focus.activeUntil, until > .now {
-            entries.append(LauncherEntry(date: until, snapshot: snapshot))
+            entries.append(LauncherEntry(date: until, snapshot: snapshot, typeface: face))
         }
         completion(Timeline(entries: entries, policy: .never))
     }
@@ -140,6 +156,7 @@ struct FocusWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "MinusFocus", provider: FocusProvider()) { entry in
             FocusWidgetView(snapshot: entry.snapshot, now: entry.date)
+                .environment(\.mnTypeface, entry.typeface)
                 .widgetURL(URL(string: "minus://focus"))
                 .modifier(GlassAwareBackground())
         }
