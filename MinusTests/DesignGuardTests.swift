@@ -78,12 +78,20 @@ final class DesignGuardTests: XCTestCase {
     func testRawColorConstructionIsContainedToDesignSystemDirectory() {
         let found = Self.findViolations(
             in: Self.swiftFiles(),
-            patterns: ["Color(red:", "Color(mnHex:", "UIColor(red:"],
+            // v1.19: the light-mode forms too. A dynamic provider, a bridged
+            // UIColor or a named asset would each have walked straight past
+            // the original three patterns — the one mechanism the guard could
+            // not see was the one light mode is built from.
+            patterns: [
+                "Color(red:", "Color(mnHex:", "UIColor(red:",
+                "Color(mnDark:", "UIColor(mnHex:", "Color(uiColor:",
+                "UIColor {", "UIColor(dynamicProvider:",
+            ],
             isExempt: { $0.path.hasPrefix(Self.designSystemRootPrefix) }
         )
         guard !found.isEmpty else { return }
         XCTFail(Self.report(
-            rule: "Rule 4 (raw color containment): Color(red:/Color(mnHex:/UIColor(red: may appear only under Minus/DesignSystem/.",
+            rule: "Rule 4 (raw color containment): raw and dynamic color construction may appear only under Minus/DesignSystem/ — everything else reads an MN token.",
             violations: found
         ))
     }

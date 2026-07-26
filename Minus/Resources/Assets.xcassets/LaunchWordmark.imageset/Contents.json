@@ -3,17 +3,50 @@
     {
       "idiom": "universal",
       "scale": "1x",
-      "filename": "wordmark@1x.png"
+      "filename": "wordmark-ink@1x.png"
+    },
+    {
+      "idiom": "universal",
+      "scale": "1x",
+      "filename": "wordmark@1x.png",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ]
     },
     {
       "idiom": "universal",
       "scale": "2x",
-      "filename": "wordmark@2x.png"
+      "filename": "wordmark-ink@2x.png"
+    },
+    {
+      "idiom": "universal",
+      "scale": "2x",
+      "filename": "wordmark@2x.png",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ]
     },
     {
       "idiom": "universal",
       "scale": "3x",
-      "filename": "wordmark@3x.png"
+      "filename": "wordmark-ink@3x.png"
+    },
+    {
+      "idiom": "universal",
+      "scale": "3x",
+      "filename": "wordmark@3x.png",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ]
     }
   ],
   "info": {
