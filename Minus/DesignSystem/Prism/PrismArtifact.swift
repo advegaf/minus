@@ -18,6 +18,12 @@ struct PrismArtifact: View {
     var size: CGFloat = 240
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Dispersion is a blend, and a blend needs to know what it is blending
+    /// onto. On the void the fringes ADD toward white; on paper they have to
+    /// subtract, or additive math over near-white leaves nothing at all.
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var onPaper: Bool { colorScheme == .light }
 
     /// One full shimmer cycle. Slow on purpose — stillness is the brand's
     /// confidence, so the drift is barely perceptible.
@@ -48,17 +54,6 @@ struct PrismArtifact: View {
             }
         }
         .frame(width: size, height: size)
-        .padding(size * 0.12)
-        // The plinth. Every fringe here is additive: the clones sum toward
-        // white and the specular is bone, so the artifact only exists against
-        // darkness. On paper it would render as black blobs with no catch of
-        // light at all. Giving it its own well keeps the physics intact and
-        // makes the prism a window into the void wherever the page sits.
-        // Invisible against the canvas in dark mode, so one path serves both.
-        .background(
-            RoundedRectangle(cornerRadius: MN.Radius.card, style: .continuous)
-                .fill(MN.obsidianAlways)
-        )
         .accessibilityElement()
         .accessibilityLabel("Minus prism")
     }
@@ -98,10 +93,23 @@ struct PrismArtifact: View {
                 .fill(Color.black)
                 .frame(width: s, height: s)
 
-            // Three dispersion clones — the chromatic edges.
-            channelClone(.prismRed, direction: PrismGeometry.redDirection, magnitude: PrismGeometry.redMagnitude, side: s, radius: radius, scale: scale, drift: drift)
-            channelClone(.prismGreen, direction: PrismGeometry.greenDirection, magnitude: PrismGeometry.greenMagnitude, side: s, radius: radius, scale: scale, drift: drift)
-            channelClone(.prismBlue, direction: PrismGeometry.blueDirection, magnitude: PrismGeometry.blueMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            // On the void the bright fringes fall BETWEEN the cubes and draw
+            // every edge for free. On paper they fall outward instead, so the
+            // cluster collapses into one black silhouette. A canvas hairline
+            // gives each cube its own edge back, the way a real stack of glass
+            // shows a seam where two faces meet.
+            if onPaper {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .stroke(MN.obsidian, lineWidth: 1.2 * scale)
+                    .frame(width: s, height: s)
+            }
+
+            // Three dispersion clones — the chromatic edges. The triad goes
+            // deeper on paper: the neon values are tuned to glow on black and
+            // the green in particular all but disappears on a light ground.
+            channelClone(onPaper ? .prismRedInk : .prismRed, direction: PrismGeometry.redDirection, magnitude: PrismGeometry.redMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            channelClone(onPaper ? .prismGreenInk : .prismGreen, direction: PrismGeometry.greenDirection, magnitude: PrismGeometry.greenMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            channelClone(onPaper ? .prismBlueInk : .prismBlue, direction: PrismGeometry.blueDirection, magnitude: PrismGeometry.blueMagnitude, side: s, radius: radius, scale: scale, drift: drift)
 
             // Specular — only the top/left edges catch light, faded to nothing
             // by the diagonal gradient mask. Composited with plusLighter so it
@@ -139,7 +147,10 @@ struct PrismArtifact: View {
             .frame(width: side, height: side)
             .offset(x: dx, y: dy)
             .blur(radius: 1.6)
-            .blendMode(.plusLighter)
+            // The mirror image of the same idea: on the void the channels sum
+            // toward white where they overlap, on paper they multiply toward
+            // ink. Either way the overlap is where the light gathers.
+            .blendMode(onPaper ? .multiply : .plusLighter)
             .opacity(0.9)
     }
 }
@@ -152,6 +163,12 @@ private extension Color {
     static let prismRed   = Color(mnHex: 0xFF2A2A)
     static let prismBlue  = Color(mnHex: 0x2A7FFF)
     static let prismGreen = Color(mnHex: 0x2AFF2A)
+
+    /// The same triad, weighted for paper. Neon reads as light on the void
+    /// and as nothing on a page, so the light ground gets pigment instead.
+    static let prismRedInk   = Color(mnHex: 0xC81E1E)
+    static let prismBlueInk  = Color(mnHex: 0x1E5AC8)
+    static let prismGreenInk = Color(mnHex: 0x1E8C3C)
 }
 
 #if DEBUG

@@ -35,11 +35,6 @@ enum MN {
     /// same disappearing act works on a light one.
     static let widgetGround = Color(mnDark: 0x000000, mnLight: 0xF7F4EE)
 
-    /// The void itself, never paper. For the one surface that must stay dark
-    /// in both appearances: the prism's plinth, whose additive fringes only
-    /// exist against darkness.
-    static let obsidianAlways = Color(mnHex: 0x101010)
-
     // MARK: Shape
 
     enum Radius {

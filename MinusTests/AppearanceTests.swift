@@ -48,13 +48,6 @@ final class AppearanceTests: XCTestCase {
                        "the dark canvas and the light ink should be the same color")
     }
 
-    /// The prism's plinth is the one surface that must NOT follow, because
-    /// every fringe it holds is additive and only exists against darkness.
-    func testThePrismPlinthStaysDarkInBothAppearances() {
-        XCTAssertEqual(rgb(resolved(MN.obsidianAlways, light)), rgb(resolved(MN.obsidianAlways, dark)))
-        XCTAssertEqual(rgb(resolved(MN.obsidianAlways, light)), rgb(resolved(MN.obsidian, dark)))
-    }
-
     /// Ink on paper and bone on the void both need to carry a monument.
     func testPrimaryTextClearsSevenToOneInBothAppearances() {
         for traits in [light, dark] {
