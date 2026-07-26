@@ -10,7 +10,6 @@ struct MinusApp: App {
     var body: some Scene {
         WindowGroup {
             rootView
-                .preferredColorScheme(.dark)
                 .environment(deps)
                 .modelContainer(deps.container)
                 // Cold-start race: UIApplication.open is silently dropped

@@ -57,8 +57,10 @@ targets:
         # upload (literal-default trap — verified in vita build 3).
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        # Dark-only by design (Vivid+Co: obsidian canvas is the theme).
-        UIUserInterfaceStyle: Dark
+        # v1.19: no UIUserInterfaceStyle. minus follows the phone: the void at
+        # night, paper in daylight. Forcing Dark here would also force every
+        # system surface (keyboard, pickers, share sheets) dark on a light
+        # phone, which is the mismatch light mode exists to remove.
         # Portrait-only, declared in the plist itself: the INFOPLIST_KEY_ build
         # setting is NOT merged when a source Info.plist is used (verified in
         # vita's built product), so it would silently support every orientation.
