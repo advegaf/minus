@@ -1,6 +1,6 @@
 # minus — deferred scope
 
-## What still stands between here and a release (as of 1.16.0)
+## What still stands between here and a release (as of 1.18.0)
 
 Ranked by what actually blocks, not by effort.
 
@@ -60,15 +60,15 @@ Worth improving, in order of what a user would feel:
 
 ## v2 candidates, in rough priority order:
 
-1. **Home-screen widget** (deferred from v1 by decision D7) — small/medium WidgetKit
-   widget: intention line + current focus state in the obsidian/bone language. Needs an
-   App Group snapshot (pattern already exists in `SharedState`) and a `MinusWidget`
-   target.
+1. ~~**Home-screen widget**~~ — shipped: launcher (systemLarge + the iOS 27 full page)
+   and a systemSmall focus widget, both reading `LauncherSnapshot` from the app group.
 2. **Custom shield appearance** — `ShieldConfigurationExtension` target so Apple's
    shield sheet carries the minus voice (system layout only: icon/title/subtitle/
    buttons — no custom fonts, no prism).
-3. **Cross-midnight schedules** — v1 validates same-day windows only; midnight-crossing
-   needs paired intervals across two weekdays.
+3. **Cross-midnight schedules** — still same-day windows only; a window that genuinely
+   spans midnight needs paired intervals across two weekdays. 1.18 covers the common
+   case instead: an all-day window (00:00 to 23:59) that ends at `second = 59`, so the
+   next day picks up a second later rather than leaving a minute open every night.
 4. **Intention history** — `UserConfig` holds a single current intention; a log of past
    intentions with dates could feed a reflective view.
 5. **PP Neue Montreal** — buy the app license, then add a case to `MTypeface`, the
@@ -80,6 +80,18 @@ Worth improving, in order of what a user would feel:
 7. **`Support/ExportOptions.plist` team ID in history** — the file is untracked now and
    the example ships blank, but the real team ID remains in commits before c6da7ee. Only
    a blocker if this repo ever goes public; scrub with `git filter-repo` first if so.
+
+## Waiting on a device, as of 1.18.0
+
+Two claims the simulator cannot settle. Neither blocks a build; both are worth one
+walk on hardware.
+
+1. **An all-day schedule across a real midnight.** The handover between one weekday's
+   activity and the next is the whole point of the `second = 59` change, and only a real
+   clock proves the shields hold through it.
+2. **The prism in daylight, on hardware.** The blur and blend passes are GPU-real on a
+   phone and software-rendered in the simulator, so the paper fringes may land at a
+   different weight. If they read soft, stroke width is the knob (`channelClone`).
 
 ## Reading the phone's installed apps (investigated, blocked)
 

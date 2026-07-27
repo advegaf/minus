@@ -24,7 +24,10 @@ Five targets, one trust invariant: **shields always come down.**
 3. **Schedules:** weekday expansion → one `DeviceActivityName` per (schedule, weekday)
    (`ScheduleMath`, pure). The extension applies shields from the app-group
    `scheduleRegistry` at `intervalDidStart`. Constraints enforced in UI: ≥15-minute
-   windows (API minimum), ~19-activity budget, same-day windows only in v1.
+   windows (API minimum), ~19-activity budget, same-day windows only (a window may
+   not cross midnight, and an end past minute 1439 is rejected outright — it would
+   expand to hour 24). An all-day window (00:00 to 23:59) registers with
+   `second = 59`, so consecutive days meet without leaving the night open.
 4. **Honesty:** deleting the app releases all shields. Strict mode is friction, not a
    jail, and the copy says so.
 

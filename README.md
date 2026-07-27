@@ -1,19 +1,56 @@
-# minus
+<p align="center">
+  <img src="docs/images/logo.png" width="120" alt="minus">
+</p>
 
-A digital-minimalism iOS app. An obsidian void with a giant clock, your
-intention, the few apps you actually need — and real app blocking via Apple's
-Screen Time API when you choose to focus.
+<h1 align="center">minus</h1>
 
-Design language: dark-only, one typeface at a time, hierarchy from scale,
-zero shadows, and a single chromatic voice (the prism artifact).
+<p align="center">
+  A digital-minimalism iOS app. A giant clock, your intention, the few apps you
+  actually need, and real app blocking through Apple's Screen Time API when you
+  choose to focus.
+</p>
 
-Which typeface is the user's call: five approved faces (General Sans,
-Satoshi, Switzer, Cabinet Grotesk, Chillax — all Fontshare, ITF Free Font
-License), picked in Settings and applied to the app, the widgets, and the
-Screen Time report together. `MTypeface` owns every PostScript name, and
-DesignGuard rule 8 fails the suite if any other font name appears. The
-launch wordmark and the app icon are baked images in General Sans and stay
-that way: a logotype is a logotype.
+<table>
+  <tr>
+    <td><img src="docs/images/home-dark.png" alt="Home in dark"></td>
+    <td><img src="docs/images/home-light.png" alt="Home in light"></td>
+  </tr>
+</table>
+
+minus follows the phone: the void at night, paper in daylight. Every colour is
+a pair resolved inside the token itself, so the app, both widgets and the
+Screen Time report change together.
+
+Design language: one typeface at a time, hierarchy from scale, zero shadows,
+and a single chromatic voice (the prism artifact).
+
+<table>
+  <tr>
+    <td><img src="docs/images/prism-dark.png" alt="The prism on the void"></td>
+    <td><img src="docs/images/prism-light.png" alt="The prism on paper"></td>
+  </tr>
+</table>
+
+The prism is the same artifact on either ground, mirrored rather than
+recoloured. Its cube sits a hair from the canvas both ways — black is 6% off
+obsidian, white is 3% off paper — so the mass recedes and the dispersion is the
+subject. One neon triad serves both: added, the channels sum toward white;
+multiplied, they sink toward ink.
+
+<table>
+  <tr>
+    <td><img src="docs/images/typeface-dark.png" alt="The typeface picker"></td>
+    <td><img src="docs/images/focus-dark.png" alt="A focus session"></td>
+  </tr>
+</table>
+
+Which typeface is the user's call: five approved faces (General Sans, Satoshi,
+Switzer, Cabinet Grotesk, Chillax — all Fontshare, ITF Free Font License),
+picked in Settings and applied to the app, the widgets, and the report
+together. Each row in the picker is set in the face it names. `MTypeface` owns
+every PostScript name, and DesignGuard rule 8 fails the suite if any other font
+name appears. The launch wordmark and the app icon are baked images and stay in
+General Sans: a logotype is a logotype.
 
 ## Build
 
