@@ -15,6 +15,9 @@ struct ScheduleEditorView: View {
     @State private var weekdays: Set<Int> = []
     @State private var startMinute = 9 * 60
     @State private var endMinute = 10 * 60
+    /// The times to put back when all day is switched off.
+    @State private var restoreStart = 9 * 60
+    @State private var restoreEnd = 10 * 60
     @State private var loaded = false
     @State private var saveError: String?
     @State private var confirmingDelete = false
@@ -29,6 +32,31 @@ struct ScheduleEditorView: View {
         return schedules.first { $0.id == scheduleID }
     }
 
+    private var isAllDay: Bool {
+        ScheduleMath.isAllDay(startMinuteOfDay: startMinute, endMinuteOfDay: endMinute)
+    }
+
+    /// One tap for the window people actually want when they want everything
+    /// blocked. Turning it off restores the times that were there before, so
+    /// a mis-tap costs nothing.
+    private var allDayRow: some View {
+        OnboardingSelectRow(
+            title: "all day",
+            isSelected: isAllDay,
+            accessibilityID: "schedule-all-day"
+        ) {
+            if isAllDay {
+                startMinute = restoreStart
+                endMinute = restoreEnd
+            } else {
+                restoreStart = startMinute
+                restoreEnd = endMinute
+                startMinute = 0
+                endMinute = ScheduleMath.lastMinuteOfDay
+            }
+        }
+    }
+
     private var validationText: String? {
         if weekdays.isEmpty { return "pick at least one day" }
         if endMinute <= startMinute { return "end must come after start" }
@@ -38,6 +66,11 @@ struct ScheduleEditorView: View {
             (weekdays: Array(weekdays), start: startMinute, end: endMinute),
             (weekdays: other.weekdays, start: other.startMinuteOfDay, end: other.endMinuteOfDay)
         ) {
+            // An all-day window covers every other schedule by definition, so
+            // "overlaps deep work" reads like a puzzle. Say the real thing.
+            if isAllDay {
+                return "all day leaves no room for another schedule. turn the others off first."
+            }
             return "overlaps \(other.name.isEmpty ? "another schedule" : other.name.lowercased())"
         }
         return nil
@@ -62,10 +95,16 @@ struct ScheduleEditorView: View {
                     dayPicker
                         .padding(.top, MN.Space.s)
 
-                    timeRow(label: "STARTS", minute: $startMinute, id: "picker-start")
+                    allDayRow
                         .padding(.top, MN.Space.l)
-                    timeRow(label: "ENDS", minute: $endMinute, id: "picker-end")
-                        .padding(.top, MN.Space.m)
+
+                    // The pickers are noise once the window is the whole day.
+                    if !isAllDay {
+                        timeRow(label: "STARTS", minute: $startMinute, id: "picker-start")
+                            .padding(.top, MN.Space.m)
+                        timeRow(label: "ENDS", minute: $endMinute, id: "picker-end")
+                            .padding(.top, MN.Space.m)
+                    }
 
                     if let validationText {
                         Text(validationText)

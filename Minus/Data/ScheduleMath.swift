@@ -9,6 +9,22 @@ enum ScheduleMath {
     /// Budget: 1 manual-session slot + 19 schedule slots.
     static let activityBudget = 19
 
+    /// The last minute a day has. A window ending here is an all-day window.
+    static let lastMinuteOfDay = 1439
+
+    /// Seconds to carry on an interval's end. A window that ends on the last
+    /// minute of the day runs to :59, so the next day's interval picks up a
+    /// second later instead of leaving a minute of the night unshielded.
+    /// Every other window ends on the minute, exactly as written.
+    static func endSecond(forEndMinuteOfDay endMinuteOfDay: Int) -> Int {
+        endMinuteOfDay == lastMinuteOfDay ? 59 : 0
+    }
+
+    /// True when a window covers the whole day.
+    static func isAllDay(startMinuteOfDay: Int, endMinuteOfDay: Int) -> Bool {
+        startMinuteOfDay == 0 && endMinuteOfDay == lastMinuteOfDay
+    }
+
     /// One DeviceActivity registration per (schedule, weekday).
     static func activityName(scheduleID: UUID, weekday: Int) -> String {
         "schedule-\(scheduleID.uuidString)-w\(weekday)"
@@ -42,12 +58,16 @@ enum ScheduleMath {
         case crossesMidnight
         case noWeekdays
         case overBudget
+        /// A minute past the end of the day. 1440 would expand to hour 24,
+        /// which is not a DateComponents any schedule can be built from.
+        case endPastMidnight
     }
 
     /// v1 rules: same-day window, ≥15 minutes, at least one weekday, and the
     /// expansion must fit the activity budget alongside existing registrations.
     static func validate(weekdays: [Int], startMinuteOfDay: Int, endMinuteOfDay: Int, existingRegistrationCount: Int) -> ValidationError? {
         if weekdays.isEmpty { return .noWeekdays }
+        if endMinuteOfDay > lastMinuteOfDay || startMinuteOfDay < 0 { return .endPastMidnight }
         if endMinuteOfDay <= startMinuteOfDay { return .crossesMidnight }
         if endMinuteOfDay - startMinuteOfDay < minimumWindowMinutes { return .windowTooShort }
         if existingRegistrationCount + weekdays.count > activityBudget { return .overBudget }

@@ -143,7 +143,14 @@ struct ScheduleListView: View {
     }
 
     static func windowText(_ schedule: FocusSchedule) -> String {
-        "\(timeText(schedule.startMinuteOfDay)) to \(timeText(schedule.endMinuteOfDay))"
+        // "0:00 to 23:59" is the same fact, said the long way.
+        if ScheduleMath.isAllDay(
+            startMinuteOfDay: schedule.startMinuteOfDay,
+            endMinuteOfDay: schedule.endMinuteOfDay
+        ) {
+            return "all day"
+        }
+        return "\(timeText(schedule.startMinuteOfDay)) to \(timeText(schedule.endMinuteOfDay))"
     }
 
     static func timeText(_ minuteOfDay: Int) -> String {

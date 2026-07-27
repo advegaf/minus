@@ -88,6 +88,11 @@ final class LiveScreenTimeService: ScreenTimeService {
         end.weekday = interval.weekday
         end.hour = interval.endMinuteOfDay / 60
         end.minute = interval.endMinuteOfDay % 60
+        // An all-day window ends on the last minute of the day, so without
+        // seconds it leaves 23:59:00 to 00:00:00 unshielded every night. Only
+        // that case: adding seconds to a 9:00 to 11:00 window would run it a
+        // minute long.
+        end.second = ScheduleMath.endSecond(forEndMinuteOfDay: interval.endMinuteOfDay)
         let schedule = DeviceActivitySchedule(intervalStart: start, intervalEnd: end, repeats: true)
         do {
             try center.startMonitoring(DeviceActivityName(interval.activityName), during: schedule)

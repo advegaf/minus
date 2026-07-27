@@ -28,6 +28,42 @@ final class ScheduleMathTests: XCTestCase {
         )
     }
 
+    /// The window people reach for when they want everything blocked: the
+    /// whole day, every day, looping into the next one.
+    func testAllDayWindowIsValid() {
+        XCTAssertNil(
+            ScheduleMath.validate(
+                weekdays: [1, 2, 3, 4, 5, 6, 7],
+                startMinuteOfDay: 0,
+                endMinuteOfDay: 1439,
+                existingRegistrationCount: 0
+            )
+        )
+        XCTAssertTrue(ScheduleMath.isAllDay(startMinuteOfDay: 0, endMinuteOfDay: 1439))
+        XCTAssertFalse(ScheduleMath.isAllDay(startMinuteOfDay: 0, endMinuteOfDay: 1438))
+    }
+
+    /// A window ending on the last minute runs to :59, so the next day picks
+    /// up a second later instead of leaving a minute of the night open.
+    func testAllDayWindowEndsOnTheLastSecond() {
+        XCTAssertEqual(ScheduleMath.endSecond(forEndMinuteOfDay: 1439), 59)
+        XCTAssertEqual(ScheduleMath.endSecond(forEndMinuteOfDay: 660), 0)
+    }
+
+    /// 1440 is not a minute of any day: it expands to hour 24, which no
+    /// DateComponents can carry.
+    func testEndPastTheDayRejected() {
+        XCTAssertEqual(
+            ScheduleMath.validate(
+                weekdays: [2],
+                startMinuteOfDay: 0,
+                endMinuteOfDay: 1440,
+                existingRegistrationCount: 0
+            ),
+            .endPastMidnight
+        )
+    }
+
     func testNoWeekdaysRejected() {
         XCTAssertEqual(
             ScheduleMath.validate(weekdays: [], startMinuteOfDay: 540, endMinuteOfDay: 660, existingRegistrationCount: 0),

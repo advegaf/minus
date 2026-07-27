@@ -123,6 +123,34 @@ final class FocusUITests: XCTestCase {
     }
 
     @MainActor
+    /// The window people reach for when they want everything blocked: one
+    /// tap, no wheel-spinning, and it reads back as what it is.
+    func testAllDayScheduleReadsBackAsAllDay() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode"]
+        app.launchEnvironment = ["MINUS_STATE": "onboarded", "MINUS_SCREEN": "schedules"]
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["schedule-list"].waitForExistence(timeout: 5))
+        app.buttons["cta-new-schedule"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["schedule-editor"].waitForExistence(timeout: 5))
+
+        // The pickers are there until the window is the whole day.
+        XCTAssertTrue(app.descendants(matching: .any)["picker-start"].exists)
+        app.buttons["schedule-all-day"].tap()
+        XCTAssertFalse(app.descendants(matching: .any)["picker-start"].exists, "the pickers are noise once it is all day")
+        attach(app, "SC-1")
+
+        app.buttons["day-2"].tap()
+        XCTAssertTrue(app.buttons["cta-save-schedule"].isEnabled)
+        app.buttons["cta-save-schedule"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["schedule-list"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'all day'")).firstMatch.exists,
+                      "the list should say all day, not 0:00 to 23:59")
+        attach(app, "SC-2")
+    }
+
     func testScheduleListEmptyThenCreate() {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode"]
