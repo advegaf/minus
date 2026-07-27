@@ -48,11 +48,7 @@ final class DesignGuardTests: XCTestCase {
     func testPrismHexCodesAreContainedToPrismDirectory() {
         let found = Self.findViolations(
             in: Self.swiftFiles(),
-            patterns: [
-                "FF2A2A", "2A7FFF", "2AFF2A",
-                // The paper-ground triad is contained the same way.
-                "C81E1E", "1E5AC8", "1E8C3C",
-            ],
+            patterns: ["FF2A2A", "2A7FFF", "2AFF2A"],
             caseInsensitive: true,
             isExempt: { $0.path.hasPrefix(Self.prismRootPrefix) }
         )

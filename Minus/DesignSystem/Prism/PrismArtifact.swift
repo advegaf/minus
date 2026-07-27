@@ -87,29 +87,23 @@ struct PrismArtifact: View {
             )
 
         return ZStack {
-            // Glass body — pure black, a hair darker than obsidian so the cube
-            // reads as a solid mass the fringes wrap around.
+            // Glass body — a hair away from the canvas, never a mass. Black
+            // sits 6% off obsidian and white sits 3% off paper, so on either
+            // ground the cube all but disappears and the dispersion is the
+            // whole subject. Filling it with ink on paper would invert that
+            // relationship rather than mirror it: the mass would become the
+            // subject and the light a faint halo.
             RoundedRectangle(cornerRadius: radius, style: .continuous)
-                .fill(Color.black)
+                .fill(onPaper ? Color.white : Color.black)
                 .frame(width: s, height: s)
 
-            // On the void the bright fringes fall BETWEEN the cubes and draw
-            // every edge for free. On paper they fall outward instead, so the
-            // cluster collapses into one black silhouette. A canvas hairline
-            // gives each cube its own edge back, the way a real stack of glass
-            // shows a seam where two faces meet.
-            if onPaper {
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(MN.obsidian, lineWidth: 1.2 * scale)
-                    .frame(width: s, height: s)
-            }
-
-            // Three dispersion clones — the chromatic edges. The triad goes
-            // deeper on paper: the neon values are tuned to glow on black and
-            // the green in particular all but disappears on a light ground.
-            channelClone(onPaper ? .prismRedInk : .prismRed, direction: PrismGeometry.redDirection, magnitude: PrismGeometry.redMagnitude, side: s, radius: radius, scale: scale, drift: drift)
-            channelClone(onPaper ? .prismGreenInk : .prismGreen, direction: PrismGeometry.greenDirection, magnitude: PrismGeometry.greenMagnitude, side: s, radius: radius, scale: scale, drift: drift)
-            channelClone(onPaper ? .prismBlueInk : .prismBlue, direction: PrismGeometry.blueDirection, magnitude: PrismGeometry.blueMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            // Three dispersion clones — the chromatic edges. One triad for
+            // both grounds: the blend does the work, not the palette. Neon
+            // green multiplied onto paper lands at (41, 244, 39), the mirror
+            // of that same neon added onto black.
+            channelClone(.prismRed, direction: PrismGeometry.redDirection, magnitude: PrismGeometry.redMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            channelClone(.prismGreen, direction: PrismGeometry.greenDirection, magnitude: PrismGeometry.greenMagnitude, side: s, radius: radius, scale: scale, drift: drift)
+            channelClone(.prismBlue, direction: PrismGeometry.blueDirection, magnitude: PrismGeometry.blueMagnitude, side: s, radius: radius, scale: scale, drift: drift)
 
             // Specular — only the top/left edges catch light, faded to nothing
             // by the diagonal gradient mask. Composited with plusLighter so it
@@ -127,7 +121,10 @@ struct PrismArtifact: View {
                     .frame(width: s, height: s)
                 )
                 .blur(radius: 0.4)
-                .blendMode(.plusLighter)
+                // The catch flips with everything else: MN.boneWhite already
+                // resolves to ink on paper, so adding becomes multiplying and
+                // the white highlight becomes a dark one.
+                .blendMode(onPaper ? .multiply : .plusLighter)
         }
         .rotationEffect(cube.rotation)
         .position(center)
@@ -139,10 +136,16 @@ struct PrismArtifact: View {
         let dx = direction.dx * magnitude * scale + drift.width
         let dy = direction.dy * magnitude * scale + drift.height
         return RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(color.opacity(0.10))
+            // Three washes stack, and multiplying stacks harder than adding
+            // does, so paper takes half. Dropping it entirely left the faces
+            // flat white, where the dark ones carry a faint chromatic tint.
+            .fill(color.opacity(onPaper ? 0.05 : 0.10))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(color, lineWidth: 1.5)
+                    // A multiplied edge through a blur reads fainter than an
+                    // additive one, so paper gets a heavier stroke to land at
+                    // the same intensity.
+                    .stroke(color, lineWidth: onPaper ? 2.1 : 1.5)
             )
             .frame(width: side, height: side)
             .offset(x: dx, y: dy)
@@ -164,11 +167,6 @@ private extension Color {
     static let prismBlue  = Color(mnHex: 0x2A7FFF)
     static let prismGreen = Color(mnHex: 0x2AFF2A)
 
-    /// The same triad, weighted for paper. Neon reads as light on the void
-    /// and as nothing on a page, so the light ground gets pigment instead.
-    static let prismRedInk   = Color(mnHex: 0xC81E1E)
-    static let prismBlueInk  = Color(mnHex: 0x1E5AC8)
-    static let prismGreenInk = Color(mnHex: 0x1E8C3C)
 }
 
 #if DEBUG
