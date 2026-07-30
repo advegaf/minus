@@ -9,13 +9,35 @@
 # one or more Screen Time APIs but has not been submitted with the Family
 # Controls entitlement." Nothing in the pipeline noticed. This does.
 #
-# Usage: scripts/verify_archive.sh <path-to-.xcarchive>
+# Check the .ipa, not the .xcarchive. With automatic signing the archive is
+# ALWAYS development-signed and -exportArchive re-signs it for distribution, so
+# the archive's identity proves nothing either way. The IPA is what Apple gets.
+#
+# Usage: scripts/verify_archive.sh <path-to-.ipa | path-to-.xcarchive>
 set -uo pipefail
 
-ARCHIVE="${1:-}"
-[ -z "$ARCHIVE" ] && { echo "usage: $0 <path-to-.xcarchive>" >&2; exit 2; }
-APP="$ARCHIVE/Products/Applications/Minus.app"
-[ -d "$APP" ] || { echo "no Minus.app inside $ARCHIVE" >&2; exit 2; }
+TARGET_IN="${1:-}"
+[ -z "$TARGET_IN" ] && { echo "usage: $0 <path-to-.ipa or .xcarchive>" >&2; exit 2; }
+
+WORK=""
+cleanup() { [ -n "$WORK" ] && rm -rf "$WORK"; }
+trap cleanup EXIT
+
+case "$TARGET_IN" in
+  *.ipa)
+    WORK=$(mktemp -d)
+    ( cd "$WORK" && unzip -q "$TARGET_IN" ) || { echo "could not unzip $TARGET_IN" >&2; exit 2; }
+    APP="$WORK/Payload/Minus.app"
+    echo "note: checking the IPA, which is what Apple receives."
+    ;;
+  *)
+    APP="$TARGET_IN/Products/Applications/Minus.app"
+    echo "note: checking an ARCHIVE. With automatic signing this is normally"
+    echo "      development-signed and says nothing about the submission."
+    echo "      Export first and check the .ipa instead."
+    ;;
+esac
+[ -d "$APP" ] || { echo "no Minus.app inside $TARGET_IN" >&2; exit 2; }
 
 FAIL=0
 note() { printf '  %-24s %s\n' "$1" "$2"; }
@@ -24,7 +46,7 @@ bad() { FAIL=1; printf '  %-24s FAIL  %s\n' "$1" "$2"; }
 ents() { codesign -d --entitlements :- "$1" 2>/dev/null; }
 has() { ents "$1" | grep -q "$2"; }
 
-echo "verifying $(basename "$ARCHIVE")"
+echo "verifying $(basename "$TARGET_IN")"
 
 # 1. The signing identity. Apple Development here is the whole bug.
 AUTH=$(codesign -dvv "$APP" 2>&1 | grep -m1 "^Authority=" | sed 's/Authority=//')
@@ -33,13 +55,15 @@ case "$AUTH" in
   *) bad "authority" "$AUTH (needs Apple Distribution; create one in Xcode > Settings > Accounts > Manage Certificates)" ;;
 esac
 
-# 2. get-task-allow is the tell. Distribution builds never carry it.
+# 2. get-task-allow is the tell, but only when it is TRUE. A distribution
+#    signature may carry the key set to false; a development one sets it true.
+#    Checking presence alone reports a correct build as broken.
 for target in "$APP" "$APP/PlugIns/MinusMonitor.appex" "$APP/PlugIns/MinusWidget.appex" "$APP/Extensions/MinusReport.appex"; do
-  [ -d "$target" ] || { bad "$(basename "$target")" "missing from the archive"; continue; }
-  if has "$target" "get-task-allow"; then
-    bad "$(basename "$target")" "get-task-allow present, so this is a development signature"
+  [ -d "$target" ] || { bad "$(basename "$target")" "missing from the bundle"; continue; }
+  if ents "$target" | grep -q "get-task-allow</key><true/>"; then
+    bad "$(basename "$target")" "get-task-allow is TRUE, so this is a development signature"
   else
-    note "$(basename "$target")" "no get-task-allow"
+    note "$(basename "$target")" "get-task-allow not true"
   fi
 done
 
