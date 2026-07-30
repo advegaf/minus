@@ -81,6 +81,25 @@ Worth improving, in order of what a user would feel:
    the example ships blank, but the real team ID remains in commits before c6da7ee. Only
    a blocker if this repo ever goes public; scrub with `git filter-repo` first if so.
 
+## The signing trap that cost a review cycle (1.18.0 build 17)
+
+App Review rejected build 17: "the app uses one or more Screen Time APIs but has not
+been submitted with the Family Controls entitlement." The entitlement was granted and
+the App IDs were configured, so the message read as wrong. It wasn't.
+
+**There was no Apple Distribution certificate in the keychain**, only Apple Development.
+So `xcodebuild archive -allowProvisioningUpdates` had no distribution identity to pick
+and signed for development: every binary carried `get-task-allow` and the *development*
+variant of the entitlement. `EXPORT SUCCEEDED`, the upload succeeded, TestFlight
+processed it, and nothing surfaced the defect until review. `-allowProvisioningUpdates`
+will NOT create that certificate for you — it has to be made once in Xcode (Settings →
+Accounts → Manage Certificates → + → Apple Distribution).
+
+**`scripts/verify_archive.sh <archive>` now gates this.** It asserts the authority is
+Apple Distribution, that `get-task-allow` is absent everywhere, and that
+family-controls and the app group sit on the targets that need them. Run it between
+archive and upload, every time. Never upload an archive it hasn't passed.
+
 ## Waiting on a device, as of 1.18.0
 
 Two claims the simulator cannot settle. Neither blocks a build; both are worth one
