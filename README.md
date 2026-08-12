@@ -109,7 +109,7 @@ SIMCTL_CHILD_MINUS_FREEZE_TIME=09:41 \
 ```
 
 `MINUS_SCREEN=gallery` renders the whole design system plus every widget frame
-in one scrolling sheet — the fastest way to see a type or motion change.
+in one scrolling sheet, the fastest way to see a type or motion change.
 
 ## Targets
 
@@ -117,6 +117,12 @@ Six: the app, `MinusWidget` (launcher + focus widgets), `MinusMonitor` (the
 DeviceActivity extension that guarantees shields lift), `MinusReport` (the
 Screen Time report rendered in the app's own typeface), and the two test
 targets. See `ARCHITECTURE.md`.
+
+## Tests
+
+108 unit tests across 13 files, and 60 UI tests across 8. No third-party
+dependencies in any target, so a clean checkout builds with nothing but
+Xcode and XcodeGen.
 
 ## QA
 
