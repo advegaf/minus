@@ -137,6 +137,14 @@ Xcode and XcodeGen.
 screenshots live in `QA/evidence/` named `{ID}.png` (and `{ID}-fixed.png`
 after a fix). See `docs/DEVICE-TESTING.md` for the on-device checklist.
 
+## How I built it
+
+I built this with Claude Code and Codex working like a small team. One agent plans the work and
+writes a spec for each piece, subagents write the code from those specs, and the two tools review
+each other's changes. I approve the plan before any code gets written, I read every diff before
+it's committed, and nothing ships until the tests pass. Anything that touches security or user
+data I write or check line by line myself.
+
 ## Credit
 
 Built by [Angel Vega](https://github.com/advegaf).
